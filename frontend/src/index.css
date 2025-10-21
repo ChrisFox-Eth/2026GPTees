@@ -1,0 +1,94 @@
+/**
+ * @fileoverview Global CSS for the React application.
+ * Includes Tailwind CSS directives and base styles for the application.
+ * @since 2025-10-20
+ */
+
+@config "../tailwind.config.js";
+@import "tailwindcss";  
+
+
+/**
+ * Custom font family import
+ * Uncomment and modify as needed
+ */
+/* @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap'); */
+
+/**
+ * Base HTML elements styling
+ */
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background-color: white;
+    color: gray;
+    transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+    transition-duration: 200ms;
+    transition-timing-function: ease-in-out;
+
+  }
+
+  body.dark {
+    background-color: gray;
+    color: white;
+  }
+
+  /* Focus styles for accessibility */
+  :focus-visible {
+    outline: 2px solid #6366f1;
+    outline-offset: 2px;
+  }
+}
+
+/**
+ * Component-level styles
+ * Use sparingly - prefer inline Tailwind classes
+ */
+@layer components {
+  /**
+   * Container for centering content with max-width
+   */
+  .container-max {
+    margin-left: auto;
+    margin-right: auto;
+    max-width: 80rem;
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+
+  /**
+   * Smooth transition mixin for UI changes
+   */
+  .transition-smooth {
+    transition: all 0.3s ease-in-out;
+  }
+}
+
+/**
+ * Animations and utilities
+ */
+/**
+ * Hide element while maintaining layout (screen reader visible)
+ */
+@utility sr-only {
+  position: absolute;
+  height: 1px;
+  width: 1px;
+  overflow: hidden;
+  white-space: nowrap;
+  border: 0;
+  padding: 0;
+  clip-path: inset(50%);
+}
+
+/**
+ * Flex center utility
+ */
+@utility flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
