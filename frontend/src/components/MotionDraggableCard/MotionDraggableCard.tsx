@@ -21,6 +21,13 @@ export default function MotionDraggableCard({
   className = '',
   ...rest
 }: MotionDraggableCardProps): JSX.Element {
+  const fallbackConstraints = { left: -80, right: 80, top: -60, bottom: 60 };
+  const dragConstraints = constraintsRef ?? fallbackConstraints;
+
+  return (
+    <motion.div
+      drag
+      dragConstraints={dragConstraints}
   return (
     <motion.div
       drag

@@ -4,11 +4,14 @@
  * @since 2025-10-29
  */
 
+import type React from 'react';
+import type { HTMLMotionProps } from 'framer-motion';
 import React from 'react';
 
 /**
  * Props for the MotionHoverCard component.
  */
+export interface MotionHoverCardProps extends Omit<HTMLMotionProps<'article'>, 'children'> {
 export interface MotionHoverCardProps extends React.HTMLAttributes<HTMLDivElement> {
   /** Title displayed inside the card. */
   title: string;

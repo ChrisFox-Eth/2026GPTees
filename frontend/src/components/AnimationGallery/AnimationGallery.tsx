@@ -16,6 +16,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { Button } from '@components/Button';
 import { Grid } from '@components/Grid';
 import { MotionFadeIn } from '@components/MotionFadeIn';
+import type { MotionFadeInDirection } from '@components/MotionFadeIn';
 import { MotionHoverCard } from '@components/MotionHoverCard';
 import { MotionStaggerList } from '@components/MotionStaggerList';
 import { MotionTogglePanel } from '@components/MotionTogglePanel';
@@ -47,12 +48,22 @@ export default function AnimationGallery(): JSX.Element {
     []
   );
 
+  const fadeVariants: Array<{ title: string; dir: MotionFadeInDirection; blurb: string }> = [
+    { title: 'Fade up', dir: 'up', blurb: 'Slide upward with soft easing.' },
+    { title: 'Fade right', dir: 'right', blurb: 'Glide in from the side.' },
+    { title: 'Fade none', dir: 'none', blurb: 'Only opacity when already aligned.' },
+  ];
+
   const sections: AnimationGallerySection[] = [
     {
       title: 'Entrance choreography',
       description: 'Fade-in wrappers animate elements into view as they scroll into the viewport.',
       content: (
         <Grid cols={1} mdCols={3} gap={4}>
+          {fadeVariants.map((item) => (
+            <MotionFadeIn
+              key={item.title}
+              direction={item.dir}
           {[
             { title: 'Fade up', dir: 'up', blurb: 'Slide upward with soft easing.' },
             { title: 'Fade right', dir: 'right', blurb: 'Glide in from the side.' },

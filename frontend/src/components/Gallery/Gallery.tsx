@@ -28,6 +28,16 @@ import type { GallerySection } from './Gallery.types';
 export default function Gallery(): JSX.Element {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
+  type TeamMemberRow = {
+    name: string;
+    role: string;
+    status: string;
+  };
+
+  /**
+   * Sample table configuration showcased in the gallery.
+   */
+  const tableColumns = useMemo<TableColumn<TeamMemberRow>[]>(
   /**
    * Sample table configuration showcased in the gallery.
    */
@@ -38,6 +48,10 @@ export default function Gallery(): JSX.Element {
       {
         accessor: 'status',
         label: 'Status',
+        render: (value) => (
+          <span className="inline-flex items-center gap-1 font-medium text-success-700 dark:text-success-300">
+            <span className="h-2 w-2 rounded-full bg-success-500" aria-hidden />
+            {String(value)}
         render: (value: string) => (
           <span className="inline-flex items-center gap-1 font-medium text-success-700 dark:text-success-300">
             <span className="h-2 w-2 rounded-full bg-success-500" aria-hidden />
@@ -49,6 +63,7 @@ export default function Gallery(): JSX.Element {
     []
   );
 
+  const tableData = useMemo<TeamMemberRow[]>(
   const tableData = useMemo(
     () => [
       { name: 'Avery Rivers', role: 'Designer', status: 'Online' },
@@ -173,6 +188,7 @@ export default function Gallery(): JSX.Element {
       description: 'Structured data presentation with striping, hover, and compact density.',
       content: (
         <div className="overflow-x-auto">
+          <Table<TeamMemberRow>
           <Table
             columns={tableColumns}
             data={tableData}
