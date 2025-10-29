@@ -34,6 +34,8 @@
 import { useState, useEffect } from 'react';
 import Header from '@components/Header/Header';
 import Hero from '@components/Hero/Hero';
+import { Gallery } from '@components/Gallery';
+import { AnimationGallery } from '@components/AnimationGallery';
 import './App.css';
 
 export default function App(): JSX.Element {
@@ -87,8 +89,10 @@ export default function App(): JSX.Element {
   return (
     <div className="min-h-screen bg-white dark:bg-gray-900 transition-colors duration-200">
       <Header isDark={isDark} onToggleTheme={toggleTheme} />
-      <main className="container-max py-8">
+      <main className="container-max py-8 space-y-16">
         <Hero />
+        <Gallery />
+        <AnimationGallery />
       </main>
     </div>
   );

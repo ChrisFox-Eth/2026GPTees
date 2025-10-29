@@ -1,196 +1,97 @@
 /**
  * @module components/Input/Input
- * @description A flexible text input component with label, error, and helper text support.
- * Provides a consistent input field with various sizes, states, and optional prefix/suffix elements.
+ * @description A text input field component with styling and error state handling.
+ * Renders a styled <input> element and an optional error message.
  *
  * @component
  * @param {InputProps} props - {@link Input.types.ts|InputProps} for the input
- * @returns {JSX.Element} A styled input element
+ * @returns {JSX.Element} A styled text input with optional error message
  *
  * @example
- * // Basic input with label
- * <Input
- *   label="Email"
- *   type="email"
- *   placeholder="Enter your email"
- *   onChange={(e) => setEmail(e.target.value)}
- * />
+ * // Basic usage
+ * <Input placeholder="Enter your name" />
  *
  * @example
- * // Search input with error
- * <Input
- *   label="Search"
- *   type="search"
- *   placeholder="Search..."
- *   error="No results found"
- *   suffix={<span>🔍</span>}
- * />
+ * // Large input with an error message
+ * <Input size="lg" isInvalid errorMessage="Name is required" />
  *
- * @example
- * // Number input with helper text
- * <Input
- *   label="Age"
- *   type="number"
- *   min="0"
- *   max="120"
- *   helperText="Must be between 0 and 120"
- * />
- *
- * @since 2025-10-20
+ * @since 2025-10-28
  * @version 1.0.0
- * @author Template
  *
  * @features
- * - Multiple input types (text, email, password, number, search, url, tel)
- * - Optional label with styling
- * - Error state with error message
- * - Helper text for additional guidance
- * - Three size options (sm, md, lg)
- * - Prefix and suffix support for icons/content
- * - Disabled and read-only states
- * - Auto-focus support
- * - Dark mode support
- * - Full keyboard accessibility
+ * - Three size options (sm, md, lg) adjusting padding and font size
+ * - Integrated error state: red border and message when `isInvalid` is true
+ * - Consistent styling with rounded borders and focus ring (primary color or danger on error)
+ * - Disabled state styling (reduced opacity and no pointer events)
+ * - Dark mode support (dark background, light text)
  *
  * @accessibility
- * - Associated label for screen readers
- * - Error messages linked via aria-describedby
- * - Helper text properly associated
- * - Focus indicators for keyboard navigation
+ * - Sets `aria-invalid` attribute when in error state for screen readers
+ * - Can accept `aria-label` or use placeholder for accessibility if no visible label
+ * - Error message is rendered in a <p role="alert"> for immediate announcement
+ * - Ensures sufficient contrast for text and placeholder in both light and dark themes
  *
  * @integration
- * Use in forms for collecting user input. Combine with Button component
- * for complete form experiences. Pair with validation logic for forms.
- *
- * @status Active
- * @category Form Components
+ * Use for any text-based input (login forms, search bars, settings). For other input types (textarea, select, etc.), similar pattern can be extended.
  */
 
-import { forwardRef } from 'react';
 import { InputProps } from './Input.types';
 
-const Input = forwardRef<HTMLInputElement, InputProps>(
-  (
-    {
-      label,
-      error,
-      helperText,
-      isDisabled = false,
-      isReadOnly = false,
-      isFocused = false,
-      size = 'md',
-      placeholder,
-      type = 'text',
-      prefix,
-      suffix,
-      className = '',
-      ...rest
-    },
-    ref
-  ): JSX.Element => {
-    /**
-     * Get base input classes
-     */
-    const baseClasses =
-      'w-full px-4 py-2 border rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-offset-0 dark:bg-gray-700 dark:text-white dark:border-gray-600';
+export default function Input({
+  size = 'md',
+  isInvalid = false,
+  errorMessage,
+  className = '',
+  type = 'text',
+  ...rest
+}: InputProps): JSX.Element {
+  /**
+   * Base classes for the input element (common styles)
+   */
+  const baseInputClasses =
+    'block w-full rounded-md shadow-sm transition-smooth focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed';
 
-    /**
-     * Get size-specific classes
-     * @returns {string} Size classes
-     */
-    const getSizeClasses = (): string => {
-      switch (size) {
-        case 'sm':
-          return 'px-3 py-1.5 text-sm';
-        case 'lg':
-          return 'px-5 py-3 text-lg';
-        case 'md':
-        default:
-          return 'px-4 py-2 text-base';
-      }
-    };
+  /**
+   * Determine border and focus ring classes based on validity
+   */
+  const stateClasses = isInvalid
+    ? 'border-danger-500 focus:ring-2 focus:ring-danger-500 focus:border-danger-500'
+    : 'border-gray-300 focus:ring-2 focus:ring-primary-500 focus:border-primary-500';
 
-    /**
-     * Get state-specific border and ring classes
-     * @returns {string} State classes
-     */
-    const getStateClasses = (): string => {
-      if (error) {
-        return 'border-danger-500 focus:ring-danger-500 dark:border-danger-500';
-      }
-      return 'border-gray-300 focus:ring-primary-500 focus:border-primary-500 dark:border-gray-600';
-    };
+  /**
+   * Text and background color classes (including dark mode)
+   */
+  const colorClasses =
+    'bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500';
 
-    /**
-     * Get disabled/readonly classes
-     * @returns {string} Disabled/readonly classes
-     */
-    const getDisabledClasses = (): string => {
-      if (isDisabled || isReadOnly) {
-        return 'bg-gray-100 dark:bg-gray-800 opacity-60 cursor-not-allowed';
-      }
-      return 'bg-white dark:bg-gray-700';
-    };
+  /**
+   * Size-specific padding and font size classes
+   */
+  const sizeClasses = (() => {
+    switch (size) {
+      case 'sm':
+        return 'px-2 py-1 text-sm';
+      case 'lg':
+        return 'px-4 py-3 text-lg';
+      case 'md':
+      default:
+        return 'px-3 py-2 text-base';
+    }
+  })();
 
-    const inputId = rest.id || `input-${Math.random().toString(36).substr(2, 9)}`;
-
-    return (
-      <div className={`w-full ${className}`}>
-        {label && (
-          <label
-            htmlFor={inputId}
-            className="block text-sm font-medium text-gray-900 dark:text-white mb-2"
-          >
-            {label}
-          </label>
-        )}
-
-        <div className="relative">
-          {prefix && (
-            <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 dark:text-gray-400 pointer-events-none">
-              {prefix}
-            </div>
-          )}
-
-          <input
-            ref={ref}
-            id={inputId}
-            type={type}
-            placeholder={placeholder}
-            disabled={isDisabled}
-            readOnly={isReadOnly}
-            autoFocus={isFocused}
-            className={`${baseClasses} ${getSizeClasses()} ${getStateClasses()} ${getDisabledClasses()} ${
-              prefix ? 'pl-10' : ''
-            } ${suffix ? 'pr-10' : ''}`}
-            aria-invalid={!!error}
-            aria-describedby={error ? `${inputId}-error` : helperText ? `${inputId}-helper` : undefined}
-            {...rest}
-          />
-
-          {suffix && (
-            <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 dark:text-gray-400 pointer-events-none">
-              {suffix}
-            </div>
-          )}
-        </div>
-
-        {error && (
-          <p id={`${inputId}-error`} className="mt-1 text-sm text-danger-600 dark:text-danger-400">
-            {error}
-          </p>
-        )}
-
-        {helperText && !error && (
-          <p id={`${inputId}-helper`} className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-            {helperText}
-          </p>
-        )}
-      </div>
-    );
-  }
-);
-
-Input.displayName = 'Input';
-
-export default Input;
+  return (
+    <div className={`inline-block w-full ${className}`}>
+      <input
+        type={type}
+        className={`${baseInputClasses} ${colorClasses} ${stateClasses} ${sizeClasses}`}
+        aria-invalid={isInvalid || undefined}
+        {...rest}
+      />
+      {isInvalid && errorMessage && (
+        <p className="text-danger-600 dark:text-danger-500 text-sm mt-1" role="alert">
+          {errorMessage}
+        </p>
+      )}
+    </div>
+  );
+}
