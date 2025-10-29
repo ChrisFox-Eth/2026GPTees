@@ -35,6 +35,7 @@ import { useState, useEffect } from 'react';
 import Header from '@components/Header/Header';
 import Hero from '@components/Hero/Hero';
 import { Gallery } from '@components/Gallery';
+import { AnimationGallery } from '@components/AnimationGallery';
 import './App.css';
 
 export default function App(): JSX.Element {
@@ -91,6 +92,7 @@ export default function App(): JSX.Element {
       <main className="container-max py-8 space-y-16">
         <Hero />
         <Gallery />
+        <AnimationGallery />
       </main>
     </div>
   );
