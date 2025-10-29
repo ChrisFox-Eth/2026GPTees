@@ -6,24 +6,17 @@
 
 import type React from 'react';
 import type { HTMLMotionProps } from 'framer-motion';
-import React from 'react';
 
 /**
  * Props for the MotionDraggableCard component.
  */
-export interface MotionDraggableCardProps
-  extends Omit<HTMLMotionProps<'div'>, 'dragConstraints' | 'children'> {
-export interface MotionDraggableCardProps extends React.HTMLAttributes<HTMLDivElement> {
+export interface MotionDraggableCardProps extends HTMLMotionProps<'div'> {
   /** Heading displayed on the draggable card. */
   title: string;
   /** Optional supporting subtitle. */
   subtitle?: string;
-  /**
-   * Optional React ref defining the drag constraints container.
-   * When omitted, the card uses a small default drag range.
-   */
-  constraintsRef?: React.RefObject<Element>;
   /** Optional additional content rendered below the subtitle. */
   children?: React.ReactNode;
+  /** Optional React ref defining the drag constraints container. */
   constraintsRef?: React.RefObject<HTMLElement>;
 }

@@ -5,9 +5,7 @@
  * @since 2025-10-29
  */
 
-import type React from 'react';
 import type { HTMLMotionProps } from 'framer-motion';
-import React from 'react';
 
 /**
  * Supported entry directions for the fade animation.
@@ -17,8 +15,7 @@ export type MotionFadeInDirection = 'up' | 'down' | 'left' | 'right' | 'none';
 /**
  * Props for the MotionFadeIn component.
  */
-export interface MotionFadeInProps extends Omit<HTMLMotionProps<'div'>, 'children'> {
-export interface MotionFadeInProps extends React.HTMLAttributes<HTMLDivElement> {
+export interface MotionFadeInProps extends HTMLMotionProps<'div'> {
   /** Content to animate into view. */
   children: React.ReactNode;
   /** Direction from which the element should slide while fading. */
