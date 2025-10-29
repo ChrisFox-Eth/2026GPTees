@@ -1,49 +1,49 @@
 /**
  * @module components/Table/Table.types
- * @description Type definitions for the Table component and related sub-components
- * @since 2025-10-20
- * @author Template
+ * @description Type definitions for the Table component
+ * @since 2025-10-28
  */
 
+import type React from 'react';
+
 /**
- * Table column definition
- * @typedef {Object} TableColumn
- * @property {string} key - Unique key for the column
- * @property {string} label - Display label for the column header
- * @property {boolean} [sortable=false] - Whether column is sortable
- * @property {string} [className] - Additional CSS classes for cells
- * @property {(value: any, row: any) => React.ReactNode} [render] - Custom render function
+ * Default table row shape (string keys with unknown values)
  */
-export interface TableColumn {
-  key: string;
+export type TableRow = Record<string, unknown>;
+
+/**
+ * Definition of a table column
+ * @typedef {Object} TableColumn
+ * @property {string} accessor - Key in the data objects for this column
+ * @property {string} label - Header text for this column
+ * @property {(value: unknown, row: TableRow) => React.ReactNode} [render] - Optional custom render function for cell values
+ */
+export interface TableColumn<Row extends TableRow = TableRow> {
+  accessor: keyof Row & string;
   label: string;
-  sortable?: boolean;
-  className?: string;
-  render?: (value: any, row: any) => React.ReactNode;
+  render?: (value: Row[keyof Row], row: Row) => React.ReactNode;
 }
 
 /**
  * Props for the Table component
  * @typedef {Object} TableProps
- * @property {any[]} data - Array of row data objects
- * @property {TableColumn[]} columns - Array of column definitions
- * @property {boolean} [isStriped=true] - Whether rows alternate colors
- * @property {boolean} [isHoverable=false] - Whether rows highlight on hover
- * @property {boolean} [isDense=false] - Whether to use compact padding
- * @property {boolean} [isLoading=false] - Whether table is loading
- * @property {React.ReactNode} [emptyState] - Custom empty state component
- * @property {(key: string, direction: 'asc' | 'desc') => void} [onSort] - Sort handler
- * @property {string} [className] - Additional CSS classes
- * @property {React.HTMLAttributes<HTMLTableElement>} - Standard HTML table attributes
+ * @property {TableColumn[]} columns - Columns configuration for the table
+ * @property {Row[]} data - Array of data objects to display in rows
+ * @property {boolean} [striped=false] - Whether to apply striped row background colors
+ * @property {boolean} [hoverable=false] - Whether rows highlight on hover
+ * @property {boolean} [isBordered=false] - Whether to show borders around the table and cells
+ * @property {boolean} [isCompact=false] - Whether to use compact padding in cells
+ * @property {string} [caption] - Optional table caption for accessibility/context
+ * @property {string} [className] - Additional CSS classes to apply to the table element
  */
-export interface TableProps extends React.HTMLAttributes<HTMLTableElement> {
-  data: any[];
-  columns: TableColumn[];
-  isStriped?: boolean;
-  isHoverable?: boolean;
-  isDense?: boolean;
-  isLoading?: boolean;
-  emptyState?: React.ReactNode;
-  onSort?: (key: string, direction: 'asc' | 'desc') => void;
+export interface TableProps<Row extends TableRow = TableRow>
+  extends React.TableHTMLAttributes<HTMLTableElement> {
+  columns: Array<TableColumn<Row>>;
+  data: Row[];
+  striped?: boolean;
+  hoverable?: boolean;
+  isBordered?: boolean;
+  isCompact?: boolean;
+  caption?: string;
   className?: string;
 }
