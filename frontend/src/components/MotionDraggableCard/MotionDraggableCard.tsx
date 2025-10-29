@@ -28,6 +28,10 @@ export default function MotionDraggableCard({
     <motion.div
       drag
       dragConstraints={dragConstraints}
+  return (
+    <motion.div
+      drag
+      dragConstraints={constraintsRef?.current ?? { left: -80, right: 80, top: -60, bottom: 60 }}
       whileTap={{ scale: 0.98 }}
       whileHover={{ scale: 1.02 }}
       transition={{ type: 'spring', stiffness: 300, damping: 25 }}

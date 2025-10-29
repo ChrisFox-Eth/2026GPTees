@@ -6,12 +6,14 @@
 
 import type React from 'react';
 import type { HTMLMotionProps } from 'framer-motion';
+import React from 'react';
 
 /**
  * Props for the MotionDraggableCard component.
  */
 export interface MotionDraggableCardProps
   extends Omit<HTMLMotionProps<'div'>, 'dragConstraints' | 'children'> {
+export interface MotionDraggableCardProps extends React.HTMLAttributes<HTMLDivElement> {
   /** Heading displayed on the draggable card. */
   title: string;
   /** Optional supporting subtitle. */
@@ -23,4 +25,5 @@ export interface MotionDraggableCardProps
   constraintsRef?: React.RefObject<Element>;
   /** Optional additional content rendered below the subtitle. */
   children?: React.ReactNode;
+  constraintsRef?: React.RefObject<HTMLElement>;
 }

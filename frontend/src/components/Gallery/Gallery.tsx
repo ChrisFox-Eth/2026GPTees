@@ -38,6 +38,10 @@ export default function Gallery(): JSX.Element {
    * Sample table configuration showcased in the gallery.
    */
   const tableColumns = useMemo<TableColumn<TeamMemberRow>[]>(
+  /**
+   * Sample table configuration showcased in the gallery.
+   */
+  const tableColumns = useMemo<TableColumn[]>(
     () => [
       { accessor: 'name', label: 'Name' },
       { accessor: 'role', label: 'Role' },
@@ -48,6 +52,10 @@ export default function Gallery(): JSX.Element {
           <span className="inline-flex items-center gap-1 font-medium text-success-700 dark:text-success-300">
             <span className="h-2 w-2 rounded-full bg-success-500" aria-hidden />
             {String(value)}
+        render: (value: string) => (
+          <span className="inline-flex items-center gap-1 font-medium text-success-700 dark:text-success-300">
+            <span className="h-2 w-2 rounded-full bg-success-500" aria-hidden />
+            {value}
           </span>
         ),
       },
@@ -56,6 +64,7 @@ export default function Gallery(): JSX.Element {
   );
 
   const tableData = useMemo<TeamMemberRow[]>(
+  const tableData = useMemo(
     () => [
       { name: 'Avery Rivers', role: 'Designer', status: 'Online' },
       { name: 'Kai Turner', role: 'Developer', status: 'Online' },
@@ -180,6 +189,7 @@ export default function Gallery(): JSX.Element {
       content: (
         <div className="overflow-x-auto">
           <Table<TeamMemberRow>
+          <Table
             columns={tableColumns}
             data={tableData}
             striped

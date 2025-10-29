@@ -5,6 +5,7 @@
  */
 
 import type { HTMLMotionProps } from 'framer-motion';
+import React from 'react';
 
 /**
  * Definition of a list item for the staggered animation.
@@ -22,6 +23,7 @@ export interface MotionStaggerListItem {
  * Props for the MotionStaggerList component.
  */
 export interface MotionStaggerListProps extends Omit<HTMLMotionProps<'ul'>, 'children'> {
+export interface MotionStaggerListProps extends React.HTMLAttributes<HTMLUListElement> {
   /** Items to render and animate. */
   items: MotionStaggerListItem[];
   /** Whether to enable alternating background stripes. */

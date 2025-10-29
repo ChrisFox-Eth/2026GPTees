@@ -64,6 +64,14 @@ export default function AnimationGallery(): JSX.Element {
             <MotionFadeIn
               key={item.title}
               direction={item.dir}
+          {[
+            { title: 'Fade up', dir: 'up', blurb: 'Slide upward with soft easing.' },
+            { title: 'Fade right', dir: 'right', blurb: 'Glide in from the side.' },
+            { title: 'Fade none', dir: 'none', blurb: 'Only opacity when already aligned.' },
+          ].map((item) => (
+            <MotionFadeIn
+              key={item.title}
+              direction={item.dir as const}
               className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-900"
             >
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white">{item.title}</h3>

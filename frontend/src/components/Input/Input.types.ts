@@ -21,6 +21,7 @@ export type InputSize = 'sm' | 'md' | 'lg';
  * @property {string} [className] - Additional CSS classes for the container
  */
 export interface InputProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'size'> {
+export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   size?: InputSize;
   isInvalid?: boolean;
   errorMessage?: string;
