@@ -1,7 +1,7 @@
 {
-  "name": "react-template-backend",
+  "name": "2026gptees-backend",
   "version": "1.0.0",
-  "description": "Backend for the React web project template",
+  "description": "Backend for 2026GPTees - AI-Powered Custom Apparel Platform",
   "type": "module",
   "main": "dist/index.js",
   "scripts": {

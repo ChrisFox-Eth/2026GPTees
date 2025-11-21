@@ -1,6 +1,6 @@
-# React Full-Stack Template
+# 2026GPTees
 
-A modern, production-ready template for building full-stack web applications with React 18, TypeScript, Tailwind CSS, Node.js, and Express. This template provides a solid foundation for new projects with established patterns, best practices, and comprehensive documentation.
+AI-Powered Custom Apparel Platform - A modern, full-stack web application built with React 18, TypeScript, Tailwind CSS, Node.js, and Express. This project enables users to create and order custom AI-generated apparel designs.
 
 ## 🚀 Features
 
@@ -109,11 +109,10 @@ root/
 
 ### Installation
 
-1. **Clone or use this template**
+1. **Clone this repository**
    ```bash
-   # Using this template from GitHub
-   git clone <repository-url>
-   cd reactTemplate
+   git clone git@github.com:ChrisFox-Eth/2026GPTees.git
+   cd 2026GPTees
    ```
 
 2. **Install dependencies for both frontend and backend**
@@ -589,12 +588,12 @@ The included `Procfile` tells Heroku how to start the backend server.
 
 ### Project Name
 
-Update in multiple places:
+This project is named 2026GPTees:
 
-1. `frontend/package.json`: `"name": "your-app-name"`
-2. `backend/package.json`: `"name": "your-app-name-backend"`
-3. `package.json`: `"name": "your-app-name"`
-4. `frontend/index.html`: `<title>` tag
+1. `frontend/package.json`: `"name": "2026gptees-frontend"`
+2. `backend/package.json`: `"name": "2026gptees-backend"`
+3. `package.json`: `"name": "2026gptees"`
+4. `frontend/index.html`: `<title>2026GPTees</title>`
 
 ### Colors and Theming
 

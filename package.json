@@ -1,7 +1,7 @@
 {
-  "name": "react-template",
+  "name": "2026gptees",
   "version": "1.0.0",
-  "description": "A comprehensive full-stack React web project template",
+  "description": "2026GPTees - AI-Powered Custom Apparel Platform",
   "private": true,
   "scripts": {
     "postinstall": "npm install --prefix backend && npm install --prefix frontend",

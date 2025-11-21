@@ -1,7 +1,7 @@
 {
-  "name": "react-template-frontend",
+  "name": "2026gptees-frontend",
   "version": "1.0.0",
-  "description": "Frontend for the React web project template",
+  "description": "Frontend for 2026GPTees - AI-Powered Custom Apparel Platform",
   "type": "module",
   "scripts": {
     "dev": "vite",
