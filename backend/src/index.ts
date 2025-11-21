@@ -18,6 +18,7 @@ import authRoutes from './routes/auth.routes.js';
 import webhookRoutes from './routes/webhook.routes.js';
 import productRoutes from './routes/product.routes.js';
 import paymentRoutes from './routes/payment.routes.js';
+import designRoutes from './routes/design.routes.js';
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -64,6 +65,7 @@ app.use('/api/health', healthRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/payments', paymentRoutes);
+app.use('/api/designs', designRoutes);
 
 // Add more routes here as needed
 // They will be added in subsequent tickets
