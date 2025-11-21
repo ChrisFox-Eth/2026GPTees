@@ -9,6 +9,7 @@ import { catchAsync, AppError } from '../middleware/error.middleware.js';
 import { generateDesign, generateRandomPrompt } from '../services/openai.service.js';
 import { uploadImage } from '../services/s3.service.js';
 import { createPrintfulOrder } from '../services/printful.service.js';
+import { sendDesignApproved } from '../services/email.service.js';
 import prisma from '../config/database.js';
 
 /**
@@ -223,11 +224,21 @@ export const approveDesign = catchAsync(async (req: Request, res: Response) => {
 
   const design = await prisma.design.findUnique({
     where: { id },
-    include: { order: true },
+    include: {
+      order: {
+        include: {
+          user: true,
+        },
+      },
+    },
   });
 
   if (!design) {
     throw new AppError('Design not found', 404);
+  }
+
+  if (!design.order) {
+    throw new AppError('Design has no associated order', 400);
   }
 
   if (design.userId !== req.user.id) {
@@ -249,6 +260,18 @@ export const approveDesign = catchAsync(async (req: Request, res: Response) => {
     data: {
       status: 'DESIGN_APPROVED',
     },
+  });
+
+  // Send design approved email (non-blocking)
+  const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+  sendDesignApproved({
+    customerName: design.order.user.firstName || design.order.user.email,
+    customerEmail: design.order.user.email,
+    orderNumber: design.order.orderNumber,
+    designImageUrl: design.imageUrl,
+    orderUrl: `${frontendUrl}/orders/${design.orderId}`,
+  }).catch((error) => {
+    console.error('Failed to send design approved email:', error);
   });
 
   // Submit order to Printful for fulfillment (non-blocking)

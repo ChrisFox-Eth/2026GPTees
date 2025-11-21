@@ -6,6 +6,7 @@
 
 import axios, { AxiosInstance } from 'axios';
 import prisma from '../config/database.js';
+import { sendOrderShipped } from './email.service.js';
 
 /**
  * Printful API client configuration
@@ -413,6 +414,9 @@ export async function handlePrintfulWebhook(webhookData: any): Promise<void> {
       // Find our order by Printful ID
       const order = await prisma.order.findFirst({
         where: { printfulOrderId },
+        include: {
+          user: true,
+        },
       });
 
       if (!order) {
@@ -420,8 +424,15 @@ export async function handlePrintfulWebhook(webhookData: any): Promise<void> {
         return;
       }
 
+      // Extract tracking information from shipments
+      const tracking = data.order.shipments?.[0];
+      const trackingNumber = tracking?.tracking_number;
+      const trackingUrl = tracking?.tracking_url;
+
       // Map Printful status to our order status
       let newStatus = order.status;
+      const wasNotShipped = order.status !== 'SHIPPED' && order.status !== 'DELIVERED';
+
       if (status === 'fulfilled') {
         newStatus = 'SHIPPED';
       } else if (status === 'shipped') {
@@ -430,13 +441,32 @@ export async function handlePrintfulWebhook(webhookData: any): Promise<void> {
         newStatus = 'DESIGN_PENDING'; // Reset to allow re-submission
       }
 
-      // Update order status
+      // Update order status and tracking info
       await prisma.order.update({
         where: { id: order.id },
-        data: { status: newStatus },
+        data: {
+          status: newStatus,
+          trackingNumber: trackingNumber || order.trackingNumber,
+          shippedAt: newStatus === 'SHIPPED' && !order.shippedAt ? new Date() : order.shippedAt,
+        },
       });
 
       console.log(`✓ Order ${order.orderNumber} status updated to ${newStatus}`);
+
+      // Send shipped email if order just transitioned to SHIPPED status
+      if (newStatus === 'SHIPPED' && wasNotShipped) {
+        const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+        sendOrderShipped({
+          customerName: order.user.firstName || order.user.email,
+          customerEmail: order.user.email,
+          orderNumber: order.orderNumber,
+          trackingNumber: trackingNumber || undefined,
+          trackingUrl: trackingUrl || undefined,
+          orderUrl: `${frontendUrl}/orders/${order.id}`,
+        }).catch((error) => {
+          console.error('Failed to send order shipped email:', error);
+        });
+      }
     }
   } catch (error: any) {
     console.error('Error handling Printful webhook:', error);

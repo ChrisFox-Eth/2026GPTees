@@ -7,6 +7,7 @@
 import Stripe from 'stripe';
 import prisma from '../config/database.js';
 import { getTierConfig, TierType } from '../config/pricing.js';
+import { sendOrderConfirmation } from './email.service.js';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
   apiVersion: '2025-11-17.clover',
@@ -132,8 +133,8 @@ export async function handleSuccessfulPayment(sessionId: string): Promise<void> 
     throw new Error('Order ID not found in session metadata');
   }
 
-  // Update order status
-  await prisma.order.update({
+  // Update order status and get full order details
+  const order = await prisma.order.update({
     where: { id: orderId },
     data: {
       status: 'PAID',
@@ -148,9 +149,28 @@ export async function handleSuccessfulPayment(sessionId: string): Promise<void> 
         },
       },
     },
+    include: {
+      user: true,
+      items: true,
+    },
   });
 
   console.log(`✓ Order ${orderId} marked as PAID`);
+
+  // Send order confirmation email (non-blocking)
+  const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+  sendOrderConfirmation({
+    customerName: order.user.firstName || order.user.email,
+    customerEmail: order.user.email,
+    orderNumber: order.orderNumber,
+    orderTotal: order.totalAmount.toString(),
+    tier: order.designTier,
+    itemCount: order.items.length,
+    orderUrl: `${frontendUrl}/design?orderId=${order.id}`,
+  }).catch((error) => {
+    console.error('Failed to send order confirmation email:', error);
+    // Don't throw - email failure shouldn't break the payment flow
+  });
 }
 
 /**
