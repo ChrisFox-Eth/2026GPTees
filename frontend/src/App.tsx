@@ -1,41 +1,15 @@
 /**
  * @module App
- * @description Root application component. Provides main layout, routing setup, and theme management.
- * This component serves as the main entry point for the React application and orchestrates
- * overall application structure, routing (if using React Router), and theme management.
- *
- * @component
- * @returns {JSX.Element} The root application element with routing and theme support
- *
- * @example
- * // Usage in main.tsx
- * import App from './App';
- * ReactDOM.createRoot(document.getElementById('root')).render(<App />);
- *
- * @since 2025-10-20
- * @version 1.0.0
- * @author Template
- *
- * @features
- * - Dark mode theme support via localStorage and Tailwind classes
- * - Main layout structure
- * - Ready for React Router integration
- *
- * @integration
- * This component can be extended to include:
- * - Route definitions for multi-page navigation
- * - Global state providers (Context API)
- * - Theme provider
- *
- * @status Draft
- * @category Pages
+ * @description Root application component for 2026GPTees
+ * @since 2025-11-21
  */
 
 import { useState, useEffect } from 'react';
+import { Routes, Route } from 'react-router-dom';
 import Header from '@components/Header/Header';
-import Hero from '@components/Hero/Hero';
-import { Gallery } from '@components/Gallery';
-import { AnimationGallery } from '@components/AnimationGallery';
+import HomePage from './pages/HomePage';
+import SignInPage from './pages/SignInPage';
+import SignUpPage from './pages/SignUpPage';
 import './App.css';
 
 export default function App(): JSX.Element {
@@ -46,14 +20,12 @@ export default function App(): JSX.Element {
    * Initialize theme from localStorage or system preference on mount
    */
   useEffect(() => {
-    // Check localStorage first
     const savedTheme = localStorage.getItem('theme');
     let isDarkTheme = false;
 
     if (savedTheme) {
       isDarkTheme = savedTheme === 'dark';
     } else {
-      // Check system preference if no saved theme
       isDarkTheme = window.matchMedia('(prefers-color-scheme: dark)').matches;
     }
 
@@ -64,7 +36,6 @@ export default function App(): JSX.Element {
 
   /**
    * Apply theme to document root element
-   * @param {boolean} isDarkMode - Whether to apply dark mode
    */
   const applyTheme = (isDarkMode: boolean) => {
     const html = document.documentElement;
@@ -77,7 +48,6 @@ export default function App(): JSX.Element {
 
   /**
    * Toggle between light and dark themes
-   * Saves preference to localStorage
    */
   const toggleTheme = () => {
     const newIsDark = !isDark;
@@ -89,11 +59,12 @@ export default function App(): JSX.Element {
   return (
     <div className="min-h-screen bg-white dark:bg-gray-900 transition-colors duration-200">
       <Header isDark={isDark} onToggleTheme={toggleTheme} />
-      <main className="container-max py-8 space-y-16">
-        <Hero />
-        <Gallery />
-        <AnimationGallery />
-      </main>
+      <Routes>
+        <Route path="/" element={<HomePage />} />
+        <Route path="/sign-in/*" element={<SignInPage />} />
+        <Route path="/sign-up/*" element={<SignUpPage />} />
+        {/* More routes will be added in subsequent tickets */}
+      </Routes>
     </div>
   );
 }
