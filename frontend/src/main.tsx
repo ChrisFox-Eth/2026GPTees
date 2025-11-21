@@ -1,18 +1,29 @@
 /**
  * @module main
- * @description React application entry point. Initializes React 18 root and renders the App component.
- * @since 2025-10-20
- * @author Template
+ * @description React application entry point for 2026GPTees
+ * @since 2025-11-21
  */
 
 import React from 'react';
 import ReactDOM from 'react-dom/client';
+import { ClerkProvider } from '@clerk/clerk-react';
+import { BrowserRouter } from 'react-router-dom';
 import App from './App';
 import './index.css';
+
+const CLERK_PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
+
+if (!CLERK_PUBLISHABLE_KEY) {
+  console.warn('Missing VITE_CLERK_PUBLISHABLE_KEY in environment variables');
+}
 
 // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
-    <App />
+    <ClerkProvider publishableKey={CLERK_PUBLISHABLE_KEY || ''}>
+      <BrowserRouter>
+        <App />
+      </BrowserRouter>
+    </ClerkProvider>
   </React.StrictMode>
 );

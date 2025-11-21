@@ -1,0 +1,251 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================================================
+// USER MODELS
+// ============================================================================
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  clerkId   String   @unique
+  firstName String?
+  lastName  String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  addresses Address[]
+  orders    Order[]
+  designs   Design[]
+
+  @@map("users")
+}
+
+model Address {
+  id        String   @id @default(uuid())
+  userId    String
+  name      String
+  address1  String
+  address2  String?
+  city      String
+  state     String?
+  zip       String
+  country   String   @default("US")
+  phone     String?
+  isDefault Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  orders Order[]
+
+  @@map("addresses")
+}
+
+// ============================================================================
+// PRODUCT MODELS
+// ============================================================================
+
+model Product {
+  id          String   @id @default(uuid())
+  name        String
+  slug        String   @unique
+  description String?
+  basePrice   Decimal  @db.Decimal(10, 2)
+  printfulId  String   @unique
+  category    String   @default("T_SHIRT")
+  sizes       String[] // Array of sizes: ["S", "M", "L", "XL", "2XL"]
+  colors      Json     // JSON array of color objects: [{ name: "Black", hex: "#000000" }]
+  imageUrl    String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  orderItems OrderItem[]
+
+  @@map("products")
+}
+
+// ============================================================================
+// ORDER MODELS
+// ============================================================================
+
+enum OrderStatus {
+  PENDING_PAYMENT
+  PAID
+  DESIGN_PENDING
+  DESIGN_APPROVED
+  SUBMITTED
+  SHIPPED
+  DELIVERED
+  CANCELLED
+  REFUNDED
+}
+
+enum DesignTier {
+  BASIC
+  PREMIUM
+  TEST
+}
+
+model Order {
+  id                String      @id @default(uuid())
+  orderNumber       String      @unique
+  userId            String
+  addressId         String?
+  status            OrderStatus @default(PENDING_PAYMENT)
+  totalAmount       Decimal     @db.Decimal(10, 2)
+  designTier        DesignTier
+  designsGenerated  Int         @default(0)
+  maxDesigns        Int
+  paymentId         String?
+  printfulOrderId   String?
+  stripeCheckoutId  String?
+  trackingNumber    String?
+  fulfillmentStatus String?
+  paidAt            DateTime?
+  shippedAt         DateTime?
+  deliveredAt       DateTime?
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+
+  // Relations
+  user       User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  address    Address?    @relation(fields: [addressId], references: [id])
+  items      OrderItem[]
+  payment    Payment?
+  designs    Design[]
+
+  @@map("orders")
+}
+
+model OrderItem {
+  id               String   @id @default(uuid())
+  orderId          String
+  productId        String
+  designId         String?
+  quantity         Int      @default(1)
+  size             String
+  color            String
+  unitPrice        Decimal  @db.Decimal(10, 2)
+  printfulVariantId String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  // Relations
+  order   Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id])
+  design  Design? @relation(fields: [designId], references: [id])
+
+  @@map("order_items")
+}
+
+// ============================================================================
+// DESIGN MODELS
+// ============================================================================
+
+enum DesignStatus {
+  GENERATING
+  COMPLETED
+  FAILED
+  APPROVED
+}
+
+model Design {
+  id             String       @id @default(uuid())
+  userId         String
+  orderId        String?
+  prompt         String       @db.Text
+  revisedPrompt  String?      @db.Text
+  aiModel        String       @default("dall-e-3")
+  imageUrl       String
+  thumbnailUrl   String?
+  status         DesignStatus @default(GENERATING)
+  style          String?
+  approvalStatus Boolean      @default(false)
+  generatedAt    DateTime     @default(now())
+  approvedAt     DateTime?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  // Relations
+  user       User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  order      Order?      @relation(fields: [orderId], references: [id])
+  orderItems OrderItem[]
+
+  @@map("designs")
+}
+
+// ============================================================================
+// PAYMENT MODELS
+// ============================================================================
+
+enum PaymentStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  REFUNDED
+}
+
+model Payment {
+  id                String        @id @default(uuid())
+  orderId           String        @unique
+  stripePaymentId   String        @unique
+  amount            Decimal       @db.Decimal(10, 2)
+  currency          String        @default("usd")
+  status            PaymentStatus @default(PENDING)
+  paymentMethod     String?
+  receiptUrl        String?
+  refundId          String?
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+
+  // Relations
+  order  Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  refund Refund?
+
+  @@map("payments")
+}
+
+model Refund {
+  id              String   @id @default(uuid())
+  paymentId       String   @unique
+  stripeRefundId  String   @unique
+  amount          Decimal  @db.Decimal(10, 2)
+  reason          String?
+  status          String
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Relations
+  payment Payment @relation(fields: [paymentId], references: [id], onDelete: Cascade)
+
+  @@map("refunds")
+}
+
+// ============================================================================
+// SETTINGS MODELS
+// ============================================================================
+
+model Settings {
+  id        String   @id @default(uuid())
+  key       String   @unique
+  value     String   @db.Text
+  type      String   @default("string") // string, number, boolean, json
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("settings")
+}
