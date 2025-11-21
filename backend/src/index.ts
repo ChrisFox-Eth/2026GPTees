@@ -16,6 +16,7 @@ import { errorHandler, notFoundHandler } from './middleware/error.middleware.js'
 import healthRoutes from './routes/health.routes.js';
 import authRoutes from './routes/auth.routes.js';
 import webhookRoutes from './routes/webhook.routes.js';
+import productRoutes from './routes/product.routes.js';
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -60,6 +61,7 @@ if (process.env.NODE_ENV === 'development') {
  */
 app.use('/api/health', healthRoutes);
 app.use('/api/auth', authRoutes);
+app.use('/api/products', productRoutes);
 
 // Add more routes here as needed
 // They will be added in subsequent tickets
