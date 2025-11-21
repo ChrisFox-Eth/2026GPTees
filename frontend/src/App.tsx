@@ -8,6 +8,7 @@ import { useState, useEffect } from 'react';
 import { Routes, Route } from 'react-router-dom';
 import Header from '@components/Header/Header';
 import { Footer } from '@components/Footer';
+import { ErrorBoundary } from '@components/ErrorBoundary';
 import HomePage from './pages/HomePage';
 import SignInPage from './pages/SignInPage';
 import SignUpPage from './pages/SignUpPage';
@@ -19,6 +20,7 @@ import AccountPage from './pages/AccountPage';
 import PrivacyPage from './pages/PrivacyPage';
 import TermsPage from './pages/TermsPage';
 import RefundsPage from './pages/RefundsPage';
+import NotFoundPage from './pages/NotFoundPage';
 import './App.css';
 
 export default function App(): JSX.Element {
@@ -66,24 +68,27 @@ export default function App(): JSX.Element {
   };
 
   return (
-    <div className="min-h-screen bg-white dark:bg-gray-900 transition-colors duration-200 flex flex-col">
-      <Header isDark={isDark} onToggleTheme={toggleTheme} />
-      <div className="flex-1">
-        <Routes>
-          <Route path="/" element={<HomePage />} />
-          <Route path="/shop" element={<ShopPage />} />
-          <Route path="/cart" element={<CartPage />} />
-          <Route path="/checkout/success" element={<CheckoutSuccessPage />} />
-          <Route path="/design" element={<DesignPage />} />
-          <Route path="/account" element={<AccountPage />} />
-          <Route path="/privacy" element={<PrivacyPage />} />
-          <Route path="/terms" element={<TermsPage />} />
-          <Route path="/refunds" element={<RefundsPage />} />
-          <Route path="/sign-in/*" element={<SignInPage />} />
-          <Route path="/sign-up/*" element={<SignUpPage />} />
-        </Routes>
+    <ErrorBoundary>
+      <div className="min-h-screen bg-white dark:bg-gray-900 transition-colors duration-200 flex flex-col">
+        <Header isDark={isDark} onToggleTheme={toggleTheme} />
+        <div className="flex-1">
+          <Routes>
+            <Route path="/" element={<HomePage />} />
+            <Route path="/shop" element={<ShopPage />} />
+            <Route path="/cart" element={<CartPage />} />
+            <Route path="/checkout/success" element={<CheckoutSuccessPage />} />
+            <Route path="/design" element={<DesignPage />} />
+            <Route path="/account" element={<AccountPage />} />
+            <Route path="/privacy" element={<PrivacyPage />} />
+            <Route path="/terms" element={<TermsPage />} />
+            <Route path="/refunds" element={<RefundsPage />} />
+            <Route path="/sign-in/*" element={<SignInPage />} />
+            <Route path="/sign-up/*" element={<SignUpPage />} />
+            <Route path="*" element={<NotFoundPage />} />
+          </Routes>
+        </div>
+        <Footer />
       </div>
-      <Footer />
-    </div>
+    </ErrorBoundary>
   );
 }
