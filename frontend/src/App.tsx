@@ -10,6 +10,8 @@ import Header from '@components/Header/Header';
 import HomePage from './pages/HomePage';
 import SignInPage from './pages/SignInPage';
 import SignUpPage from './pages/SignUpPage';
+import ShopPage from './pages/ShopPage';
+import CartPage from './pages/CartPage';
 import './App.css';
 
 export default function App(): JSX.Element {
@@ -61,6 +63,8 @@ export default function App(): JSX.Element {
       <Header isDark={isDark} onToggleTheme={toggleTheme} />
       <Routes>
         <Route path="/" element={<HomePage />} />
+        <Route path="/shop" element={<ShopPage />} />
+        <Route path="/cart" element={<CartPage />} />
         <Route path="/sign-in/*" element={<SignInPage />} />
         <Route path="/sign-up/*" element={<SignUpPage />} />
         {/* More routes will be added in subsequent tickets */}

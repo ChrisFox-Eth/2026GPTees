@@ -8,10 +8,13 @@ import { Link } from 'react-router-dom';
 import { useUser, useClerk, SignedIn, SignedOut } from '@clerk/clerk-react';
 import { HeaderProps } from './Header.types';
 import { Button } from '@components/Button';
+import { useCart } from '../../hooks/useCart';
 
 export default function Header({ isDark, onToggleTheme }: HeaderProps): JSX.Element {
   const { user } = useUser();
   const { signOut } = useClerk();
+  const { getTotalItems } = useCart();
+  const cartItemCount = getTotalItems();
 
   const handleSignOut = () => {
     signOut();
@@ -67,6 +70,18 @@ export default function Header({ isDark, onToggleTheme }: HeaderProps): JSX.Elem
               </Button>
             </div>
           </SignedIn>
+
+          {/* Cart */}
+          <Link to="/cart" className="relative">
+            <Button variant="secondary" size="sm">
+              🛒 Cart
+              {cartItemCount > 0 && (
+                <span className="absolute -top-2 -right-2 bg-primary-600 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+                  {cartItemCount}
+                </span>
+              )}
+            </Button>
+          </Link>
 
           {/* Theme Toggle */}
           <Button
