@@ -8,6 +8,7 @@ import { Request, Response } from 'express';
 import { catchAsync } from '../middleware/error.middleware.js';
 import { verifyClerkWebhook, syncUserToDatabase } from '../services/clerk.service.js';
 import { constructWebhookEvent, handleSuccessfulPayment } from '../services/stripe.service.js';
+import { handlePrintfulWebhook as processPrintfulWebhook } from '../services/printful.service.js';
 
 /**
  * Handle Clerk webhooks
@@ -103,6 +104,31 @@ export const handleStripeWebhook = catchAsync(async (req: Request, res: Response
     res.json({ success: true, received: true });
   } catch (error: any) {
     console.error('❌ Stripe webhook error:', error);
+    res.status(400).json({
+      success: false,
+      message: error.message || 'Webhook processing failed',
+    });
+  }
+});
+
+/**
+ * Handle Printful webhooks
+ * POST /api/webhooks/printful
+ * @param {Request} req - Express request
+ * @param {Response} res - Express response
+ */
+export const handlePrintfulWebhook = catchAsync(async (req: Request, res: Response) => {
+  try {
+    const webhookData = req.body;
+
+    console.log('Received Printful webhook:', webhookData.type);
+
+    // Process webhook
+    await processPrintfulWebhook(webhookData);
+
+    res.json({ success: true, received: true });
+  } catch (error: any) {
+    console.error('❌ Printful webhook error:', error);
     res.status(400).json({
       success: false,
       message: error.message || 'Webhook processing failed',

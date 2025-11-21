@@ -5,7 +5,7 @@
  */
 
 import { Router } from 'express';
-import { handleClerkWebhook, handleStripeWebhook } from '../controllers/webhook.controller.js';
+import { handleClerkWebhook, handleStripeWebhook, handlePrintfulWebhook } from '../controllers/webhook.controller.js';
 import express from 'express';
 
 const router = Router();
@@ -23,5 +23,12 @@ router.post('/clerk', express.raw({ type: 'application/json' }), handleClerkWebh
  * Note: Uses raw body parser for signature verification
  */
 router.post('/stripe', express.raw({ type: 'application/json' }), handleStripeWebhook);
+
+/**
+ * POST /api/webhooks/printful
+ * Handle Printful order status updates
+ * Note: Printful doesn't require signature verification by default
+ */
+router.post('/printful', handlePrintfulWebhook);
 
 export default router;

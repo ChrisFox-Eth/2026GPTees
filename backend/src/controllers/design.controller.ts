@@ -8,6 +8,7 @@ import { Request, Response } from 'express';
 import { catchAsync, AppError } from '../middleware/error.middleware.js';
 import { generateDesign, generateRandomPrompt } from '../services/openai.service.js';
 import { uploadImage } from '../services/s3.service.js';
+import { createPrintfulOrder } from '../services/printful.service.js';
 import prisma from '../config/database.js';
 
 /**
@@ -250,9 +251,25 @@ export const approveDesign = catchAsync(async (req: Request, res: Response) => {
     },
   });
 
+  // Submit order to Printful for fulfillment (non-blocking)
+  // This runs in the background to not block the user response
+  createPrintfulOrder(design.orderId!, id)
+    .then((result) => {
+      if (result.success) {
+        console.log(`✓ Order ${design.orderId} submitted to Printful: ${result.printfulOrderId}`);
+      } else {
+        console.error(`❌ Failed to submit order ${design.orderId} to Printful:`, result.error);
+        // NOTE: In production, you'd want to send an alert/notification here
+        // or add the order to a retry queue
+      }
+    })
+    .catch((error) => {
+      console.error('Unexpected error submitting to Printful:', error);
+    });
+
   res.json({
     success: true,
-    message: 'Design approved successfully',
+    message: 'Design approved successfully! Your order is being submitted for printing.',
   });
 });
 
