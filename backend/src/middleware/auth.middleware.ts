@@ -5,7 +5,7 @@
  */
 
 import { Request, Response, NextFunction } from 'express';
-import { clerkClient } from '@clerk/clerk-sdk-node';
+import { verifyToken } from '@clerk/backend';
 import { AppError } from './error.middleware.js';
 import { getUserByClerkId } from '../services/clerk.service.js';
 
@@ -22,50 +22,40 @@ export const requireAuth = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    // Get session token from Authorization header
     const authHeader = req.headers.authorization;
 
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       throw new AppError('No authorization token provided', 401);
     }
 
-    const sessionToken = authHeader.split(' ')[1];
+    const token = authHeader.split(' ')[1];
 
-    if (!sessionToken) {
+    if (!token) {
       throw new AppError('Invalid authorization token', 401);
     }
 
-    // Optional session id header for verification
-    const sessionIdHeader = req.headers['x-session-id'];
-    const sessionId =
-      typeof sessionIdHeader === 'string'
-        ? sessionIdHeader
-        : Array.isArray(sessionIdHeader)
-          ? sessionIdHeader[0]
-          : undefined;
-
-    if (!sessionId) {
-      throw new AppError('Missing Clerk session id', 401);
+    const secretKey = process.env.CLERK_SECRET_KEY || process.env.CLERK_PUBLISHABLE_KEY;
+    if (!secretKey) {
+      throw new AppError('Clerk configuration missing', 500);
     }
 
-    // Verify session with Clerk
-    const session = await clerkClient.sessions.verifySession(
-      sessionId,
-      sessionToken
-    );
+    const payload = await verifyToken(token, {
+      secretKey,
+      issuer: (iss) => iss.startsWith('https://clerk.'),
+    });
 
-    if (!session || !session.userId) {
-      throw new AppError('Invalid or expired session', 401);
+    if (!payload || !payload.sub) {
+      throw new AppError('Invalid or expired token', 401);
     }
 
-    // Get user from database
-    const user = await getUserByClerkId(session.userId);
+    const clerkUserId = payload.sub;
+
+    const user = await getUserByClerkId(clerkUserId);
 
     if (!user) {
       throw new AppError('User not found', 404);
     }
 
-    // Attach user to request
     req.user = {
       id: user.id,
       clerkId: user.clerkId,

@@ -46,7 +46,7 @@ const STYLE_OPTIONS = [
 function DesignContent(): JSX.Element {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const { getToken, sessionId, isLoaded, isSignedIn } = useAuth();
+  const { getToken, isLoaded, isSignedIn } = useAuth();
 
   const orderId = searchParams.get('orderId');
 
@@ -76,17 +76,17 @@ function DesignContent(): JSX.Element {
       setLoading(true);
       setError(null);
       const token = await getToken();
-      if (!token || !sessionId) {
+      if (!token) {
         setError('Authentication required. Please sign in again.');
         return;
       }
 
       // Fetch order details
-      const orderResponse = await apiGet(`/api/orders/${orderId}`, token, sessionId);
+      const orderResponse = await apiGet(`/api/orders/${orderId}`, token);
       setOrder(orderResponse.data);
 
       // Fetch existing designs for this order
-      const designsResponse = await apiGet(`/api/designs?orderId=${orderId}`, token, sessionId);
+      const designsResponse = await apiGet(`/api/designs?orderId=${orderId}`, token);
       setDesigns(designsResponse.data || []);
     } catch (err: any) {
       console.error('Error fetching order/designs:', err);
@@ -124,7 +124,7 @@ function DesignContent(): JSX.Element {
       setIsGenerating(true);
       setError(null);
       const token = await getToken();
-      if (!token || !sessionId) {
+      if (!token) {
         setError('Authentication required. Please sign in again.');
         return;
       }
@@ -133,7 +133,7 @@ function DesignContent(): JSX.Element {
         orderId,
         prompt: prompt.trim(),
         style: selectedStyle,
-      }, token, sessionId);
+      }, token);
 
       // Add new design to the list
       setDesigns((prev) => [response.data, ...prev]);
@@ -162,12 +162,12 @@ function DesignContent(): JSX.Element {
       setError(null);
 
       const token = await getToken();
-      if (!token || !sessionId) {
+      if (!token) {
         setError('Authentication required. Please sign in again.');
         setIsApproving(null);
         return;
       }
-      await apiPost(`/api/designs/${designId}/approve`, {}, token, sessionId);
+      await apiPost(`/api/designs/${designId}/approve`, {}, token);
 
       // Update design in list
       setDesigns((prev) =>

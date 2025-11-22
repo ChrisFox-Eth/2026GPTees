@@ -24,7 +24,7 @@ const PRODUCTS = [
       { name: 'Navy', hex: '#000080' },
       { name: 'Gray', hex: '#808080' },
     ],
-    imageUrl: 'https://via.placeholder.com/400x400?text=Basic+Tee',
+    imageUrl: 'https://placehold.co/400x400/e5e7eb/1f2937?text=Basic+Tee',
     isActive: true,
   },
   {
@@ -42,7 +42,7 @@ const PRODUCTS = [
       { name: 'Red', hex: '#FF0000' },
       { name: 'Royal Blue', hex: '#4169E1' },
     ],
-    imageUrl: 'https://via.placeholder.com/400x400?text=Premium+Tee',
+    imageUrl: 'https://placehold.co/400x400/e5e7eb/1f2937?text=Premium+Tee',
     isActive: true,
   },
   {
@@ -58,7 +58,7 @@ const PRODUCTS = [
       { name: 'Gray', hex: '#808080' },
       { name: 'Navy', hex: '#000080' },
     ],
-    imageUrl: 'https://via.placeholder.com/400x400?text=Hoodie',
+    imageUrl: 'https://placehold.co/400x400/e5e7eb/1f2937?text=Hoodie',
     isActive: true,
   },
 ];

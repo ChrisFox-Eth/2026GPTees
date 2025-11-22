@@ -56,7 +56,7 @@ interface Order {
 
 function OrderDetailContent(): JSX.Element {
   const { id } = useParams<{ id: string }>();
-  const { getToken, sessionId, isLoaded, isSignedIn } = useAuth();
+  const { getToken, isLoaded, isSignedIn } = useAuth();
 
   const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
@@ -72,11 +72,11 @@ function OrderDetailContent(): JSX.Element {
     try {
       setLoading(true);
       const token = await getToken();
-      if (!token || !sessionId) {
+      if (!token) {
         setError('Authentication required. Please sign in again.');
         return;
       }
-      const response = await apiGet(`/api/orders/${id}`, token, sessionId);
+      const response = await apiGet(`/api/orders/${id}`, token);
       setOrder(response.data);
       setError(null);
     } catch (err: any) {

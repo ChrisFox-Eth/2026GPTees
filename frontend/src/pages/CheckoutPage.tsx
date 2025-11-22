@@ -25,7 +25,7 @@ interface ShippingAddress {
 export default function CheckoutPage(): JSX.Element {
   const navigate = useNavigate();
   const { cart, getSubtotal } = useCart();
-  const { getToken, sessionId } = useAuth();
+  const { getToken } = useAuth();
 
   const [shipping, setShipping] = useState<ShippingAddress>({
     name: '',
@@ -57,7 +57,7 @@ export default function CheckoutPage(): JSX.Element {
       setIsSubmitting(true);
       setError(null);
       const token = await getToken();
-      if (!token || !sessionId) {
+      if (!token) {
         setError('Authentication required. Please sign in again.');
         return;
       }
@@ -72,8 +72,7 @@ export default function CheckoutPage(): JSX.Element {
             phone: shipping.phone || undefined,
           },
         },
-        token,
-        sessionId
+        token
       );
 
       const checkoutUrl = response.data.url;

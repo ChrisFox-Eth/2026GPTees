@@ -15,8 +15,7 @@ const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 export async function apiRequest(
   endpoint: string,
   options: RequestInit = {},
-  token?: string | null,
-  sessionId?: string | null
+  token?: string | null
 ): Promise<any> {
   const url = `${API_URL}${endpoint}`;
 
@@ -27,10 +26,6 @@ export async function apiRequest(
 
   if (token) {
     headers.Authorization = `Bearer ${token}`;
-  }
-
-  if (sessionId) {
-    headers['X-Session-Id'] = sessionId;
   }
 
   const config: RequestInit = {
@@ -56,57 +51,53 @@ export async function apiRequest(
 /**
  * GET request
  */
-export function apiGet(endpoint: string, token?: string | null, sessionId?: string | null): Promise<any> {
+export function apiGet(endpoint: string, token?: string | null): Promise<any> {
   return apiRequest(
     endpoint,
     {
       method: 'GET',
     },
-    token,
-    sessionId
+    token
   );
 }
 
 /**
  * POST request
  */
-export function apiPost(endpoint: string, data: any, token?: string | null, sessionId?: string | null): Promise<any> {
+export function apiPost(endpoint: string, data: any, token?: string | null): Promise<any> {
   return apiRequest(
     endpoint,
     {
       method: 'POST',
       body: JSON.stringify(data),
     },
-    token,
-    sessionId
+    token
   );
 }
 
 /**
  * PUT request
  */
-export function apiPut(endpoint: string, data: any, token?: string | null, sessionId?: string | null): Promise<any> {
+export function apiPut(endpoint: string, data: any, token?: string | null): Promise<any> {
   return apiRequest(
     endpoint,
     {
       method: 'PUT',
       body: JSON.stringify(data),
     },
-    token,
-    sessionId
+    token
   );
 }
 
 /**
  * DELETE request
  */
-export function apiDelete(endpoint: string, token?: string | null, sessionId?: string | null): Promise<any> {
+export function apiDelete(endpoint: string, token?: string | null): Promise<any> {
   return apiRequest(
     endpoint,
     {
       method: 'DELETE',
     },
-    token,
-    sessionId
+    token
   );
 }

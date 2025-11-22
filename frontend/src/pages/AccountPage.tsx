@@ -26,7 +26,7 @@ interface Order {
 
 function AccountContent(): JSX.Element {
   const { user } = useUser();
-  const { getToken, sessionId, isSignedIn, isLoaded } = useAuth();
+  const { getToken, isSignedIn, isLoaded } = useAuth();
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -41,7 +41,7 @@ function AccountContent(): JSX.Element {
     try {
       setLoading(true);
       const token = await getToken();
-      const response = await apiGet('/api/orders', token, sessionId);
+      const response = await apiGet('/api/orders', token);
       setOrders(response.data || []);
       setError(null);
     } catch (err: any) {
