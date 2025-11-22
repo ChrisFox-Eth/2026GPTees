@@ -37,6 +37,17 @@ export default function ProductModal({ product, isOpen, onClose }: ProductModalP
   const totalPrice = basePrice + tierPrice;
 
   const handleAddToCart = () => {
+    console.log('Adding to cart:', {
+      productId: product.id,
+      productName: product.name,
+      size: selectedSize,
+      color: selectedColor.name,
+      tier: selectedTier,
+      quantity,
+      basePrice,
+      tierPrice,
+    });
+    
     addToCart({
       productId: product.id,
       productName: product.name,
@@ -48,6 +59,8 @@ export default function ProductModal({ product, isOpen, onClose }: ProductModalP
       tierPrice,
       imageUrl: product.imageUrl,
     });
+    
+    console.log('Item added to cart, closing modal');
     onClose();
   };
 
@@ -56,12 +69,18 @@ export default function ProductModal({ product, isOpen, onClose }: ProductModalP
       {/* Backdrop */}
       <div
         className="fixed inset-0 bg-black bg-opacity-50 transition-opacity"
-        onClick={onClose}
+        onClick={(e) => {
+          e.stopPropagation();
+          onClose();
+        }}
       />
 
       {/* Modal */}
       <div className="flex min-h-full items-center justify-center p-4">
-        <div className="relative bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-4xl w-full p-6">
+        <div 
+          className="relative bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-4xl w-full p-6"
+          onClick={(e) => e.stopPropagation()}
+        >
           {/* Close Button */}
           <button
             onClick={onClose}
