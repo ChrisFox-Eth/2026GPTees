@@ -145,13 +145,13 @@ Do these in order:
 
 ```bash
 # Check Heroku config
-heroku config -a gptees-2026-a039a07e6329
+heroku config -a gptees-2026
 
 # Watch Heroku logs
-heroku logs --tail -a gptees-2026-a039a07e6329
+heroku logs --tail -a gptees-2026
 
 # Restart Heroku
-heroku restart -a gptees-2026-a039a07e6329
+heroku restart -a gptees-2026
 
 # Test health endpoint
 curl https://gptees-2026-a039a07e6329.herokuapp.com/api/health
