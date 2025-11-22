@@ -19,70 +19,109 @@ export interface CartItem {
 }
 
 const CART_STORAGE_KEY = 'gptees_cart';
+const CART_UPDATE_EVENT = 'gptees-cart-updated';
 
 export function useCart() {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
 
-  // Load cart from localStorage on mount
+  // Load cart from localStorage on mount and listen for updates
   useEffect(() => {
-    const storedCart = localStorage.getItem(CART_STORAGE_KEY);
-    if (storedCart) {
-      try {
-        const parsed = JSON.parse(storedCart) as CartItem[];
-        // Coerce numeric fields in case they were saved as strings
-        const normalized = parsed.map((item) => ({
-          ...item,
-          basePrice: Number(item.basePrice),
-          tierPrice: Number(item.tierPrice),
-          quantity: Number(item.quantity),
-        }));
-        setCart(normalized);
-      } catch (error) {
-        console.error('Failed to parse cart from localStorage:', error);
+    const loadCart = () => {
+      const storedCart = localStorage.getItem(CART_STORAGE_KEY);
+      if (storedCart) {
+        try {
+          const parsed = JSON.parse(storedCart) as CartItem[];
+          // Coerce numeric fields in case they were saved as strings
+          const normalized = parsed.map((item) => ({
+            ...item,
+            basePrice: Number(item.basePrice),
+            tierPrice: Number(item.tierPrice),
+            quantity: Number(item.quantity),
+          }));
+          setCart(normalized);
+        } catch (error) {
+          console.error('Failed to parse cart from localStorage:', error);
+          setCart([]);
+        }
+      } else {
+        setCart([]);
       }
-    }
-    setIsLoaded(true);
+      setIsLoaded(true);
+    };
+
+    loadCart();
+
+    // Listen for custom event to sync state across components
+    const handleCartUpdate = () => loadCart();
+    
+    // Listen for both custom event (same tab) and storage event (cross-tab)
+    window.addEventListener(CART_UPDATE_EVENT, handleCartUpdate);
+    window.addEventListener('storage', handleCartUpdate);
+
+    return () => {
+      window.removeEventListener(CART_UPDATE_EVENT, handleCartUpdate);
+      window.removeEventListener('storage', handleCartUpdate);
+    };
   }, []);
 
-  // Save cart to localStorage whenever it changes
-  useEffect(() => {
-    if (isLoaded) {
-      localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cart));
-    }
-  }, [cart, isLoaded]);
+  // Helper to save cart and notify other components
+  const saveCart = (newCart: CartItem[]) => {
+    localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(newCart));
+    setCart(newCart);
+    // Dispatch custom event to notify other components
+    window.dispatchEvent(new Event(CART_UPDATE_EVENT));
+  };
 
   /**
    * Add item to cart
    */
   const addToCart = (item: CartItem) => {
-    setCart((prevCart) => {
-      // Check if item with same product, size, color, and tier already exists
-      const existingIndex = prevCart.findIndex(
-        (i) =>
-          i.productId === item.productId &&
-          i.size === item.size &&
-          i.color === item.color &&
-          i.tier === item.tier
-      );
-
-      if (existingIndex >= 0) {
-        // Update quantity
-        const newCart = [...prevCart];
-        newCart[existingIndex].quantity += item.quantity;
-        return newCart;
-      } else {
-        // Add new item
-        return [...prevCart, item];
+    // We read from localStorage first to ensure we have the latest state
+    // This prevents race conditions if multiple components try to update
+    const storedCart = localStorage.getItem(CART_STORAGE_KEY);
+    let currentCart: CartItem[] = [];
+    
+    if (storedCart) {
+      try {
+        currentCart = JSON.parse(storedCart);
+      } catch (e) {
+        currentCart = [];
       }
-    });
+    }
+
+    // Check if item with same product, size, color, and tier already exists
+    const existingIndex = currentCart.findIndex(
+      (i) =>
+        i.productId === item.productId &&
+        i.size === item.size &&
+        i.color === item.color &&
+        i.tier === item.tier
+    );
+
+    let newCart: CartItem[];
+    if (existingIndex >= 0) {
+      // Update quantity
+      newCart = [...currentCart];
+      newCart[existingIndex].quantity += item.quantity;
+    } else {
+      // Add new item
+      newCart = [...currentCart, item];
+    }
+    
+    saveCart(newCart);
   };
 
   /**
    * Remove item from cart
    */
   const removeFromCart = (index: number) => {
-    setCart((prevCart) => prevCart.filter((_, i) => i !== index));
+    const storedCart = localStorage.getItem(CART_STORAGE_KEY);
+    if (!storedCart) return;
+    
+    const currentCart = JSON.parse(storedCart) as CartItem[];
+    const newCart = currentCart.filter((_, i) => i !== index);
+    saveCart(newCart);
   };
 
   /**
@@ -94,18 +133,23 @@ export function useCart() {
       return;
     }
 
-    setCart((prevCart) => {
-      const newCart = [...prevCart];
+    const storedCart = localStorage.getItem(CART_STORAGE_KEY);
+    if (!storedCart) return;
+
+    const currentCart = JSON.parse(storedCart) as CartItem[];
+    const newCart = [...currentCart];
+    
+    if (newCart[index]) {
       newCart[index].quantity = quantity;
-      return newCart;
-    });
+      saveCart(newCart);
+    }
   };
 
   /**
    * Clear entire cart
    */
   const clearCart = () => {
-    setCart([]);
+    saveCart([]);
   };
 
   /**
