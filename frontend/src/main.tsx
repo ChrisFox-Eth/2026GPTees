@@ -20,7 +20,13 @@ if (!CLERK_PUBLISHABLE_KEY) {
 // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
-    <ClerkProvider publishableKey={CLERK_PUBLISHABLE_KEY || ''}>
+    <ClerkProvider 
+      publishableKey={CLERK_PUBLISHABLE_KEY || ''}
+      afterSignInUrl="/shop"
+      afterSignUpUrl="/shop"
+      signInUrl="/sign-in"
+      signUpUrl="/sign-up"
+    >
       <BrowserRouter>
         <App />
       </BrowserRouter>
