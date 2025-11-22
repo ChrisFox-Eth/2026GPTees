@@ -35,9 +35,22 @@ export const requireAuth = async (
       throw new AppError('Invalid authorization token', 401);
     }
 
+    // Optional session id header for verification
+    const sessionIdHeader = req.headers['x-session-id'];
+    const sessionId =
+      typeof sessionIdHeader === 'string'
+        ? sessionIdHeader
+        : Array.isArray(sessionIdHeader)
+          ? sessionIdHeader[0]
+          : undefined;
+
+    if (!sessionId) {
+      throw new AppError('Missing Clerk session id', 401);
+    }
+
     // Verify session with Clerk
     const session = await clerkClient.sessions.verifySession(
-      sessionToken,
+      sessionId,
       sessionToken
     );
 

@@ -12,15 +12,30 @@ const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
  * @param {RequestInit} options - Fetch options
  * @returns {Promise<any>} Response data
  */
-export async function apiRequest(endpoint: string, options: RequestInit = {}): Promise<any> {
+export async function apiRequest(
+  endpoint: string,
+  options: RequestInit = {},
+  token?: string | null,
+  sessionId?: string | null
+): Promise<any> {
   const url = `${API_URL}${endpoint}`;
+
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    ...(options.headers as Record<string, string> | undefined),
+  };
+
+  if (token) {
+    headers.Authorization = `Bearer ${token}`;
+  }
+
+  if (sessionId) {
+    headers['X-Session-Id'] = sessionId;
+  }
 
   const config: RequestInit = {
     ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...options.headers,
-    },
+    headers,
   };
 
   try {
@@ -41,41 +56,57 @@ export async function apiRequest(endpoint: string, options: RequestInit = {}): P
 /**
  * GET request
  */
-export function apiGet(endpoint: string, token?: string): Promise<any> {
-  return apiRequest(endpoint, {
-    method: 'GET',
-    headers: token ? { Authorization: `Bearer ${token}` } : {},
-  });
+export function apiGet(endpoint: string, token?: string | null, sessionId?: string | null): Promise<any> {
+  return apiRequest(
+    endpoint,
+    {
+      method: 'GET',
+    },
+    token,
+    sessionId
+  );
 }
 
 /**
  * POST request
  */
-export function apiPost(endpoint: string, data: any, token?: string): Promise<any> {
-  return apiRequest(endpoint, {
-    method: 'POST',
-    headers: token ? { Authorization: `Bearer ${token}` } : {},
-    body: JSON.stringify(data),
-  });
+export function apiPost(endpoint: string, data: any, token?: string | null, sessionId?: string | null): Promise<any> {
+  return apiRequest(
+    endpoint,
+    {
+      method: 'POST',
+      body: JSON.stringify(data),
+    },
+    token,
+    sessionId
+  );
 }
 
 /**
  * PUT request
  */
-export function apiPut(endpoint: string, data: any, token?: string): Promise<any> {
-  return apiRequest(endpoint, {
-    method: 'PUT',
-    headers: token ? { Authorization: `Bearer ${token}` } : {},
-    body: JSON.stringify(data),
-  });
+export function apiPut(endpoint: string, data: any, token?: string | null, sessionId?: string | null): Promise<any> {
+  return apiRequest(
+    endpoint,
+    {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    },
+    token,
+    sessionId
+  );
 }
 
 /**
  * DELETE request
  */
-export function apiDelete(endpoint: string, token?: string): Promise<any> {
-  return apiRequest(endpoint, {
-    method: 'DELETE',
-    headers: token ? { Authorization: `Bearer ${token}` } : {},
-  });
+export function apiDelete(endpoint: string, token?: string | null, sessionId?: string | null): Promise<any> {
+  return apiRequest(
+    endpoint,
+    {
+      method: 'DELETE',
+    },
+    token,
+    sessionId
+  );
 }

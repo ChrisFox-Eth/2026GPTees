@@ -75,8 +75,8 @@ export default function Footer(): JSX.Element {
                 </a>
               </li>
               <li>
-                <Link to="/faq" className="hover:text-white transition-colors">
-                  FAQ
+                <Link to="/refunds" className="hover:text-white transition-colors">
+                  Refunds
                 </Link>
               </li>
               <li>

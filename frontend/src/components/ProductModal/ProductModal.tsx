@@ -30,8 +30,11 @@ export default function ProductModal({ product, isOpen, onClose }: ProductModalP
 
   if (!isOpen) return null;
 
-  const tierPrice = TIER_PRICES[selectedTier];
-  const totalPrice = product.basePrice + tierPrice;
+  const basePrice = Number(product.basePrice);
+  const tierPrice =
+    product.tierPricing?.[selectedTier]?.price ??
+    (selectedTier === 'PREMIUM' ? TIER_PRICES.PREMIUM : TIER_PRICES.BASIC);
+  const totalPrice = basePrice + tierPrice;
 
   const handleAddToCart = () => {
     addToCart({
@@ -41,7 +44,7 @@ export default function ProductModal({ product, isOpen, onClose }: ProductModalP
       color: selectedColor.name,
       tier: selectedTier,
       quantity,
-      basePrice: product.basePrice,
+      basePrice,
       tierPrice,
       imageUrl: product.imageUrl,
     });
@@ -150,8 +153,14 @@ export default function ProductModal({ product, isOpen, onClose }: ProductModalP
                   >
                     <div className="flex justify-between items-center">
                       <div>
-                        <p className="font-semibold text-gray-900 dark:text-white">Basic - ${TIER_PRICES.BASIC}</p>
-                        <p className="text-sm text-gray-600 dark:text-gray-400">Generate 1 AI design</p>
+                        <p className="font-semibold text-gray-900 dark:text-white">
+                          Basic - ${(
+                            product.tierPricing?.BASIC?.price ?? TIER_PRICES.BASIC
+                          ).toFixed(2)}
+                        </p>
+                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                          {product.tierPricing?.BASIC?.description || 'Generate 1 AI design'}
+                        </p>
                       </div>
                       {selectedTier === 'BASIC' && <span className="text-primary-600">✓</span>}
                     </div>
@@ -166,8 +175,14 @@ export default function ProductModal({ product, isOpen, onClose }: ProductModalP
                   >
                     <div className="flex justify-between items-center">
                       <div>
-                        <p className="font-semibold text-gray-900 dark:text-white">Premium - ${TIER_PRICES.PREMIUM}</p>
-                        <p className="text-sm text-gray-600 dark:text-gray-400">Unlimited AI design regeneration</p>
+                        <p className="font-semibold text-gray-900 dark:text-white">
+                          Premium - ${(
+                            product.tierPricing?.PREMIUM?.price ?? TIER_PRICES.PREMIUM
+                          ).toFixed(2)}
+                        </p>
+                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                          {product.tierPricing?.PREMIUM?.description || 'Unlimited AI design regeneration'}
+                        </p>
                       </div>
                       {selectedTier === 'PREMIUM' && <span className="text-primary-600">✓</span>}
                     </div>

@@ -1,3 +1,4 @@
+/// <reference types="node" />
 /**
  * @module prisma/seed
  * @description Database seeding script for 2026GPTees
@@ -102,7 +103,7 @@ async function main() {
 main()
   .catch((e) => {
     console.error('❌ Error seeding database:', e);
-    process.exit(1);
+    process.exit(1);     
   })
   .finally(async () => {
     await prisma.$disconnect();

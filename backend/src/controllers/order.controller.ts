@@ -31,6 +31,7 @@ export const getUserOrders = catchAsync(async (req: Request, res: Response) => {
       },
       designs: true,
       payment: true,
+      address: true,
     },
     orderBy: { createdAt: 'desc' },
   });

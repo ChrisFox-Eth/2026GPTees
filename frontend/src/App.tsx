@@ -15,12 +15,15 @@ import SignUpPage from './pages/SignUpPage';
 import ShopPage from './pages/ShopPage';
 import CartPage from './pages/CartPage';
 import CheckoutSuccessPage from './pages/CheckoutSuccessPage';
+import CheckoutPage from './pages/CheckoutPage';
 import DesignPage from './pages/DesignPage';
 import AccountPage from './pages/AccountPage';
+import OrderDetailPage from './pages/OrderDetailPage';
 import PrivacyPage from './pages/PrivacyPage';
 import TermsPage from './pages/TermsPage';
 import RefundsPage from './pages/RefundsPage';
 import NotFoundPage from './pages/NotFoundPage';
+import ProtectedRoute from './components/ProtectedRoute';
 import './App.css';
 
 export default function App(): JSX.Element {
@@ -76,9 +79,25 @@ export default function App(): JSX.Element {
             <Route path="/" element={<HomePage />} />
             <Route path="/shop" element={<ShopPage />} />
             <Route path="/cart" element={<CartPage />} />
+            <Route
+              path="/checkout"
+              element={
+                <ProtectedRoute>
+                  <CheckoutPage />
+                </ProtectedRoute>
+              }
+            />
             <Route path="/checkout/success" element={<CheckoutSuccessPage />} />
             <Route path="/design" element={<DesignPage />} />
             <Route path="/account" element={<AccountPage />} />
+            <Route
+              path="/orders/:id"
+              element={
+                <ProtectedRoute>
+                  <OrderDetailPage />
+                </ProtectedRoute>
+              }
+            />
             <Route path="/privacy" element={<PrivacyPage />} />
             <Route path="/terms" element={<TermsPage />} />
             <Route path="/refunds" element={<RefundsPage />} />

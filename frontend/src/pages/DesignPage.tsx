@@ -6,6 +6,7 @@
 
 import { useEffect, useState } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
+import { useAuth } from '@clerk/clerk-react';
 import { apiGet, apiPost } from '../utils/api';
 import { Button } from '@components/Button';
 import ProtectedRoute from '../components/ProtectedRoute';
@@ -45,6 +46,7 @@ const STYLE_OPTIONS = [
 function DesignContent(): JSX.Element {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const { getToken, sessionId, isLoaded, isSignedIn } = useAuth();
 
   const orderId = searchParams.get('orderId');
 
@@ -64,20 +66,27 @@ function DesignContent(): JSX.Element {
       setLoading(false);
       return;
     }
-    fetchOrderAndDesigns();
-  }, [orderId]);
+    if (isLoaded && isSignedIn) {
+      fetchOrderAndDesigns();
+    }
+  }, [orderId, isLoaded, isSignedIn]);
 
   const fetchOrderAndDesigns = async () => {
     try {
       setLoading(true);
       setError(null);
+      const token = await getToken();
+      if (!token || !sessionId) {
+        setError('Authentication required. Please sign in again.');
+        return;
+      }
 
       // Fetch order details
-      const orderResponse = await apiGet(`/api/orders/${orderId}`);
+      const orderResponse = await apiGet(`/api/orders/${orderId}`, token, sessionId);
       setOrder(orderResponse.data);
 
       // Fetch existing designs for this order
-      const designsResponse = await apiGet(`/api/designs?orderId=${orderId}`);
+      const designsResponse = await apiGet(`/api/designs?orderId=${orderId}`, token, sessionId);
       setDesigns(designsResponse.data || []);
     } catch (err: any) {
       console.error('Error fetching order/designs:', err);
@@ -114,12 +123,17 @@ function DesignContent(): JSX.Element {
     try {
       setIsGenerating(true);
       setError(null);
+      const token = await getToken();
+      if (!token || !sessionId) {
+        setError('Authentication required. Please sign in again.');
+        return;
+      }
 
       const response = await apiPost('/api/designs/generate', {
         orderId,
         prompt: prompt.trim(),
         style: selectedStyle,
-      });
+      }, token, sessionId);
 
       // Add new design to the list
       setDesigns((prev) => [response.data, ...prev]);
@@ -147,7 +161,13 @@ function DesignContent(): JSX.Element {
       setIsApproving(designId);
       setError(null);
 
-      await apiPost(`/api/designs/${designId}/approve`, {});
+      const token = await getToken();
+      if (!token || !sessionId) {
+        setError('Authentication required. Please sign in again.');
+        setIsApproving(null);
+        return;
+      }
+      await apiPost(`/api/designs/${designId}/approve`, {}, token, sessionId);
 
       // Update design in list
       setDesigns((prev) =>

@@ -23,4 +23,13 @@ export interface Product {
   isActive: boolean;
   createdAt: Date;
   updatedAt: Date;
+  tierPricing?: Record<
+    string,
+    {
+      name: string;
+      price: number;
+      maxDesigns: number;
+      description: string;
+    }
+  >;
 }

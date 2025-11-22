@@ -29,7 +29,15 @@ export function useCart() {
     const storedCart = localStorage.getItem(CART_STORAGE_KEY);
     if (storedCart) {
       try {
-        setCart(JSON.parse(storedCart));
+        const parsed = JSON.parse(storedCart) as CartItem[];
+        // Coerce numeric fields in case they were saved as strings
+        const normalized = parsed.map((item) => ({
+          ...item,
+          basePrice: Number(item.basePrice),
+          tierPrice: Number(item.tierPrice),
+          quantity: Number(item.quantity),
+        }));
+        setCart(normalized);
       } catch (error) {
         console.error('Failed to parse cart from localStorage:', error);
       }

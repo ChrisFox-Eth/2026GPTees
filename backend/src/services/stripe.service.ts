@@ -15,18 +15,27 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
 
 interface CheckoutItem {
   productId: string;
-  productName: string;
   size: string;
   color: string;
   tier: 'BASIC' | 'PREMIUM';
   quantity: number;
-  basePrice: number;
-  tierPrice: number;
+}
+
+interface ShippingAddress {
+  name: string;
+  address1: string;
+  address2?: string;
+  city: string;
+  state?: string;
+  zip: string;
+  country: string;
+  phone?: string;
 }
 
 interface CheckoutSessionData {
   userId: string;
   items: CheckoutItem[];
+  shippingAddress: ShippingAddress;
   successUrl: string;
   cancelUrl: string;
 }
@@ -39,18 +48,53 @@ interface CheckoutSessionData {
 export async function createCheckoutSession(
   data: CheckoutSessionData
 ): Promise<{ sessionId: string; url: string }> {
-  const { userId, items, successUrl, cancelUrl } = data;
+  const { userId, items, shippingAddress, successUrl, cancelUrl } = data;
 
-  // Calculate total amount
-  const totalAmount = items.reduce((sum, item) => {
-    return sum + (item.basePrice + item.tierPrice) * item.quantity;
-  }, 0);
+  // Load products from DB to prevent client-side price tampering
+  const productIds = Array.from(new Set(items.map((item) => item.productId)));
+  const products = await prisma.product.findMany({
+    where: { id: { in: productIds } },
+  });
+  const productMap = new Map(products.map((p) => [p.id, p]));
+
+  // Calculate totals and prepare order items
+  let totalAmount = 0;
+  const validatedItems = items.map((item) => {
+    const product = productMap.get(item.productId);
+    if (!product) {
+      throw new Error(`Invalid product: ${item.productId}`);
+    }
+
+    const tierConfig = getTierConfig(item.tier as TierType);
+    const unitPrice = Number(product.basePrice) + tierConfig.price;
+    totalAmount += unitPrice * item.quantity;
+
+    return {
+      product,
+      unitPrice,
+      tierConfig,
+      payload: item,
+    };
+  });
 
   // Generate unique order number
   const orderNumber = `ORDER-${Date.now()}-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
 
-  // Get tier config for first item (assuming single item orders for now)
-  const tierConfig = getTierConfig(items[0].tier as TierType);
+  // Create / upsert shipping address
+  const address = await prisma.address.create({
+    data: {
+      userId,
+      name: shippingAddress.name,
+      address1: shippingAddress.address1,
+      address2: shippingAddress.address2 || null,
+      city: shippingAddress.city,
+      state: shippingAddress.state || null,
+      zip: shippingAddress.zip,
+      country: shippingAddress.country || 'US',
+      phone: shippingAddress.phone || null,
+      isDefault: false,
+    },
+  });
 
   // Create order in database with PENDING_PAYMENT status
   const order = await prisma.order.create({
@@ -60,15 +104,16 @@ export async function createCheckoutSession(
       status: 'PENDING_PAYMENT',
       totalAmount,
       designTier: items[0].tier,
-      maxDesigns: tierConfig.maxDesigns,
+      maxDesigns: validatedItems[0].tierConfig.maxDesigns,
       designsGenerated: 0,
+      addressId: address.id,
       items: {
-        create: items.map((item) => ({
-          productId: item.productId,
-          size: item.size,
-          color: item.color,
-          quantity: item.quantity,
-          unitPrice: item.basePrice + item.tierPrice,
+        create: validatedItems.map(({ payload, unitPrice }) => ({
+          productId: payload.productId,
+          size: payload.size,
+          color: payload.color,
+          quantity: payload.quantity,
+          unitPrice,
         })),
       },
     },
@@ -78,21 +123,26 @@ export async function createCheckoutSession(
   });
 
   // Create Stripe line items
-  const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = items.map((item) => ({
-    price_data: {
-      currency: 'usd',
-      product_data: {
-        name: `${item.productName} - ${item.tier}`,
-        description: `Size: ${item.size}, Color: ${item.color}`,
+  const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = validatedItems.map(
+    ({ payload, product, unitPrice }) => ({
+      price_data: {
+        currency: 'usd',
+        product_data: {
+          name: `${product.name} - ${payload.tier}`,
+          description: `Size: ${payload.size}, Color: ${payload.color}`,
+        },
+        unit_amount: Math.round(unitPrice * 100), // Convert to cents
       },
-      unit_amount: Math.round((item.basePrice + item.tierPrice) * 100), // Convert to cents
-    },
-    quantity: item.quantity,
-  }));
+      quantity: payload.quantity,
+    })
+  );
 
   // Create Stripe checkout session
   const session = await stripe.checkout.sessions.create({
     payment_method_types: ['card'],
+    shipping_address_collection: {
+      allowed_countries: ['US', 'CA', 'GB', 'AU'],
+    },
     line_items: lineItems,
     mode: 'payment',
     success_url: `${successUrl}?session_id={CHECKOUT_SESSION_ID}&order_id=${order.id}`,
@@ -102,6 +152,8 @@ export async function createCheckoutSession(
       orderId: order.id,
       orderNumber: order.orderNumber,
       userId,
+      addressId: address.id,
+      tier: items[0].tier,
     },
   });
 
@@ -131,6 +183,13 @@ export async function handleSuccessfulPayment(sessionId: string): Promise<void> 
   const orderId = session.metadata?.orderId;
   if (!orderId) {
     throw new Error('Order ID not found in session metadata');
+  }
+
+  // Idempotency: if already marked paid, exit
+  const existing = await prisma.order.findUnique({ where: { id: orderId } });
+  if (existing?.status === 'PAID') {
+    console.log(`Order ${orderId} already marked as PAID; skipping duplicate webhook.`);
+    return;
   }
 
   // Update order status and get full order details

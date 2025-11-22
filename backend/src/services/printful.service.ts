@@ -424,6 +424,12 @@ export async function handlePrintfulWebhook(webhookData: any): Promise<void> {
         return;
       }
 
+      // Ignore duplicate status updates
+      if (order.fulfillmentStatus === status) {
+        console.log(`Skipping duplicate Printful status ${status} for order ${order.orderNumber}`);
+        return;
+      }
+
       // Extract tracking information from shipments
       const tracking = data.order.shipments?.[0];
       const trackingNumber = tracking?.tracking_number;
@@ -446,6 +452,7 @@ export async function handlePrintfulWebhook(webhookData: any): Promise<void> {
         where: { id: order.id },
         data: {
           status: newStatus,
+          fulfillmentStatus: status,
           trackingNumber: trackingNumber || order.trackingNumber,
           shippedAt: newStatus === 'SHIPPED' && !order.shippedAt ? new Date() : order.shippedAt,
         },

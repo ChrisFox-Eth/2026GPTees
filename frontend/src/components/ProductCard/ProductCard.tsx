@@ -48,7 +48,7 @@ export default function ProductCard({ product, onClick }: ProductCardProps): JSX
           <div>
             <p className="text-sm text-gray-500 dark:text-gray-400">Starting at</p>
             <p className="text-xl font-bold text-primary-600 dark:text-primary-400">
-              ${product.basePrice.toFixed(2)}
+              ${Number(product.basePrice).toFixed(2)}
             </p>
           </div>
 

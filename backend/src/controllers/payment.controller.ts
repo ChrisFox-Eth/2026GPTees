@@ -21,7 +21,7 @@ export const createCheckout = catchAsync(async (req: Request, res: Response) => 
     return;
   }
 
-  const { items } = req.body;
+  const { items, shippingAddress } = req.body;
 
   if (!items || !Array.isArray(items) || items.length === 0) {
     res.status(400).json({
@@ -31,11 +31,27 @@ export const createCheckout = catchAsync(async (req: Request, res: Response) => 
     return;
   }
 
+  if (
+    !shippingAddress ||
+    !shippingAddress.name ||
+    !shippingAddress.address1 ||
+    !shippingAddress.city ||
+    !shippingAddress.zip ||
+    !shippingAddress.country
+  ) {
+    res.status(400).json({
+      success: false,
+      message: 'Shipping address is required',
+    });
+    return;
+  }
+
   const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
 
   const checkoutData = {
     userId: req.user.id,
     items,
+    shippingAddress,
     successUrl: `${frontendUrl}/checkout/success`,
     cancelUrl: `${frontendUrl}/cart`,
   };

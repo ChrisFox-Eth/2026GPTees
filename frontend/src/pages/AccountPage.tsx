@@ -6,7 +6,7 @@
 
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { useUser } from '@clerk/clerk-react';
+import { useAuth, useUser } from '@clerk/clerk-react';
 import { apiGet } from '../utils/api';
 import { Button } from '@components/Button';
 import ProtectedRoute from '../components/ProtectedRoute';
@@ -26,18 +26,22 @@ interface Order {
 
 function AccountContent(): JSX.Element {
   const { user } = useUser();
+  const { getToken, sessionId, isSignedIn, isLoaded } = useAuth();
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    fetchOrders();
-  }, []);
+    if (isLoaded && isSignedIn) {
+      fetchOrders();
+    }
+  }, [isLoaded, isSignedIn]);
 
   const fetchOrders = async () => {
     try {
       setLoading(true);
-      const response = await apiGet('/api/orders');
+      const token = await getToken();
+      const response = await apiGet('/api/orders', token, sessionId);
       setOrders(response.data || []);
       setError(null);
     } catch (err: any) {
@@ -124,7 +128,7 @@ function AccountContent(): JSX.Element {
                   <div className="text-right">
                     {getStatusBadge(order.status)}
                     <p className="text-lg font-bold text-gray-900 dark:text-white mt-1">
-                      ${order.totalAmount.toFixed(2)}
+                      ${Number(order.totalAmount).toFixed(2)}
                     </p>
                   </div>
                 </div>

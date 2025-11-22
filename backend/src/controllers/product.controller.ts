@@ -7,6 +7,7 @@
 import { Request, Response } from 'express';
 import { catchAsync } from '../middleware/error.middleware.js';
 import prisma from '../config/database.js';
+import { TIERS } from '../config/pricing.js';
 
 /**
  * Get all products
@@ -24,7 +25,7 @@ export const getProducts = catchAsync(async (_req: Request, res: Response) => {
 
   res.json({
     success: true,
-    data: products,
+    data: products.map((p) => ({ ...p, tierPricing: TIERS })),
     count: products.length,
   });
 });
@@ -50,7 +51,7 @@ export const getProductById = catchAsync(async (req: Request, res: Response) => 
 
   res.json({
     success: true,
-    data: product,
+    data: product ? { ...product, tierPricing: TIERS } : null,
   });
 });
 
@@ -75,6 +76,6 @@ export const getProductBySlug = catchAsync(async (req: Request, res: Response) =
 
   res.json({
     success: true,
-    data: product,
+    data: product ? { ...product, tierPricing: TIERS } : null,
   });
 });
