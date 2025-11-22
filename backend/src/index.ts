@@ -32,9 +32,16 @@ app.use(helmet());
 /**
  * CORS configuration
  */
+const allowedOrigins = [
+  process.env.FRONTEND_URL || 'http://localhost:5173',
+  'https://2026-gp-tees.vercel.app',
+  'https://www.gptees.app',
+  'http://localhost:5173',
+];
+
 app.use(
   cors({
-    origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+    origin: allowedOrigins,
     credentials: true,
   })
 );
