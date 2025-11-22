@@ -60,7 +60,7 @@ export async function getUserByClerkId(clerkId: string) {
  * @param {any} headers - Request headers
  * @returns {any} Verified webhook event
  */
-export function verifyClerkWebhook(payload: any, headers: any) {
+export function verifyClerkWebhook(payload: string, headers: any) {
   const webhookSecret = process.env.CLERK_WEBHOOK_SECRET;
 
   if (!webhookSecret) {
@@ -68,7 +68,8 @@ export function verifyClerkWebhook(payload: any, headers: any) {
   }
 
   const wh = new Webhook(webhookSecret);
-  return wh.verify(JSON.stringify(payload), headers);
+  // Payload is already a string from the controller, don't stringify again
+  return wh.verify(payload, headers);
 }
 
 /**

@@ -18,12 +18,12 @@ import { handlePrintfulWebhook as processPrintfulWebhook } from '../services/pri
  */
 export const handleClerkWebhook = catchAsync(async (req: Request, res: Response) => {
   try {
-    // Verify webhook signature
-    const payload = req.body;
+    // Get raw body as string (express.raw gives us a Buffer)
+    const payload = req.body.toString('utf8');
     const headers = {
-      'svix-id': req.headers['svix-id'],
-      'svix-timestamp': req.headers['svix-timestamp'],
-      'svix-signature': req.headers['svix-signature'],
+      'svix-id': req.headers['svix-id'] as string,
+      'svix-timestamp': req.headers['svix-timestamp'] as string,
+      'svix-signature': req.headers['svix-signature'] as string,
     };
 
     const evt: any = verifyClerkWebhook(payload, headers);
