@@ -36,6 +36,7 @@ const allowedOrigins = [
   process.env.FRONTEND_URL || 'http://localhost:5173',
   'https://2026-gp-tees.vercel.app',
   'https://www.gptees.app',
+  'https://gptees.app',
   'http://localhost:5173',
 ];
 

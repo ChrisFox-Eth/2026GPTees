@@ -81,3 +81,22 @@ export const getDetailedHealth = (_req: Request, res: Response): void => {
     },
   });
 };
+
+/**
+ * Export health controller functions
+ *
+ * @status Active
+ * @category Health Check
+ *
+ * @example
+ * // Request: GET /api/health
+ * // Response: 200 OK
+ * {
+ *   success: true,
+ *   message: "Server is healthy",
+ *   timestamp: "2025-10-20T12:00:00Z"
+ * }
+ */
+export const healthController = { checkHealth, getDetailedHealth };
+
+
