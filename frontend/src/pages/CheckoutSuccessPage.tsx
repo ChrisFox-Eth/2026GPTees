@@ -8,6 +8,7 @@ import { useEffect, useState } from 'react';
 import { Link, useSearchParams, useNavigate } from 'react-router-dom';
 import { Button } from '@components/Button';
 import { useCart } from '../hooks/useCart';
+import { apiPost } from '@utils/api';
 
 export default function CheckoutSuccessPage(): JSX.Element {
   const [searchParams] = useSearchParams();
