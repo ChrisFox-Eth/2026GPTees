@@ -14,6 +14,8 @@ export default function CheckoutSuccessPage(): JSX.Element {
   const navigate = useNavigate();
   const { clearCart } = useCart();
   const [isCleared, setIsCleared] = useState(false);
+  const [isConfirming, setIsConfirming] = useState(false);
+  const [confirmError, setConfirmError] = useState<string | null>(null);
   const [shareMessage, setShareMessage] = useState<string | null>(null);
 
   const orderId = searchParams.get('order_id');
@@ -26,6 +28,24 @@ export default function CheckoutSuccessPage(): JSX.Element {
       setIsCleared(true);
     }
   }, [clearCart, isCleared]);
+
+  const confirmPayment = async () => {
+    if (!orderId || !sessionId) return;
+    try {
+      setIsConfirming(true);
+      setConfirmError(null);
+      await apiPost('/api/payments/confirm-session', {
+        orderId,
+        sessionId,
+      });
+      // After confirming, push user to design page
+      navigate(`/design?orderId=${orderId}`);
+    } catch (err: any) {
+      setConfirmError(err.message || 'Could not confirm payment. Please try again.');
+    } finally {
+      setIsConfirming(false);
+    }
+  };
 
   const handleShare = async () => {
     const shareUrl = `${window.location.origin}/design?orderId=${orderId ?? ''}`;
@@ -153,6 +173,33 @@ export default function CheckoutSuccessPage(): JSX.Element {
 
         {shareMessage && (
           <p className="text-center text-sm text-gray-500 dark:text-gray-400 mt-2">{shareMessage}</p>
+        )}
+
+        {/* Manual payment confirmation helper */}
+        {orderId && sessionId && (
+          <div className="mt-6 bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <p className="text-sm font-semibold text-gray-900 dark:text-white">
+                  Having trouble reaching the design page?
+                </p>
+                <p className="text-xs text-gray-600 dark:text-gray-400">
+                  Manually confirm your Stripe session, then continue.
+                </p>
+              </div>
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={confirmPayment}
+                disabled={isConfirming}
+              >
+                {isConfirming ? 'Confirming...' : 'Confirm Payment'}
+              </Button>
+            </div>
+            {confirmError && (
+              <p className="text-xs text-red-600 dark:text-red-400 mt-2">{confirmError}</p>
+            )}
+          </div>
         )}
 
         {/* Email Confirmation */}

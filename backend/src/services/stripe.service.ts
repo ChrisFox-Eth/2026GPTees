@@ -234,6 +234,24 @@ export async function handleSuccessfulPayment(sessionId: string): Promise<void> 
 }
 
 /**
+ * Manually confirm a checkout session and mark the order as paid
+ * Useful when the Stripe webhook didn't fire
+ */
+export async function confirmCheckoutSession(sessionId: string, orderId: string): Promise<void> {
+  const order = await prisma.order.findUnique({ where: { id: orderId } });
+  if (!order) {
+    throw new Error('Order not found');
+  }
+
+  // If already paid, no-op
+  if (order.status === 'PAID') {
+    return;
+  }
+
+  await handleSuccessfulPayment(sessionId);
+}
+
+/**
  * Construct Stripe webhook event
  * @param {string | Buffer} payload - Webhook payload
  * @param {string} signature - Webhook signature

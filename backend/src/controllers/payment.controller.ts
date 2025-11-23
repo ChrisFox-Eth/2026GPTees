@@ -6,7 +6,7 @@
 
 import { Request, Response } from 'express';
 import { catchAsync } from '../middleware/error.middleware.js';
-import { createCheckoutSession } from '../services/stripe.service.js';
+import { createCheckoutSession, confirmCheckoutSession } from '../services/stripe.service.js';
 
 /**
  * Create Stripe checkout session
@@ -65,4 +65,21 @@ export const createCheckout = catchAsync(async (req: Request, res: Response) => 
       url: session.url,
     },
   });
+});
+
+/**
+ * Manually confirm a Stripe checkout session (fallback when webhook is missing)
+ * POST /api/payments/confirm-session
+ */
+export const confirmSession = catchAsync(async (req: Request, res: Response) => {
+  const { orderId, sessionId } = req.body;
+
+  if (!orderId || !sessionId) {
+    res.status(400).json({ success: false, message: 'orderId and sessionId are required' });
+    return;
+  }
+
+  await confirmCheckoutSession(sessionId, orderId);
+
+  res.json({ success: true, message: 'Session confirmed, order marked as paid' });
 });
