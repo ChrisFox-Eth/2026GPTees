@@ -152,11 +152,6 @@ function DesignContent(): JSX.Element {
           designsGenerated: order.designsGenerated + 1,
         });
       }
-
-      // Poll for status update so the approve button appears without a manual refresh
-      setTimeout(() => {
-        fetchOrderAndDesigns();
-      }, 4000);
     } catch (err: any) {
       console.error('Error generating design:', err);
       setError(err.message || 'Failed to generate design');
@@ -251,32 +246,7 @@ function DesignContent(): JSX.Element {
   const hasReachedLimit =
     order.maxDesigns !== 9999 && order.designsGenerated >= order.maxDesigns;
 
-  // Auto-refresh designs when any are still generating
-  useEffect(() => {
-    const hasGenerating = designs.some((design) => design.status === 'GENERATING');
-    if (!hasGenerating) return;
-
-    let timer: number | undefined;
-    const refresh = async () => {
-      try {
-        const token = await getToken();
-        if (!token) return;
-        await fetchDesigns(token);
-      } catch (err) {
-        console.error('Error refreshing designs:', err);
-      } finally {
-        timer = window.setTimeout(refresh, 4000);
-      }
-    };
-
-    timer = window.setTimeout(refresh, 3000);
-
-    return () => {
-      if (timer) {
-        clearTimeout(timer);
-      }
-    };
-  }, [designs, getToken]);
+  // You can manually refresh designs via the button, keeping hook order stable to avoid React hook invariant issues.
 
   return (
     <div className="container-max py-8">

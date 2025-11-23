@@ -167,6 +167,13 @@ function AccountContent(): JSX.Element {
                       </Button>
                     </Link>
                   )}
+                  {order.status === 'PAID' && (
+                    <Link to={`/design?orderId=${order.id}`}>
+                      <Button variant="secondary" size="sm">
+                        Design Page
+                      </Button>
+                    </Link>
+                  )}
                   {order.designs.length > 0 && (
                     <Link to={`/orders/${order.id}`}>
                       <Button variant="secondary" size="sm">
