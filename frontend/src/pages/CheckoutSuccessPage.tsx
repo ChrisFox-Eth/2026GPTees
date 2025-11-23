@@ -14,6 +14,7 @@ export default function CheckoutSuccessPage(): JSX.Element {
   const navigate = useNavigate();
   const { clearCart } = useCart();
   const [isCleared, setIsCleared] = useState(false);
+  const [shareMessage, setShareMessage] = useState<string | null>(null);
 
   const orderId = searchParams.get('order_id');
   const sessionId = searchParams.get('session_id');
@@ -25,6 +26,25 @@ export default function CheckoutSuccessPage(): JSX.Element {
       setIsCleared(true);
     }
   }, [clearCart, isCleared]);
+
+  const handleShare = async () => {
+    const shareUrl = `${window.location.origin}/design?orderId=${orderId ?? ''}`;
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: 'I just ordered a custom AI tee on GPTees!',
+          text: 'Create your own in seconds.',
+          url: shareUrl,
+        });
+        setShareMessage('Thanks for sharing!');
+      } catch {
+        // user cancelled; no-op
+      }
+    } else if (navigator.clipboard) {
+      await navigator.clipboard.writeText(shareUrl);
+      setShareMessage('Link copied—share it with friends!');
+    }
+  };
 
   if (!orderId || !sessionId) {
     return (
@@ -119,14 +139,21 @@ export default function CheckoutSuccessPage(): JSX.Element {
             onClick={() => navigate(`/design?orderId=${orderId}`)}
             className="flex-1"
           >
-            Generate Design Now →
+            Generate My Design
           </Button>
           <Link to="/account" className="flex-1">
             <Button variant="secondary" className="w-full">
               View My Orders
             </Button>
           </Link>
+          <Button variant="secondary" onClick={handleShare} className="flex-1">
+            Share with Friends
+          </Button>
         </div>
+
+        {shareMessage && (
+          <p className="text-center text-sm text-gray-500 dark:text-gray-400 mt-2">{shareMessage}</p>
+        )}
 
         {/* Email Confirmation */}
         <p className="text-center text-sm text-gray-500 dark:text-gray-400 mt-6">

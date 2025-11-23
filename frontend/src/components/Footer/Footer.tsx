@@ -96,11 +96,11 @@ export default function Footer(): JSX.Element {
         {/* Bottom Bar */}
         <div className="border-t border-gray-800 pt-8 flex flex-col md:flex-row justify-between items-center text-sm">
           <p className="text-gray-400 mb-4 md:mb-0">
-            © {currentYear} 2026GPTees. All rights reserved.
+            (c) {currentYear} 2026GPTees. All rights reserved.
           </p>
           <div className="flex items-center gap-6 text-gray-400">
             <span>Powered by OpenAI DALL-E 3</span>
-            <span>•</span>
+            <span>|</span>
             <span>Fulfilled by Printful</span>
           </div>
         </div>

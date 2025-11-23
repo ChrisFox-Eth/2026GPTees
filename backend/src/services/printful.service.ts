@@ -19,6 +19,8 @@ const printfulApi: AxiosInstance = axios.create({
   },
 });
 
+const PRINTFUL_STORE_ID = process.env.PRINTFUL_STORE_ID;
+
 /**
  * Interfaces
  */
@@ -326,6 +328,11 @@ export async function createPrintfulOrder(
       external_id: order.orderNumber,
     };
 
+    if (PRINTFUL_STORE_ID) {
+      // Route order to a specific Printful store if provided
+      (printfulOrderData as any).store_id = PRINTFUL_STORE_ID;
+    }
+
     console.log('Creating Printful order:', JSON.stringify(printfulOrderData, null, 2));
 
     // Create order in Printful
@@ -341,6 +348,7 @@ export async function createPrintfulOrder(
       data: {
         printfulOrderId: printfulOrder.id.toString(),
         status: 'SUBMITTED',
+        fulfillmentStatus: printfulOrder.status,
       },
     });
 

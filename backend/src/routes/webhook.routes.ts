@@ -29,6 +29,6 @@ router.post('/stripe', express.raw({ type: 'application/json' }), handleStripeWe
  * Handle Printful order status updates
  * Note: Printful doesn't require signature verification by default
  */
-router.post('/printful', handlePrintfulWebhook);
+router.post('/printful', express.json({ type: 'application/json' }), handlePrintfulWebhook);
 
 export default router;

@@ -10,7 +10,8 @@ import { getTierConfig, TierType } from '../config/pricing.js';
 import { sendOrderConfirmation } from './email.service.js';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
-  apiVersion: '2025-11-17.clover',
+  // Pin to a stable Stripe API version; the previous value was invalid and caused hard failures
+  apiVersion: '2024-11-20' as Stripe.LatestApiVersion,
 });
 
 interface CheckoutItem {

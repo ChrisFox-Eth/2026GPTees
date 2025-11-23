@@ -8,9 +8,16 @@ import { Resend } from 'resend';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
-const FROM_EMAIL = process.env.RESEND_FROM_EMAIL || 'noreply@yourdomain.com';
+const FROM_EMAIL = process.env.RESEND_FROM_EMAIL;
 const SITE_NAME = '2026GPTees';
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5173';
+
+function getFromEmail(): string {
+  if (!FROM_EMAIL) {
+    throw new Error('RESEND_FROM_EMAIL is not configured');
+  }
+  return FROM_EMAIL;
+}
 
 /**
  * Email template interfaces
@@ -106,7 +113,7 @@ export async function sendOrderConfirmation(
     `;
 
     await resend.emails.send({
-      from: FROM_EMAIL,
+      from: getFromEmail(),
       to: data.customerEmail,
       subject: `Order Confirmed - ${data.orderNumber}`,
       html: emailHtml,
@@ -185,7 +192,7 @@ export async function sendDesignApproved(
     `;
 
     await resend.emails.send({
-      from: FROM_EMAIL,
+      from: getFromEmail(),
       to: data.customerEmail,
       subject: `Design Approved - ${data.orderNumber}`,
       html: emailHtml,
@@ -268,7 +275,7 @@ export async function sendOrderShipped(
     `;
 
     await resend.emails.send({
-      from: FROM_EMAIL,
+      from: getFromEmail(),
       to: data.customerEmail,
       subject: `Your Order Has Shipped - ${data.orderNumber}`,
       html: emailHtml,

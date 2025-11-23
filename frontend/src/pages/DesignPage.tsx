@@ -71,6 +71,11 @@ function DesignContent(): JSX.Element {
     }
   }, [orderId, isLoaded, isSignedIn]);
 
+  const fetchDesigns = async (token: string) => {
+    const designsResponse = await apiGet(`/api/designs?orderId=${orderId}`, token);
+    setDesigns(designsResponse.data || []);
+  };
+
   const fetchOrderAndDesigns = async () => {
     try {
       setLoading(true);
@@ -86,8 +91,7 @@ function DesignContent(): JSX.Element {
       setOrder(orderResponse.data);
 
       // Fetch existing designs for this order
-      const designsResponse = await apiGet(`/api/designs?orderId=${orderId}`, token);
-      setDesigns(designsResponse.data || []);
+      await fetchDesigns(token);
     } catch (err: any) {
       console.error('Error fetching order/designs:', err);
       setError(err.message || 'Failed to load order details');
@@ -148,6 +152,11 @@ function DesignContent(): JSX.Element {
           designsGenerated: order.designsGenerated + 1,
         });
       }
+
+      // Poll for status update so the approve button appears without a manual refresh
+      setTimeout(() => {
+        fetchOrderAndDesigns();
+      }, 4000);
     } catch (err: any) {
       console.error('Error generating design:', err);
       setError(err.message || 'Failed to generate design');
@@ -242,6 +251,33 @@ function DesignContent(): JSX.Element {
   const hasReachedLimit =
     order.maxDesigns !== 9999 && order.designsGenerated >= order.maxDesigns;
 
+  // Auto-refresh designs when any are still generating
+  useEffect(() => {
+    const hasGenerating = designs.some((design) => design.status === 'GENERATING');
+    if (!hasGenerating) return;
+
+    let timer: number | undefined;
+    const refresh = async () => {
+      try {
+        const token = await getToken();
+        if (!token) return;
+        await fetchDesigns(token);
+      } catch (err) {
+        console.error('Error refreshing designs:', err);
+      } finally {
+        timer = window.setTimeout(refresh, 4000);
+      }
+    };
+
+    timer = window.setTimeout(refresh, 3000);
+
+    return () => {
+      if (timer) {
+        clearTimeout(timer);
+      }
+    };
+  }, [designs, getToken]);
+
   return (
     <div className="container-max py-8">
       {/* Header */}
@@ -267,11 +303,11 @@ function DesignContent(): JSX.Element {
         <div className="text-right">
           <p className="text-sm text-primary-800 dark:text-primary-200">
             <strong>Designs Generated:</strong> {order.designsGenerated}/{' '}
-            {order.maxDesigns === 9999 ? '∞' : order.maxDesigns}
+            {order.maxDesigns === 9999 ? 'unlimited' : order.maxDesigns}
           </p>
           <p className="text-sm text-primary-800 dark:text-primary-200">
             <strong>Remaining:</strong>{' '}
-            {typeof remainingDesigns === 'number' ? remainingDesigns : '∞'}
+            {typeof remainingDesigns === 'number' ? remainingDesigns : 'unlimited'}
           </p>
         </div>
       </div>
@@ -340,7 +376,7 @@ function DesignContent(): JSX.Element {
               disabled={!canGenerate || hasReachedLimit || isLoadingSurprise}
               className="w-full"
             >
-              {isLoadingSurprise ? 'Loading...' : '✨ Surprise Me'}
+              {isLoadingSurprise ? 'Loading...' : 'Surprise Me'}
             </Button>
           </div>
 
@@ -385,7 +421,7 @@ function DesignContent(): JSX.Element {
                 Generating Design...
               </span>
             ) : (
-              '🎨 Generate Design'
+              'Generate Design'
             )}
           </Button>
 
@@ -432,7 +468,7 @@ function DesignContent(): JSX.Element {
                   )}
                   {design.approvalStatus && (
                     <div className="absolute top-2 right-2 bg-green-500 text-white px-3 py-1 rounded-full text-xs font-semibold">
-                      ✓ Approved
+                      Approved
                     </div>
                   )}
                 </div>
@@ -466,7 +502,7 @@ function DesignContent(): JSX.Element {
                           Approving...
                         </span>
                       ) : (
-                        '✓ Approve This Design'
+                        'Approve This Design'
                       )}
                     </Button>
                   )}
@@ -488,7 +524,7 @@ function DesignContent(): JSX.Element {
       {/* Back Button */}
       <div className="mt-8 text-center">
         <Button variant="secondary" onClick={() => navigate('/account')}>
-          ← Back to My Orders
+          Back to My Orders
         </Button>
       </div>
     </div>

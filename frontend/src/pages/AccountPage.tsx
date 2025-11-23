@@ -22,6 +22,8 @@ interface Order {
   createdAt: string;
   items: any[];
   designs: any[];
+  fulfillmentStatus?: string | null;
+  trackingNumber?: string | null;
 }
 
 function AccountContent(): JSX.Element {
@@ -143,6 +145,18 @@ function AccountContent(): JSX.Element {
                   <span>
                     Designs: {order.designsGenerated}/{order.maxDesigns === 9999 ? '∞' : order.maxDesigns}
                   </span>
+                  {order.fulfillmentStatus && (
+                    <>
+                      <span>•</span>
+                      <span>Fulfillment: {order.fulfillmentStatus}</span>
+                    </>
+                  )}
+                  {order.trackingNumber && (
+                    <>
+                      <span>•</span>
+                      <span>Tracking: {order.trackingNumber}</span>
+                    </>
+                  )}
                 </div>
 
                 <div className="mt-4 flex gap-3">

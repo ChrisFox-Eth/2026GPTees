@@ -22,6 +22,8 @@ interface ShippingAddress {
   phone?: string;
 }
 
+const SHIPPING_STORAGE_KEY = 'gptees_shipping_address';
+
 export default function CheckoutPage(): JSX.Element {
   const navigate = useNavigate();
   const { cart, getSubtotal } = useCart();
@@ -48,8 +50,25 @@ export default function CheckoutPage(): JSX.Element {
     }
   }, [cart.length, navigate]);
 
+  // Load saved shipping info for faster mobile checkout
+  useEffect(() => {
+    const saved = localStorage.getItem(SHIPPING_STORAGE_KEY);
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved) as ShippingAddress;
+        setShipping((prev) => ({ ...prev, ...parsed }));
+      } catch {
+        // ignore malformed saved data
+      }
+    }
+  }, []);
+
   const handleInputChange = (field: keyof ShippingAddress, value: string) => {
-    setShipping((prev) => ({ ...prev, [field]: value }));
+    setShipping((prev) => {
+      const updated = { ...prev, [field]: value };
+      localStorage.setItem(SHIPPING_STORAGE_KEY, JSON.stringify(updated));
+      return updated;
+    });
   };
 
   const handleCheckout = async () => {
@@ -74,6 +93,9 @@ export default function CheckoutPage(): JSX.Element {
         },
         token
       );
+
+      // Remember shipping info for the next checkout
+      localStorage.setItem(SHIPPING_STORAGE_KEY, JSON.stringify(shipping));
 
       const checkoutUrl = response.data.url;
       if (checkoutUrl) {
@@ -111,6 +133,9 @@ export default function CheckoutPage(): JSX.Element {
                 type="text"
                 value={shipping.name}
                 onChange={(e) => handleInputChange('name', e.target.value)}
+                name="name"
+                autoComplete="name"
+                placeholder="Jane Doe"
                 className="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 px-3 py-2"
                 required
               />
@@ -124,6 +149,9 @@ export default function CheckoutPage(): JSX.Element {
                 type="text"
                 value={shipping.address1}
                 onChange={(e) => handleInputChange('address1', e.target.value)}
+                name="address1"
+                autoComplete="address-line1"
+                placeholder="123 Main St"
                 className="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 px-3 py-2"
                 required
               />
@@ -137,6 +165,8 @@ export default function CheckoutPage(): JSX.Element {
                 type="text"
                 value={shipping.address2}
                 onChange={(e) => handleInputChange('address2', e.target.value)}
+                name="address2"
+                autoComplete="address-line2"
                 className="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 px-3 py-2"
               />
             </div>
@@ -149,6 +179,9 @@ export default function CheckoutPage(): JSX.Element {
                 type="text"
                 value={shipping.city}
                 onChange={(e) => handleInputChange('city', e.target.value)}
+                name="city"
+                autoComplete="address-level2"
+                placeholder="Austin"
                 className="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 px-3 py-2"
                 required
               />
@@ -162,6 +195,9 @@ export default function CheckoutPage(): JSX.Element {
                 type="text"
                 value={shipping.state || ''}
                 onChange={(e) => handleInputChange('state', e.target.value)}
+                name="state"
+                autoComplete="address-level1"
+                placeholder="TX"
                 className="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 px-3 py-2"
               />
             </div>
@@ -174,6 +210,10 @@ export default function CheckoutPage(): JSX.Element {
                 type="text"
                 value={shipping.zip}
                 onChange={(e) => handleInputChange('zip', e.target.value)}
+                name="postal"
+                autoComplete="postal-code"
+                inputMode="numeric"
+                placeholder="78701"
                 className="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 px-3 py-2"
                 required
               />
@@ -187,6 +227,9 @@ export default function CheckoutPage(): JSX.Element {
                 type="text"
                 value={shipping.country}
                 onChange={(e) => handleInputChange('country', e.target.value)}
+                name="country"
+                autoComplete="country"
+                placeholder="US"
                 className="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 px-3 py-2"
                 required
               />
@@ -200,6 +243,9 @@ export default function CheckoutPage(): JSX.Element {
                 type="tel"
                 value={shipping.phone || ''}
                 onChange={(e) => handleInputChange('phone', e.target.value)}
+                name="phone"
+                autoComplete="tel"
+                inputMode="tel"
                 className="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 px-3 py-2"
                 placeholder="For delivery updates"
               />

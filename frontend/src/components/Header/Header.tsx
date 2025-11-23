@@ -27,18 +27,22 @@ export default function Header({ isDark, onToggleTheme }: HeaderProps): JSX.Elem
           <div className="h-8 w-8 bg-primary-600 rounded-md flex items-center justify-center text-white font-bold">
             G
           </div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-            2026GPTees
-          </h1>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">2026GPTees</h1>
         </Link>
 
         <div className="flex items-center gap-4">
           {/* Navigation Links */}
           <nav className="hidden md:flex items-center gap-6">
-            <Link to="/" className="text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 transition-colors">
+            <Link
+              to="/"
+              className="text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 transition-colors"
+            >
               Home
             </Link>
-            <Link to="/shop" className="text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 transition-colors">
+            <Link
+              to="/shop"
+              className="text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 transition-colors"
+            >
               Shop
             </Link>
           </nav>
@@ -58,7 +62,10 @@ export default function Header({ isDark, onToggleTheme }: HeaderProps): JSX.Elem
           </SignedOut>
 
           <SignedIn>
-            <Link to="/account" className="text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 transition-colors">
+            <Link
+              to="/account"
+              className="text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 transition-colors"
+            >
               Account
             </Link>
             <div className="flex items-center gap-2">
@@ -74,7 +81,7 @@ export default function Header({ isDark, onToggleTheme }: HeaderProps): JSX.Elem
           {/* Cart */}
           <Link to="/cart" className="relative">
             <Button variant="secondary" size="sm">
-              🛒 Cart
+              Cart
               {cartItemCount > 0 && (
                 <span className="absolute -top-2 -right-2 bg-primary-600 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
                   {cartItemCount}
@@ -90,7 +97,7 @@ export default function Header({ isDark, onToggleTheme }: HeaderProps): JSX.Elem
             onClick={onToggleTheme}
             ariaLabel={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
           >
-            {isDark ? '☀️' : '🌙'}
+            {isDark ? 'Light' : 'Dark'}
           </Button>
         </div>
       </div>

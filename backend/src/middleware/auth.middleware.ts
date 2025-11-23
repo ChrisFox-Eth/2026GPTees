@@ -34,14 +34,16 @@ export const requireAuth = async (
       throw new AppError('Invalid authorization token', 401);
     }
 
-    const secretKey = process.env.CLERK_SECRET_KEY || process.env.CLERK_PUBLISHABLE_KEY;
+    const secretKey = process.env.CLERK_SECRET_KEY;
     if (!secretKey) {
-      throw new AppError('Clerk configuration missing', 500);
+      throw new AppError('Clerk secret key missing', 500);
     }
 
     const payload = await verifyToken(token, {
       secretKey,
       issuer: (iss) => iss.startsWith('https://clerk.'),
+      // Ensure the token is actually meant for this app
+      audience: process.env.CLERK_PUBLISHABLE_KEY,
     });
 
     if (!payload || !payload.sub) {
