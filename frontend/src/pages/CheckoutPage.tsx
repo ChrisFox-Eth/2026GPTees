@@ -26,7 +26,7 @@ const SHIPPING_STORAGE_KEY = 'gptees_shipping_address';
 
 export default function CheckoutPage(): JSX.Element {
   const navigate = useNavigate();
-  const { cart, getSubtotal } = useCart();
+  const { cart, getSubtotal, isLoaded } = useCart();
   const { getToken } = useAuth();
 
   const [shipping, setShipping] = useState<ShippingAddress>({
@@ -45,10 +45,12 @@ export default function CheckoutPage(): JSX.Element {
   const subtotal = getSubtotal();
 
   useEffect(() => {
+    // Wait for cart to load from localStorage before redirecting
+    if (!isLoaded) return;
     if (cart.length === 0) {
       navigate('/cart');
     }
-  }, [cart.length, navigate]);
+  }, [cart.length, isLoaded, navigate]);
 
   // Load saved shipping info for faster mobile checkout
   useEffect(() => {
@@ -274,7 +276,7 @@ export default function CheckoutPage(): JSX.Element {
                 <div>
                   <p className="font-semibold text-gray-900 dark:text-white">{item.productName}</p>
                   <p className="text-sm text-gray-600 dark:text-gray-400">
-                    {item.size} • {item.color} • {item.tier}
+                    {item.size} / {item.color} / {item.tier}
                   </p>
                 </div>
                 <div className="text-right text-gray-900 dark:text-white">
