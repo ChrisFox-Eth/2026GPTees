@@ -8,6 +8,7 @@ import { Request, Response } from 'express';
 import { catchAsync, AppError } from '../middleware/error.middleware.js';
 import { generateDesign, generateRandomPrompt } from '../services/openai.service.js';
 import { uploadImage } from '../services/s3.service.js';
+import { uploadImageWithFallback } from '../services/supabase-storage.service.js';
 import { createPrintfulOrder } from '../services/printful.service.js';
 import { sendDesignApproved } from '../services/email.service.js';
 import prisma from '../config/database.js';
@@ -83,22 +84,27 @@ export const createDesign = catchAsync(async (req: Request, res: Response) => {
     },
   });
 
-  // Upload to S3 in background (non-blocking)
-  uploadImage(imageUrl, design.id)
-    .then(async ({ imageUrl: s3Url, thumbnailUrl: s3ThumbnailUrl }) => {
+  // Upload to persistent storage in background (Supabase → S3 fallback → temporary)
+  uploadImageWithFallback(imageUrl, design.id, uploadImage)
+    .then(async ({ imageUrl: storageUrl, thumbnailUrl: storageThumbnailUrl, storage }) => {
       await prisma.design.update({
         where: { id: design.id },
         data: {
-          imageUrl: s3Url,
-          thumbnailUrl: s3ThumbnailUrl,
+          imageUrl: storageUrl,
+          thumbnailUrl: storageThumbnailUrl,
           status: 'COMPLETED',
         },
       });
-      console.log(`✓ Design ${design.id} uploaded to S3`);
+      console.log(`✅ Design ${design.id} uploaded to ${storage} storage`);
+
+      // Warn if using temporary storage
+      if (storage === 'temporary') {
+        console.warn(`⚠️  Design ${design.id} using temporary OpenAI URL - will expire in 1 hour! Please configure Supabase or S3 storage.`);
+      }
     })
     .catch((error) => {
-      console.error('S3 upload error:', error);
-      // Keep the OpenAI URL if S3 fails
+      console.error('❌ All storage uploads failed:', error);
+      // Mark as completed even if upload fails (keeps OpenAI URL)
       prisma.design.update({
         where: { id: design.id },
         data: { status: 'COMPLETED' },

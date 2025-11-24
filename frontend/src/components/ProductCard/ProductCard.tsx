@@ -11,7 +11,14 @@ export interface ProductCardProps {
   onClick: () => void;
 }
 
+const TIER_PRICES = {
+  BASIC: 34.99,
+  PREMIUM: 54.99,
+};
+
 export default function ProductCard({ product, onClick }: ProductCardProps): JSX.Element {
+  // Calculate starting price (Basic tier + base price)
+  const startingPrice = Number(product.basePrice) + (product.tierPricing?.BASIC?.price ?? TIER_PRICES.BASIC);
   return (
     <div
       onClick={onClick}
@@ -48,7 +55,7 @@ export default function ProductCard({ product, onClick }: ProductCardProps): JSX
           <div>
             <p className="text-sm text-gray-500 dark:text-gray-400">Starting at</p>
             <p className="text-xl font-bold text-primary-600 dark:text-primary-400">
-              ${Number(product.basePrice).toFixed(2)}
+              ${startingPrice.toFixed(2)}
             </p>
           </div>
 
