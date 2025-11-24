@@ -1,6 +1,6 @@
 /**
  * @module utils/analytics
- * @description Lightweight Vercel Analytics helpers for page and event tracking.
+ * @description Vercel Analytics helpers for page and event tracking.
  */
 
 import { inject, track } from '@vercel/analytics';
@@ -9,16 +9,17 @@ type Primitive = string | number | boolean | null;
 type AnalyticsPayload = Record<string, Primitive>;
 
 const isClient = typeof window !== 'undefined';
-let hasInjected = false;
+let injected = false;
 
 /**
  * Initialize Vercel Analytics once on the client.
  */
 export function initAnalytics(): void {
-  if (!isClient || hasInjected) return;
+  if (!isClient || injected) return;
+
   try {
     inject({ mode: import.meta.env.DEV ? 'development' : 'production' });
-    hasInjected = true;
+    injected = true;
   } catch (error) {
     if (import.meta.env.DEV) {
       console.warn('Analytics injection failed', error);
@@ -43,7 +44,7 @@ const sanitizePayload = (payload?: Record<string, unknown>): AnalyticsPayload =>
 };
 
 /**
- * Track a custom event with safe, flat payloads.
+ * Track a custom event with a safe, flat payload.
  */
 export function trackEvent(eventName: string, payload?: Record<string, unknown>): void {
   if (!isClient) return;
@@ -58,7 +59,7 @@ export function trackEvent(eventName: string, payload?: Record<string, unknown>)
 }
 
 /**
- * Track a page view with route details.
+ * Track a page view when the router path changes.
  */
 export function trackPageView(details: {
   path: string;
