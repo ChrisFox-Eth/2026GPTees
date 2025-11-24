@@ -86,6 +86,7 @@ model Order {
   address           Address?    @relation(fields: [addressId], references: [id])
   user              User        @relation(fields: [userId], references: [id], onDelete: Cascade)
   payment           Payment?
+  fulfillmentEvents FulfillmentEvent[]
 
   @@map("orders")
 }
@@ -173,6 +174,22 @@ model Settings {
   updatedAt DateTime @updatedAt
 
   @@map("settings")
+}
+
+model FulfillmentEvent {
+  id              String   @id @default(uuid())
+  orderId         String?
+  printfulOrderId String?
+  type            String
+  status          String?
+  payload         Json?
+  createdAt       DateTime @default(now())
+
+  order Order? @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([orderId])
+  @@index([printfulOrderId])
+  @@map("fulfillment_events")
 }
 
 enum OrderStatus {

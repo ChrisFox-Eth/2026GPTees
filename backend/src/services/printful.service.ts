@@ -9,7 +9,7 @@ import prisma from '../config/database.js';
 import { sendOrderShipped } from './email.service.js';
 
 /**
- * Printful API client configuration
+ * Printful API client configuration (v2)
  */
 const printfulApi: AxiosInstance = axios.create({
   baseURL: 'https://api.printful.com',
@@ -20,6 +20,8 @@ const printfulApi: AxiosInstance = axios.create({
 });
 
 const PRINTFUL_STORE_ID = process.env.PRINTFUL_STORE_ID;
+const STORE_HEADERS = PRINTFUL_STORE_ID ? { 'X-PF-Store-Id': PRINTFUL_STORE_ID } : {};
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 /**
  * Interfaces
@@ -35,12 +37,10 @@ interface PrintfulRecipient {
   email?: string;
 }
 
-interface PrintfulFile {
+interface PrintfulLayer {
+  type: 'file';
   url: string;
-  type?: 'default' | 'back' | 'label_outside' | 'label_inside';
   position?: {
-    area_width: number;
-    area_height: number;
     width: number;
     height: number;
     top: number;
@@ -48,41 +48,43 @@ interface PrintfulFile {
   };
 }
 
+interface PrintfulPlacement {
+  placement: string;
+  technique: string;
+  layers: PrintfulLayer[];
+}
+
 interface PrintfulOrderItem {
-  variant_id?: number;
-  external_variant_id?: string;
+  source: 'catalog';
+  catalog_variant_id: number;
   quantity: number;
-  retail_price?: string;
   name?: string;
-  files?: PrintfulFile[];
+  retail_price?: string;
+  placements: PrintfulPlacement[];
 }
 
 interface PrintfulOrderRequest {
   recipient: PrintfulRecipient;
-  items: PrintfulOrderItem[];
+  order_items: PrintfulOrderItem[];
+  external_id?: string;
   retail_costs?: {
     currency: string;
     subtotal: string;
-    discount?: string;
     shipping?: string;
     tax?: string;
-    total: string;
+    total?: string;
   };
-  external_id?: string;
+  store_id?: string;
 }
 
 interface PrintfulOrderResponse {
   id: number;
-  external_id: string;
+  external_id?: string;
   status: string;
-  shipping: string;
-  created: number;
-  updated: number;
-  recipient: PrintfulRecipient;
-  items: any[];
-  costs: any;
-  retail_costs: any;
-  shipments: any[];
+  shipments?: any[];
+  retail_costs?: {
+    calculation_status?: string;
+  };
 }
 
 /**
@@ -92,7 +94,7 @@ interface PrintfulOrderResponse {
  */
 const COLOR_VARIANT_MAP: Record<string, Record<string, Record<string, number>>> = {
   '71': {
-    // Basic Tee (Bella+Canvas 3001)
+    // Bella+Canvas 3001 tee
     Black: {
       S: 4011,
       M: 4012,
@@ -114,6 +116,13 @@ const COLOR_VARIANT_MAP: Record<string, Record<string, Record<string, number>>> 
       XL: 4024,
       '2XL': 4025,
     },
+    Blue: {
+      S: 4021,
+      M: 4022,
+      L: 4023,
+      XL: 4024,
+      '2XL': 4025,
+    },
     Gray: {
       S: 4026,
       M: 4027,
@@ -122,74 +131,107 @@ const COLOR_VARIANT_MAP: Record<string, Record<string, Record<string, number>>> 
       '2XL': 4030,
     },
   },
-  '19': {
-    // Premium Tee (Gildan 5000)
-    Black: {
-      S: 1359,
-      M: 1360,
-      L: 1361,
-      XL: 1362,
-      '2XL': 1363,
-      '3XL': 1364,
-    },
-    White: {
-      S: 1365,
-      M: 1366,
-      L: 1367,
-      XL: 1368,
-      '2XL': 1369,
-      '3XL': 1370,
-    },
-    Navy: {
-      S: 1371,
-      M: 1372,
-      L: 1373,
-      XL: 1374,
-      '2XL': 1375,
-      '3XL': 1376,
-    },
-    Red: {
-      S: 1377,
-      M: 1378,
-      L: 1379,
-      XL: 1380,
-      '2XL': 1381,
-      '3XL': 1382,
-    },
-    'Royal Blue': {
-      S: 1383,
-      M: 1384,
-      L: 1385,
-      XL: 1386,
-      '2XL': 1387,
-      '3XL': 1388,
-    },
-  },
-  '146': {
-    // Hoodie (Gildan 18500)
-    Black: {
-      S: 4376,
-      M: 4377,
-      L: 4378,
-      XL: 4379,
-      '2XL': 4380,
-    },
-    Gray: {
-      S: 4381,
-      M: 4382,
-      L: 4383,
-      XL: 4384,
-      '2XL': 4385,
-    },
-    Navy: {
-      S: 4386,
-      M: 4387,
-      L: 4388,
-      XL: 4389,
-      '2XL': 4390,
-    },
-  },
 };
+
+async function logFulfillmentEvent(params: {
+  orderId?: string;
+  printfulOrderId?: string;
+  type: string;
+  status?: string;
+  payload?: unknown;
+}) {
+  try {
+    await prisma.fulfillmentEvent.create({
+      data: {
+        orderId: params.orderId,
+        printfulOrderId: params.printfulOrderId,
+        type: params.type,
+        status: params.status,
+        payload: params.payload as any,
+      },
+    });
+  } catch (err) {
+    console.error('Failed to log fulfillment event', err);
+  }
+}
+
+const COUNTRY_CODE_MAP: Record<string, string> = {
+  'UNITED STATES': 'US',
+  'UNITED STATES OF AMERICA': 'US',
+  USA: 'US',
+  US: 'US',
+  CANADA: 'CA',
+  CA: 'CA',
+  AUSTRALIA: 'AU',
+  AU: 'AU',
+  'UNITED KINGDOM': 'GB',
+  UK: 'GB',
+};
+
+const STATE_CODE_MAP: Record<string, string> = {
+  ALABAMA: 'AL',
+  ALASKA: 'AK',
+  ARIZONA: 'AZ',
+  ARKANSAS: 'AR',
+  CALIFORNIA: 'CA',
+  COLORADO: 'CO',
+  CONNECTICUT: 'CT',
+  DELAWARE: 'DE',
+  FLORIDA: 'FL',
+  GEORGIA: 'GA',
+  HAWAII: 'HI',
+  IDAHO: 'ID',
+  ILLINOIS: 'IL',
+  INDIANA: 'IN',
+  IOWA: 'IA',
+  KANSAS: 'KS',
+  KENTUCKY: 'KY',
+  LOUISIANA: 'LA',
+  MAINE: 'ME',
+  MARYLAND: 'MD',
+  MASSACHUSETTS: 'MA',
+  MICHIGAN: 'MI',
+  MINNESOTA: 'MN',
+  MISSISSIPPI: 'MS',
+  MISSOURI: 'MO',
+  MONTANA: 'MT',
+  NEBRASKA: 'NE',
+  NEVADA: 'NV',
+  'NEW HAMPSHIRE': 'NH',
+  'NEW JERSEY': 'NJ',
+  'NEW MEXICO': 'NM',
+  'NEW YORK': 'NY',
+  'NORTH CAROLINA': 'NC',
+  'NORTH DAKOTA': 'ND',
+  OHIO: 'OH',
+  OKLAHOMA: 'OK',
+  OREGON: 'OR',
+  PENNSYLVANIA: 'PA',
+  'RHODE ISLAND': 'RI',
+  'SOUTH CAROLINA': 'SC',
+  'SOUTH DAKOTA': 'SD',
+  TENNESSEE: 'TN',
+  TEXAS: 'TX',
+  UTAH: 'UT',
+  VERMONT: 'VT',
+  VIRGINIA: 'VA',
+  WASHINGTON: 'WA',
+  'WEST VIRGINIA': 'WV',
+  WISCONSIN: 'WI',
+  WYOMING: 'WY',
+};
+
+function normalizeCountryCode(country: string | null | undefined): string {
+  if (!country) return '';
+  const normalized = country.trim().toUpperCase();
+  return COUNTRY_CODE_MAP[normalized] || (normalized.length === 2 ? normalized : normalized.slice(0, 2));
+}
+
+function normalizeStateCode(state: string | null | undefined): string {
+  if (!state) return '';
+  const normalized = state.trim().toUpperCase();
+  return STATE_CODE_MAP[normalized] || normalized;
+}
 
 /**
  * Get Printful variant ID from product, color, and size
@@ -221,7 +263,7 @@ function getPrintfulVariantId(
 }
 
 /**
- * Create a Printful order from an approved design
+ * Create a Printful order from an approved design (v2 API)
  * @param orderId - Database order ID
  * @param designId - Approved design ID
  * @returns Printful order response
@@ -230,9 +272,10 @@ export async function createPrintfulOrder(
   orderId: string,
   designId: string
 ): Promise<{ success: boolean; printfulOrderId?: number; error?: string }> {
+  let order: any;
   try {
     // Fetch order with all related data
-    const order = await prisma.order.findUnique({
+    order = await prisma.order.findUnique({
       where: { id: orderId },
       include: {
         items: {
@@ -264,15 +307,9 @@ export async function createPrintfulOrder(
       throw new Error('Design must be approved before submitting to Printful');
     }
 
-    // Build Printful order items
-    const printfulItems: PrintfulOrderItem[] = [];
-
-    for (const item of order.items) {
-      const variantId = getPrintfulVariantId(
-        item.product.printfulId,
-        item.color,
-        item.size
-      );
+    // Build Printful order items (v2)
+    const printfulItems: PrintfulOrderItem[] = order.items.map((item: any) => {
+      const variantId = getPrintfulVariantId(item.product.printfulId, item.color, item.size);
 
       if (!variantId) {
         throw new Error(
@@ -280,36 +317,40 @@ export async function createPrintfulOrder(
         );
       }
 
-      printfulItems.push({
-        variant_id: variantId,
+      const isApparel = item.product.category === 'T_SHIRT' || item.product.category === 'HOODIE';
+      const placement = isApparel ? 'front' : 'default';
+      const technique = isApparel ? 'dtg' : 'stock-mug';
+
+      const placements: PrintfulPlacement[] = [
+        {
+          placement,
+          technique,
+          layers: [
+            {
+              type: 'file',
+              url: design.imageUrl,
+            },
+          ],
+        },
+      ];
+
+      return {
+        source: 'catalog',
+        catalog_variant_id: variantId,
         quantity: item.quantity,
         retail_price: item.unitPrice.toString(),
         name: `${item.product.name} - ${item.color} - ${item.size}`,
-        files: [
-          {
-            url: design.imageUrl,
-            type: 'default',
-            // Default positioning for front print
-            position: {
-              area_width: 1800,
-              area_height: 2400,
-              width: 1800,
-              height: 1800,
-              top: 300,
-              left: 0,
-            },
-          },
-        ],
-      });
-    }
+        placements,
+      };
+    });
 
-    // Build recipient info
+    // Build recipient info (normalized codes for Printful)
     const recipient: PrintfulRecipient = {
       name: order.address.name,
       address1: order.address.address1,
       city: order.address.city,
-      state_code: order.address.state || '',
-      country_code: order.address.country,
+      state_code: normalizeStateCode(order.address.state),
+      country_code: normalizeCountryCode(order.address.country),
       zip: order.address.zip,
       phone: order.address.phone || undefined,
     };
@@ -317,7 +358,8 @@ export async function createPrintfulOrder(
     // Build Printful order request
     const printfulOrderData: PrintfulOrderRequest = {
       recipient,
-      items: printfulItems,
+      order_items: printfulItems,
+      external_id: order.orderNumber,
       retail_costs: {
         currency: 'USD',
         subtotal: order.totalAmount.toString(),
@@ -325,31 +367,79 @@ export async function createPrintfulOrder(
         tax: '0.00',
         total: order.totalAmount.toString(),
       },
-      external_id: order.orderNumber,
+      store_id: PRINTFUL_STORE_ID,
     };
 
-    if (PRINTFUL_STORE_ID) {
-      // Route order to a specific Printful store if provided
-      (printfulOrderData as any).store_id = PRINTFUL_STORE_ID;
+    console.log('Creating Printful v2 order:', JSON.stringify(printfulOrderData, null, 2));
+    await logFulfillmentEvent({
+      orderId,
+      type: 'printful_order_create_started',
+      payload: printfulOrderData,
+    });
+
+    // Create order in Printful (draft)
+    const response = await printfulApi.post('/v2/orders', printfulOrderData, {
+      headers: STORE_HEADERS,
+    });
+
+    const printfulOrder: PrintfulOrderResponse =
+      response.data?.result ?? response.data?.data ?? response.data;
+
+    const printfulOrderId = printfulOrder?.id?.toString();
+
+    console.log(`✓ Printful order created (draft): ${printfulOrderId}`);
+    await logFulfillmentEvent({
+      orderId,
+      printfulOrderId,
+      type: 'printful_order_created',
+      status: printfulOrder?.status,
+      payload: printfulOrder,
+    });
+
+    if (!printfulOrderId) {
+      throw new Error('Printful did not return an order ID');
     }
 
-    console.log('Creating Printful order:', JSON.stringify(printfulOrderData, null, 2));
+    await waitForPrintfulOrderReady(printfulOrderId);
 
-    // Create order in Printful
-    const response = await printfulApi.post('/orders', printfulOrderData);
+    // Confirm order for fulfillment (retry a few times if costs are still calculating)
+    let confirmed = false;
+    let lastError: any;
+    for (let attempt = 1; attempt <= 6; attempt += 1) {
+      const confirmResult = await confirmPrintfulOrder(printfulOrderId);
+      if (confirmResult.success) {
+        confirmed = true;
+        break;
+      }
+      lastError = confirmResult.error;
+      if (
+        lastError?.includes('calculations still running') ||
+        lastError?.includes('design is still processing')
+      ) {
+        await waitForPrintfulOrderReady(printfulOrderId);
+      }
+      await sleep(3000);
+    }
 
-    const printfulOrder: PrintfulOrderResponse = response.data.result;
-
-    console.log(`✓ Printful order created: ${printfulOrder.id}`);
+    if (!confirmed) {
+      throw new Error(lastError || 'Failed to confirm Printful order');
+    }
 
     // Update our order with Printful order ID
     await prisma.order.update({
       where: { id: orderId },
       data: {
-        printfulOrderId: printfulOrder.id.toString(),
+        printfulOrderId,
         status: 'SUBMITTED',
         fulfillmentStatus: printfulOrder.status,
       },
+    });
+
+    await logFulfillmentEvent({
+      orderId,
+      printfulOrderId,
+      type: 'printful_order_confirmed',
+      status: 'confirmed',
     });
 
     return {
@@ -357,13 +447,82 @@ export async function createPrintfulOrder(
       printfulOrderId: printfulOrder.id,
     };
   } catch (error: any) {
+    const message = error.response?.data?.error?.message || error.message;
+
+    // If order already exists in Printful, reclaim it
+    if (message?.includes('External ID validation error') && order?.orderNumber) {
+      const existingOrder = await fetchPrintfulOrderByExternalId(order.orderNumber);
+      if (existingOrder?.id) {
+        console.log(`Re-using existing Printful order ${existingOrder.id} for ${order.orderNumber}`);
+
+        await prisma.order.update({
+          where: { id: orderId },
+          data: {
+            printfulOrderId: existingOrder.id.toString(),
+            status: 'SUBMITTED',
+            fulfillmentStatus: existingOrder.status,
+          },
+        });
+
+        await logFulfillmentEvent({
+          orderId,
+          printfulOrderId: existingOrder.id.toString(),
+          type: 'printful_order_reclaimed',
+          status: existingOrder.status,
+          payload: existingOrder,
+        });
+
+        // Attempt confirmation if needed
+        if (existingOrder.status !== 'fulfilled' && existingOrder.status !== 'shipped') {
+          await confirmPrintfulOrder(existingOrder.id.toString());
+        }
+
+        return { success: true, printfulOrderId: existingOrder.id };
+      }
+    }
+
     console.error('❌ Error creating Printful order:', error.response?.data || error.message);
+
+    await logFulfillmentEvent({
+      orderId,
+      type: 'printful_order_error',
+      status: 'failed',
+      payload: error.response?.data || { message },
+    });
 
     return {
       success: false,
-      error: error.response?.data?.error?.message || error.message,
+      error: message,
     };
   }
+}
+
+async function fetchPrintfulOrderByExternalId(
+  externalId: string
+): Promise<PrintfulOrderResponse | null> {
+  try {
+    const response = await printfulApi.get(`/v2/orders/@${externalId}`, { headers: STORE_HEADERS });
+    return response.data?.result ?? response.data?.data ?? response.data;
+  } catch (error: any) {
+    console.error('Error fetching Printful order by external_id:', error.response?.data || error.message);
+    return null;
+  }
+}
+
+async function waitForPrintfulOrderReady(
+  printfulOrderId: string,
+  attempts = 6,
+  delayMs = 3000
+): Promise<PrintfulOrderResponse | null> {
+  for (let attempt = 1; attempt <= attempts; attempt += 1) {
+    const order = await getPrintfulOrderStatus(printfulOrderId);
+    const calculationStatus = order?.retail_costs?.calculation_status;
+    if (!calculationStatus || calculationStatus === 'done') {
+      return order;
+    }
+    await sleep(delayMs);
+  }
+  return null;
 }
 
 /**
@@ -373,8 +532,8 @@ export async function createPrintfulOrder(
  */
 export async function getPrintfulOrderStatus(printfulOrderId: string): Promise<any> {
   try {
-    const response = await printfulApi.get(`/orders/${printfulOrderId}`);
-    return response.data.result;
+    const response = await printfulApi.get(`/v2/orders/${printfulOrderId}`, { headers: STORE_HEADERS });
+    return response.data?.result ?? response.data?.data ?? response.data;
   } catch (error: any) {
     console.error('Error fetching Printful order:', error.response?.data || error.message);
     throw new Error(error.response?.data?.error?.message || 'Failed to fetch Printful order');
@@ -390,13 +549,22 @@ export async function confirmPrintfulOrder(
   printfulOrderId: string
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    await printfulApi.post(`/orders/${printfulOrderId}/confirm`);
+    await printfulApi.post(`/v2/orders/${printfulOrderId}/confirmation`, undefined, {
+      headers: STORE_HEADERS,
+    });
 
     console.log(`✓ Printful order ${printfulOrderId} confirmed for fulfillment`);
 
     return { success: true };
   } catch (error: any) {
     console.error('Error confirming Printful order:', error.response?.data || error.message);
+
+    await logFulfillmentEvent({
+      printfulOrderId,
+      type: 'printful_order_confirm_error',
+      status: 'failed',
+      payload: error.response?.data || { message: error.message },
+    });
 
     return {
       success: false,
@@ -414,6 +582,13 @@ export async function handlePrintfulWebhook(webhookData: any): Promise<void> {
     const { type, data } = webhookData;
 
     console.log(`Received Printful webhook: ${type}`);
+
+    await logFulfillmentEvent({
+      type: 'printful_webhook',
+      status: type,
+      printfulOrderId: data?.order?.id?.toString(),
+      payload: webhookData,
+    });
 
     if (type === 'order_updated') {
       const printfulOrderId = data.order.id.toString();
@@ -447,9 +622,7 @@ export async function handlePrintfulWebhook(webhookData: any): Promise<void> {
       let newStatus = order.status;
       const wasNotShipped = order.status !== 'SHIPPED' && order.status !== 'DELIVERED';
 
-      if (status === 'fulfilled') {
-        newStatus = 'SHIPPED';
-      } else if (status === 'shipped') {
+      if (status === 'fulfilled' || status === 'shipped') {
         newStatus = 'SHIPPED';
       } else if (status === 'canceled') {
         newStatus = 'DESIGN_PENDING'; // Reset to allow re-submission
@@ -485,6 +658,11 @@ export async function handlePrintfulWebhook(webhookData: any): Promise<void> {
     }
   } catch (error: any) {
     console.error('Error handling Printful webhook:', error);
+    await logFulfillmentEvent({
+      type: 'printful_webhook_error',
+      status: 'failed',
+      payload: { message: error.message },
+    });
     throw error;
   }
 }
