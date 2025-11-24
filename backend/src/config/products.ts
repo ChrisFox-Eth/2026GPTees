@@ -36,20 +36,20 @@ export const PRODUCTS: ProductConfig[] = [
       { name: 'Blue', hex: '#000080' },
       { name: 'White', hex: '#FFFFFF' },
     ],
-  },
-  {
-    name: 'Premium Tee',
-    slug: 'premium-tee',
-    description: 'Premium tier; unlimited design generations',
-    basePrice: 29.99,
-    printfulId: '71', // Same base product, price differs by tier in-app
-    category: 'T_SHIRT',
-    sizes: ['S', 'M', 'L', 'XL', '2XL'],
-    colors: [
-      { name: 'Black', hex: '#000000' },
-      { name: 'Gray', hex: '#808080' },
-      { name: 'Blue', hex: '#000080' },
-      { name: 'White', hex: '#FFFFFF' },
-    ],
-  },
+  }
+  // {
+  //   name: 'Premium Tee',
+  //   slug: 'premium-tee',
+  //   description: 'Premium tier; unlimited design generations',
+  //   basePrice: 29.99,
+  //   printfulId: '71', // Same base product, price differs by tier in-app
+  //   category: 'T_SHIRT',
+  //   sizes: ['S', 'M', 'L', 'XL', '2XL'],
+  //   colors: [
+  //     { name: 'Black', hex: '#000000' },
+  //     { name: 'Gray', hex: '#808080' },
+  //     { name: 'Blue', hex: '#000080' },
+  //     { name: 'White', hex: '#FFFFFF' },
+  //   ],
+  // },
 ];

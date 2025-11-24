@@ -24,7 +24,10 @@ export default function ShopPage(): JSX.Element {
     try {
       setLoading(true);
       const response = await apiGet('/api/products');
-      setProducts(response.data);
+      const filtered = (response.data as Product[]).filter(
+        (p) => p.slug === 'basic-tee' || p.name.toLowerCase().includes('basic')
+      );
+      setProducts(filtered);
       setError(null);
     } catch (err: any) {
       setError(err.message || 'Failed to load products');
