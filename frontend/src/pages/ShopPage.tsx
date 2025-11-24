@@ -9,6 +9,7 @@ import { Product } from '../types/product';
 import { apiGet } from '../utils/api';
 import { ProductCard } from '../components/ProductCard';
 import { ProductModal } from '../components/ProductModal';
+import { trackEvent } from '@utils/analytics';
 
 export default function ShopPage(): JSX.Element {
   const [products, setProducts] = useState<Product[]>([]);
@@ -29,12 +30,31 @@ export default function ShopPage(): JSX.Element {
       );
       setProducts(filtered);
       setError(null);
+      trackEvent('shop.products.loaded', {
+        product_count: filtered.length,
+        has_basic: filtered.some((p) => p.slug === 'basic-tee'),
+      });
     } catch (err: any) {
       setError(err.message || 'Failed to load products');
       console.error('Error fetching products:', err);
+      trackEvent('shop.products.load_error', {
+        message: err?.message || 'unknown',
+      });
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleProductClick = (product: Product) => {
+    setSelectedProduct(product);
+    trackEvent('shop.product.open_modal', {
+      product_id: product.id,
+      product_name: product.name,
+      base_price: Number(product.basePrice),
+      color_count: product.colors.length,
+      size_count: product.sizes.length,
+      source_surface: 'shop_grid',
+    });
   };
 
   return (
@@ -76,7 +96,7 @@ export default function ShopPage(): JSX.Element {
             <ProductCard
               key={product.id}
               product={product}
-              onClick={() => setSelectedProduct(product)}
+              onClick={() => handleProductClick(product)}
             />
           ))}
         </div>

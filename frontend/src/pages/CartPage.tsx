@@ -8,6 +8,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@clerk/clerk-react';
 import { useCart } from '../hooks/useCart';
 import { Button } from '@components/Button';
+import { trackEvent } from '@utils/analytics';
 
 export default function CartPage(): JSX.Element {
   const { cart, removeFromCart, updateQuantity, getSubtotal, getTotalItems } = useCart();
@@ -18,6 +19,12 @@ export default function CartPage(): JSX.Element {
   const totalItems = getTotalItems();
 
   const handleCheckout = () => {
+    trackEvent('cart.checkout.start', {
+      item_count: totalItems,
+      subtotal: Number(subtotal.toFixed(2)),
+      is_signed_in: isSignedIn,
+    });
+
     if (!isSignedIn) {
       navigate('/sign-in');
       return;

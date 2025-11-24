@@ -8,6 +8,7 @@ import { useState } from 'react';
 import { Product } from '../../types/product';
 import { Button } from '@components/Button';
 import { useCart } from '../../hooks/useCart';
+import { trackEvent } from '@utils/analytics';
 
 interface ProductModalProps {
   product: Product;
@@ -35,6 +36,35 @@ export default function ProductModal({ product, isOpen, onClose }: ProductModalP
     product.tierPricing?.[selectedTier]?.price ??
     (selectedTier === 'PREMIUM' ? TIER_PRICES.PREMIUM : TIER_PRICES.BASIC);
   const totalPrice = basePrice + tierPrice;
+
+  const handleSizeChange = (size: string) => {
+    setSelectedSize(size);
+    trackEvent('shop.product.option_change', {
+      product_id: product.id,
+      option_type: 'size',
+      option_value: size,
+    });
+  };
+
+  const handleColorChange = (colorName: string) => {
+    const color = product.colors.find((c) => c.name === colorName);
+    if (!color) return;
+    setSelectedColor(color);
+    trackEvent('shop.product.option_change', {
+      product_id: product.id,
+      option_type: 'color',
+      option_value: color.name,
+    });
+  };
+
+  const handleTierChange = (tier: 'BASIC' | 'PREMIUM') => {
+    setSelectedTier(tier);
+    trackEvent('shop.product.option_change', {
+      product_id: product.id,
+      option_type: 'tier',
+      option_value: tier,
+    });
+  };
 
   const handleAddToCart = () => {
     console.log('Adding to cart:', {
@@ -121,7 +151,7 @@ export default function ProductModal({ product, isOpen, onClose }: ProductModalP
                   {product.sizes.map((size) => (
                     <button
                       key={size}
-                      onClick={() => setSelectedSize(size)}
+                      onClick={() => handleSizeChange(size)}
                       className={`px-4 py-2 border rounded-md transition-colors ${
                         selectedSize === size
                           ? 'border-primary-600 bg-primary-50 dark:bg-primary-900 text-primary-600 dark:text-primary-400'
@@ -143,7 +173,7 @@ export default function ProductModal({ product, isOpen, onClose }: ProductModalP
                   {product.colors.map((color, idx) => (
                     <button
                       key={idx}
-                      onClick={() => setSelectedColor(color)}
+                      onClick={() => handleColorChange(color.name)}
                       className={`w-10 h-10 rounded-full border-2 transition-all ${
                         selectedColor.name === color.name
                           ? 'border-primary-600 scale-110'
@@ -163,7 +193,7 @@ export default function ProductModal({ product, isOpen, onClose }: ProductModalP
                 </label>
                 <div className="space-y-2">
                   <button
-                    onClick={() => setSelectedTier('BASIC')}
+                    onClick={() => handleTierChange('BASIC')}
                     className={`w-full p-4 border rounded-lg text-left transition-colors ${
                       selectedTier === 'BASIC'
                         ? 'border-primary-600 bg-primary-50 dark:bg-primary-900'
@@ -185,7 +215,7 @@ export default function ProductModal({ product, isOpen, onClose }: ProductModalP
                     </div>
                   </button>
                   <button
-                    onClick={() => setSelectedTier('PREMIUM')}
+                    onClick={() => handleTierChange('PREMIUM')}
                     className={`w-full p-4 border rounded-lg text-left transition-colors ${
                       selectedTier === 'PREMIUM'
                         ? 'border-primary-600 bg-primary-50 dark:bg-primary-900'

@@ -10,6 +10,7 @@ import { useAuth, useUser } from '@clerk/clerk-react';
 import { apiGet } from '../utils/api';
 import { Button } from '@components/Button';
 import ProtectedRoute from '../components/ProtectedRoute';
+import { trackEvent } from '@utils/analytics';
 
 interface Order {
   id: string;
@@ -46,9 +47,15 @@ function AccountContent(): JSX.Element {
       const response = await apiGet('/api/orders', token);
       setOrders(response.data || []);
       setError(null);
+      trackEvent('account.orders.loaded', {
+        order_count: (response.data || []).length,
+      });
     } catch (err: any) {
       setError(err.message || 'Failed to load orders');
       console.error('Error fetching orders:', err);
+      trackEvent('account.orders.error', {
+        message: err?.message || 'unknown',
+      });
     } finally {
       setLoading(false);
     }

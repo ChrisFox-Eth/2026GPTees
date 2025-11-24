@@ -5,10 +5,11 @@
  */
 
 import { useState, useEffect } from 'react';
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, useLocation } from 'react-router-dom';
 import Header from '@components/Header/Header';
 import { Footer } from '@components/Footer';
 import { ErrorBoundary } from '@components/ErrorBoundary';
+import { trackEvent, trackPageView } from '@utils/analytics';
 import HomePage from './pages/HomePage';
 import SignInPage from './pages/SignInPage';
 import SignUpPage from './pages/SignUpPage';
@@ -25,6 +26,21 @@ import RefundsPage from './pages/RefundsPage';
 import NotFoundPage from './pages/NotFoundPage';
 import ProtectedRoute from './components/ProtectedRoute';
 import './App.css';
+
+function PageViewTracker(): JSX.Element | null {
+  const location = useLocation();
+
+  useEffect(() => {
+    trackPageView({
+      path: location.pathname,
+      search: location.search || null,
+      title: document.title,
+      referrer: document.referrer || undefined,
+    });
+  }, [location.pathname, location.search]);
+
+  return null;
+}
 
 export default function App(): JSX.Element {
   const [isDark, setIsDark] = useState(false);
@@ -68,10 +84,12 @@ export default function App(): JSX.Element {
     setIsDark(newIsDark);
     applyTheme(newIsDark);
     localStorage.setItem('theme', newIsDark ? 'dark' : 'light');
+    trackEvent('ui.theme.toggle', { theme: newIsDark ? 'dark' : 'light' });
   };
 
   return (
     <ErrorBoundary>
+      <PageViewTracker />
       <div className="min-h-screen bg-white dark:bg-gray-900 transition-colors duration-200 flex flex-col">
         <Header isDark={isDark} onToggleTheme={toggleTheme} />
         <div className="flex-1">

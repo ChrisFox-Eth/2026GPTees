@@ -6,6 +6,7 @@
 
 import { Link } from 'react-router-dom';
 import { Button } from '@components/Button';
+import { trackEvent } from '@utils/analytics';
 
 export default function PricingSection(): JSX.Element {
   const tiers = [
@@ -114,6 +115,12 @@ export default function PricingSection(): JSX.Element {
                   variant={tier.highlighted ? 'primary' : 'secondary'}
                   className="w-full"
                   size="lg"
+                  onClick={() =>
+                    trackEvent('pricing.plan.select', {
+                      plan_name: tier.name.toLowerCase(),
+                      highlighted: tier.highlighted,
+                    })
+                  }
                 >
                   {tier.cta}
                 </Button>

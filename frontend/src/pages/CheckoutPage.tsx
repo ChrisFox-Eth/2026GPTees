@@ -10,6 +10,7 @@ import { useAuth } from '@clerk/clerk-react';
 import { apiPost } from '../utils/api';
 import { useCart } from '../hooks/useCart';
 import { Button } from '@components/Button';
+import { trackEvent } from '@utils/analytics';
 
 interface ShippingAddress {
   name: string;
@@ -48,6 +49,7 @@ export default function CheckoutPage(): JSX.Element {
     // Wait for cart to load from localStorage before redirecting
     if (!isLoaded) return;
     if (cart.length === 0) {
+      trackEvent('checkout.redirect.cart_empty', {});
       navigate('/cart');
     }
   }, [cart.length, isLoaded, navigate]);
@@ -83,6 +85,14 @@ export default function CheckoutPage(): JSX.Element {
         return;
       }
 
+      trackEvent('checkout.payment.start', {
+        item_count: cart.length,
+        subtotal: Number(subtotal.toFixed(2)),
+        country: shipping.country,
+        has_state: Boolean(shipping.state),
+        has_phone: Boolean(shipping.phone),
+      });
+
       const response = await apiPost(
         '/api/payments/create-checkout-session',
         {
@@ -107,6 +117,9 @@ export default function CheckoutPage(): JSX.Element {
       }
     } catch (err: any) {
       console.error('Checkout error:', err);
+      trackEvent('checkout.payment.error', {
+        message: err?.message || 'unknown',
+      });
       setError(err.message || 'Failed to start checkout. Please try again.');
     } finally {
       setIsSubmitting(false);

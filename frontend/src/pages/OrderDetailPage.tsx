@@ -9,6 +9,7 @@ import { Link, useParams } from 'react-router-dom';
 import { useAuth } from '@clerk/clerk-react';
 import { apiGet } from '../utils/api';
 import { Button } from '@components/Button';
+import { trackEvent } from '@utils/analytics';
 
 interface OrderItem {
   id: string;
@@ -81,9 +82,18 @@ function OrderDetailContent(): JSX.Element {
       const response = await apiGet(`/api/orders/${id}`, token);
       setOrder(response.data);
       setError(null);
+      trackEvent('account.order_detail.loaded', {
+        order_id: id,
+        status: response.data?.status,
+        design_count: response.data?.designs?.length ?? 0,
+      });
     } catch (err: any) {
       console.error('Error loading order', err);
       setError(err.message || 'Failed to load order');
+      trackEvent('account.order_detail.error', {
+        order_id: id,
+        message: err?.message || 'unknown',
+      });
     } finally {
       setLoading(false);
     }

@@ -5,6 +5,7 @@
  */
 
 import { useState, useEffect } from 'react';
+import { trackEvent } from '@utils/analytics';
 
 export interface CartItem {
   productId: string;
@@ -110,6 +111,21 @@ export function useCart() {
     }
     
     saveCart(newCart);
+
+    const existingQuantity = existingIndex >= 0 ? currentCart[existingIndex].quantity : 0;
+    const newQuantity = existingQuantity + item.quantity;
+    trackEvent('cart.item.add', {
+      product_id: item.productId,
+      product_name: item.productName,
+      tier: item.tier.toLowerCase(),
+      size: item.size,
+      color: item.color,
+      quantity_added: item.quantity,
+      quantity_total: newQuantity,
+      has_image: Boolean(item.imageUrl),
+      base_price: item.basePrice,
+      tier_price: item.tierPrice,
+    });
   };
 
   /**
@@ -120,8 +136,21 @@ export function useCart() {
     if (!storedCart) return;
     
     const currentCart = JSON.parse(storedCart) as CartItem[];
+    const removedItem = currentCart[index];
     const newCart = currentCart.filter((_, i) => i !== index);
     saveCart(newCart);
+
+    if (removedItem) {
+      trackEvent('cart.item.remove', {
+        product_id: removedItem.productId,
+        product_name: removedItem.productName,
+        tier: removedItem.tier.toLowerCase(),
+        size: removedItem.size,
+        color: removedItem.color,
+        quantity_removed: removedItem.quantity,
+        remaining_items: newCart.length,
+      });
+    }
   };
 
   /**
@@ -140,8 +169,15 @@ export function useCart() {
     const newCart = [...currentCart];
     
     if (newCart[index]) {
+      const previousQuantity = newCart[index].quantity;
       newCart[index].quantity = quantity;
       saveCart(newCart);
+      trackEvent('cart.item.quantity_change', {
+        product_id: newCart[index].productId,
+        product_name: newCart[index].productName,
+        from: previousQuantity,
+        to: quantity,
+      });
     }
   };
 
@@ -150,6 +186,7 @@ export function useCart() {
    */
   const clearCart = () => {
     saveCart([]);
+    trackEvent('cart.clear', {});
   };
 
   /**

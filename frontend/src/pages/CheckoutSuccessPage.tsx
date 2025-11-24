@@ -9,6 +9,7 @@ import { Link, useSearchParams, useNavigate } from 'react-router-dom';
 import { Button } from '@components/Button';
 import { useCart } from '../hooks/useCart';
 import { apiPost } from '@utils/api';
+import { trackEvent } from '@utils/analytics';
 
 export default function CheckoutSuccessPage(): JSX.Element {
   const [searchParams] = useSearchParams();
@@ -30,11 +31,24 @@ export default function CheckoutSuccessPage(): JSX.Element {
     }
   }, [clearCart, isCleared]);
 
+  useEffect(() => {
+    if (orderId && sessionId) {
+      trackEvent('checkout.success.view', {
+        order_id: orderId,
+        session_id: sessionId,
+      });
+    }
+  }, [orderId, sessionId]);
+
   const confirmPayment = async () => {
     if (!orderId || !sessionId) return;
     try {
       setIsConfirming(true);
       setConfirmError(null);
+      trackEvent('checkout.success.confirm_click', {
+        order_id: orderId,
+        session_id: sessionId,
+      });
       await apiPost('/api/payments/confirm-session', {
         orderId,
         sessionId,
@@ -42,6 +56,10 @@ export default function CheckoutSuccessPage(): JSX.Element {
       // After confirming, push user to design page
       navigate(`/design?orderId=${orderId}`);
     } catch (err: any) {
+      trackEvent('checkout.success.confirm_error', {
+        order_id: orderId,
+        message: err?.message || 'unknown',
+      });
       setConfirmError(err.message || 'Could not confirm payment. Please try again.');
     } finally {
       setIsConfirming(false);
@@ -58,12 +76,20 @@ export default function CheckoutSuccessPage(): JSX.Element {
           url: shareUrl,
         });
         setShareMessage('Thanks for sharing!');
+        trackEvent('checkout.success.share', {
+          order_id: orderId,
+          method: 'web_share',
+        });
       } catch {
         // user cancelled; no-op
       }
     } else if (navigator.clipboard) {
       await navigator.clipboard.writeText(shareUrl);
       setShareMessage('Link copied—share it with friends!');
+      trackEvent('checkout.success.share', {
+        order_id: orderId,
+        method: 'clipboard',
+      });
     }
   };
 

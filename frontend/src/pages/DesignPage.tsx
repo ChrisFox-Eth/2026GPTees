@@ -4,12 +4,13 @@
  * @since 2025-11-21
  */
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '@clerk/clerk-react';
 import { apiGet, apiPost } from '../utils/api';
 import { Button } from '@components/Button';
 import ProtectedRoute from '../components/ProtectedRoute';
+import { trackEvent } from '@utils/analytics';
 
 interface Order {
   id: string;
@@ -59,6 +60,7 @@ function DesignContent(): JSX.Element {
   const [isApproving, setIsApproving] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const hasTrackedOrderView = useRef(false);
 
   useEffect(() => {
     if (!orderId) {
@@ -71,9 +73,24 @@ function DesignContent(): JSX.Element {
     }
   }, [orderId, isLoaded, isSignedIn]);
 
+  useEffect(() => {
+    if (order && !hasTrackedOrderView.current) {
+      hasTrackedOrderView.current = true;
+      trackEvent('design.page.loaded', {
+        order_id: order.id,
+        status: order.status,
+        design_tier: order.designTier,
+        designs_generated: order.designsGenerated,
+        max_designs: order.maxDesigns,
+      });
+    }
+  }, [order]);
+
   const fetchDesigns = async (token: string) => {
     const designsResponse = await apiGet(`/api/designs?orderId=${orderId}`, token);
-    setDesigns(designsResponse.data || []);
+    const data = designsResponse.data || [];
+    setDesigns(data);
+    return data;
   };
 
   const fetchOrderAndDesigns = async () => {
@@ -91,7 +108,11 @@ function DesignContent(): JSX.Element {
       setOrder(orderResponse.data);
 
       // Fetch existing designs for this order
-      await fetchDesigns(token);
+      const loadedDesigns = await fetchDesigns(token);
+      trackEvent('design.gallery.loaded', {
+        order_id: orderId,
+        design_count: loadedDesigns.length,
+      });
     } catch (err: any) {
       console.error('Error fetching order/designs:', err);
       setError(err.message || 'Failed to load order details');
@@ -104,7 +125,13 @@ function DesignContent(): JSX.Element {
     try {
       setIsLoadingSurprise(true);
       const response = await apiGet('/api/designs/random-prompt');
-      setPrompt(response.data.prompt);
+      const promptText = response.data.prompt;
+      setPrompt(promptText);
+      trackEvent('design.prompt.randomized', {
+        order_id: orderId,
+        prompt_length: promptText?.length ?? 0,
+        style: selectedStyle,
+      });
     } catch (err: any) {
       console.error('Error getting random prompt:', err);
       setError('Failed to generate surprise prompt');
@@ -133,9 +160,25 @@ function DesignContent(): JSX.Element {
         return;
       }
 
+      const promptText = prompt.trim();
+      const remaining =
+        order?.maxDesigns === 9999
+          ? 'unlimited'
+          : order
+          ? order.maxDesigns - order.designsGenerated
+          : null;
+
+      trackEvent('design.generate.submit', {
+        order_id: orderId,
+        prompt_length: promptText.length,
+        style: selectedStyle,
+        remaining_designs: typeof remaining === 'number' ? remaining : null,
+        tier: order?.designTier,
+      });
+
       const response = await apiPost('/api/designs/generate', {
         orderId,
-        prompt: prompt.trim(),
+        prompt: promptText,
         style: selectedStyle,
       }, token);
 
@@ -152,6 +195,12 @@ function DesignContent(): JSX.Element {
           designsGenerated: order.designsGenerated + 1,
         });
       }
+
+      trackEvent('design.generate.success', {
+        order_id: orderId,
+        design_id: response?.data?.id,
+        style: selectedStyle,
+      });
     } catch (err: any) {
       console.error('Error generating design:', err);
       setError(err.message || 'Failed to generate design');
@@ -172,6 +221,10 @@ function DesignContent(): JSX.Element {
         return;
       }
       await apiPost(`/api/designs/${designId}/approve`, {}, token);
+      trackEvent('design.approval.submit', {
+        order_id: order?.id ?? orderId,
+        design_id: designId,
+      });
 
       // Update design in list
       setDesigns((prev) =>

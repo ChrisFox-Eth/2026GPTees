@@ -10,6 +10,14 @@
 
 import { Link } from 'react-router-dom';
 import { Button } from '@components/Button';
+import { trackEvent } from '@utils/analytics';
+
+const handleHeroCta = (cta: 'start_creating' | 'how_it_works') => {
+  trackEvent('home.hero.cta_click', {
+    cta,
+    surface: 'hero',
+  });
+};
 
 export default function Hero(): JSX.Element {
   return (
@@ -59,12 +67,21 @@ export default function Hero(): JSX.Element {
       {/* CTA Buttons */}
       <div className="flex flex-col sm:flex-row gap-4 justify-center">
         <Link to="/shop">
-          <Button size="lg" className="px-8 py-3 text-lg">
+          <Button
+            size="lg"
+            className="px-8 py-3 text-lg"
+            onClick={() => handleHeroCta('start_creating')}
+          >
             Start Creating →
           </Button>
         </Link>
         <a href="#how-it-works">
-          <Button variant="secondary" size="lg" className="px-8 py-3 text-lg">
+          <Button
+            variant="secondary"
+            size="lg"
+            className="px-8 py-3 text-lg"
+            onClick={() => handleHeroCta('how_it_works')}
+          >
             How It Works
           </Button>
         </a>
