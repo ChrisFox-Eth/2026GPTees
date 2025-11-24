@@ -22,6 +22,7 @@ import OrderDetailPage from './pages/OrderDetailPage';
 import PrivacyPage from './pages/PrivacyPage';
 import TermsPage from './pages/TermsPage';
 import RefundsPage from './pages/RefundsPage';
+import AdminPage from './pages/AdminPage';
 import NotFoundPage from './pages/NotFoundPage';
 import ProtectedRoute from './components/ProtectedRoute';
 import './App.css';
@@ -118,6 +119,7 @@ export default function App(): JSX.Element {
             <Route path="/privacy" element={<PrivacyPage />} />
             <Route path="/terms" element={<TermsPage />} />
             <Route path="/refunds" element={<RefundsPage />} />
+            {import.meta.env.DEV && <Route path="/admin" element={<AdminPage />} />}
             <Route path="/auth/*" element={<AuthPage />} />
             <Route path="/sign-in/*" element={<AuthPage />} />
             <Route path="/sign-up/*" element={<AuthPage />} />

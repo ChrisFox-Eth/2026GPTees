@@ -218,26 +218,45 @@ export const getOrderTracking = catchAsync(async (req: Request, res: Response) =
   }
 
   // Fetch latest status from Printful
-  const status = await getPrintfulOrderStatus(order.printfulOrderId);
+  const printfulStatus = await getPrintfulOrderStatus(order.printfulOrderId);
 
-  const tracking = status?.shipments?.[0];
+  const tracking = printfulStatus?.shipments?.[0];
   const trackingNumber = tracking?.tracking_number || order.trackingNumber;
   const trackingUrl = tracking?.tracking_url;
-  const fulfillmentStatus = status?.status || order.fulfillmentStatus;
+  const fulfillmentStatus = printfulStatus?.status || order.fulfillmentStatus;
 
-  await prisma.order.update({
+  const mappedStatus = (() => {
+    switch (fulfillmentStatus) {
+      case 'fulfilled':
+      case 'shipped':
+      case 'partial':
+        return 'SHIPPED';
+      case 'delivered':
+        return 'DELIVERED';
+      case 'canceled':
+        return 'CANCELLED';
+      default:
+        return order.status;
+    }
+  })();
+
+  const updatedOrder = await prisma.order.update({
     where: { id: order.id },
     data: {
+      status: mappedStatus,
       fulfillmentStatus,
       trackingNumber,
-      shippedAt: fulfillmentStatus === 'shipped' ? new Date() : order.shippedAt,
+      shippedAt:
+        (mappedStatus === 'SHIPPED' && !order.shippedAt) ? new Date() : order.shippedAt,
+      deliveredAt:
+        (mappedStatus === 'DELIVERED' && !order.deliveredAt) ? new Date() : order.deliveredAt,
     },
   });
 
   res.json({
     success: true,
     data: {
-      status: order.status,
+      status: updatedOrder.status,
       fulfillmentStatus,
       trackingNumber,
       trackingUrl,

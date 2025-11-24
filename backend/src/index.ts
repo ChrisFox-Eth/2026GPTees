@@ -20,6 +20,7 @@ import productRoutes from './routes/product.routes.js';
 import paymentRoutes from './routes/payment.routes.js';
 import designRoutes from './routes/design.routes.js';
 import orderRoutes from './routes/order.routes.js';
+import adminRoutes from './routes/admin.routes.js';
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -76,6 +77,7 @@ app.use('/api/products', productRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/designs', designRoutes);
 app.use('/api/orders', orderRoutes);
+app.use('/api/admin', adminRoutes);
 
 // Add more routes here as needed
 // Printful and email integrations pending

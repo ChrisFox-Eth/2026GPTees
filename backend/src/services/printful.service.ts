@@ -387,7 +387,7 @@ export async function createPrintfulOrder(
 
     const printfulOrderId = printfulOrder?.id?.toString();
 
-    console.log(`✓ Printful order created (draft): ${printfulOrderId}`);
+    console.log(`Printful order created (draft): ${printfulOrderId}`);
     await logFulfillmentEvent({
       orderId,
       printfulOrderId,
@@ -525,6 +525,30 @@ async function waitForPrintfulOrderReady(
   return null;
 }
 
+export function mapOrderStatusFromPrintful(status?: string): {
+  orderStatus?: string;
+  markShipped?: boolean;
+  markDelivered?: boolean;
+} {
+  switch (status) {
+    case 'draft':
+    case 'pending':
+    case 'being_fulfilled':
+    case 'inprocess':
+      return { orderStatus: 'SUBMITTED' };
+    case 'partial':
+    case 'fulfilled':
+    case 'shipped':
+      return { orderStatus: 'SHIPPED', markShipped: true };
+    case 'delivered':
+      return { orderStatus: 'DELIVERED', markShipped: true, markDelivered: true };
+    case 'canceled':
+      return { orderStatus: 'CANCELLED' };
+    default:
+      return {};
+  }
+}
+
 /**
  * Get Printful order status
  * @param printfulOrderId - Printful order ID
@@ -541,6 +565,108 @@ export async function getPrintfulOrderStatus(printfulOrderId: string): Promise<a
 }
 
 /**
+ * Sync all orders that have a Printful ID to ensure local status is current
+ */
+export async function syncAllPrintfulOrders(): Promise<{
+  total: number;
+  updated: number;
+  results: Array<{
+    orderId: string;
+    orderNumber: string;
+    printfulOrderId: string;
+    fromStatus: string;
+    toStatus: string;
+    fulfillmentStatus: string | null;
+    trackingNumber?: string;
+    error?: string;
+  }>;
+}> {
+  const orders = await prisma.order.findMany({
+    where: { printfulOrderId: { not: null } },
+  });
+
+  let updated = 0;
+  const results: Array<{
+    orderId: string;
+    orderNumber: string;
+    printfulOrderId: string;
+    fromStatus: string;
+    toStatus: string;
+    fulfillmentStatus: string | null;
+    trackingNumber?: string;
+    error?: string;
+  }> = [];
+
+  for (const order of orders) {
+    try {
+      const status = await getPrintfulOrderStatus(order.printfulOrderId!);
+      const tracking = status?.shipments?.[0];
+      const trackingNumber = tracking?.tracking_number || order.trackingNumber;
+
+      const statusMapping = mapOrderStatusFromPrintful(status?.status);
+      const derivedStatus = statusMapping.orderStatus || order.status;
+
+      const dataToUpdate: any = {
+        fulfillmentStatus: status?.status || order.fulfillmentStatus,
+        trackingNumber,
+      };
+
+      if (order.status !== derivedStatus) {
+        dataToUpdate.status = derivedStatus;
+      }
+      if (statusMapping.markShipped && !order.shippedAt) {
+        dataToUpdate.shippedAt = new Date();
+      }
+      if (statusMapping.markDelivered && !order.deliveredAt) {
+        dataToUpdate.deliveredAt = new Date();
+      }
+
+      const hasChanges =
+        dataToUpdate.status ||
+        dataToUpdate.fulfillmentStatus !== order.fulfillmentStatus ||
+        dataToUpdate.trackingNumber !== order.trackingNumber ||
+        dataToUpdate.shippedAt ||
+        dataToUpdate.deliveredAt;
+
+      if (hasChanges) {
+        await prisma.order.update({
+          where: { id: order.id },
+          data: dataToUpdate,
+        });
+        updated += 1;
+      }
+
+      results.push({
+        orderId: order.id,
+        orderNumber: order.orderNumber,
+        printfulOrderId: order.printfulOrderId!,
+        fromStatus: order.status,
+        toStatus: dataToUpdate.status || order.status,
+        fulfillmentStatus: dataToUpdate.fulfillmentStatus || order.fulfillmentStatus,
+        trackingNumber,
+      });
+    } catch (error: any) {
+      results.push({
+        orderId: order.id,
+        orderNumber: order.orderNumber,
+        printfulOrderId: order.printfulOrderId!,
+        fromStatus: order.status,
+        toStatus: order.status,
+        fulfillmentStatus: order.fulfillmentStatus,
+        trackingNumber: order.trackingNumber || undefined,
+        error: error?.message || 'Failed to sync order',
+      });
+    }
+  }
+
+  return {
+    total: orders.length,
+    updated,
+    results,
+  };
+}
+
+/**
  * Confirm Printful order for fulfillment
  * @param printfulOrderId - Printful order ID
  * @returns Confirmation result
@@ -553,7 +679,7 @@ export async function confirmPrintfulOrder(
       headers: STORE_HEADERS,
     });
 
-    console.log(`✓ Printful order ${printfulOrderId} confirmed for fulfillment`);
+    console.log(`Printful order ${printfulOrderId} confirmed for fulfillment`);
 
     return { success: true };
   } catch (error: any) {
@@ -607,42 +733,45 @@ export async function handlePrintfulWebhook(webhookData: any): Promise<void> {
         return;
       }
 
-      // Ignore duplicate status updates
-      if (order.fulfillmentStatus === status) {
-        console.log(`Skipping duplicate Printful status ${status} for order ${order.orderNumber}`);
-        return;
-      }
+      const statusMapping = mapOrderStatusFromPrintful(status);
+      const derivedStatus = statusMapping.orderStatus || order.status;
+      const wasNotShipped = order.status !== 'SHIPPED' && order.status !== 'DELIVERED';
 
       // Extract tracking information from shipments
       const tracking = data.order.shipments?.[0];
       const trackingNumber = tracking?.tracking_number;
       const trackingUrl = tracking?.tracking_url;
 
-      // Map Printful status to our order status
-      let newStatus = order.status;
-      const wasNotShipped = order.status !== 'SHIPPED' && order.status !== 'DELIVERED';
+      const shouldUpdate =
+        order.fulfillmentStatus !== status ||
+        order.status !== derivedStatus ||
+        (statusMapping.markShipped && !order.shippedAt) ||
+        (statusMapping.markDelivered && !order.deliveredAt) ||
+        (!!trackingNumber && trackingNumber !== order.trackingNumber);
 
-      if (status === 'fulfilled' || status === 'shipped') {
-        newStatus = 'SHIPPED';
-      } else if (status === 'canceled') {
-        newStatus = 'DESIGN_PENDING'; // Reset to allow re-submission
+      if (!shouldUpdate) {
+        console.log(`Skipping duplicate Printful status ${status} for order ${order.orderNumber}`);
+        return;
       }
 
       // Update order status and tracking info
       await prisma.order.update({
         where: { id: order.id },
         data: {
-          status: newStatus,
+          status: derivedStatus,
           fulfillmentStatus: status,
           trackingNumber: trackingNumber || order.trackingNumber,
-          shippedAt: newStatus === 'SHIPPED' && !order.shippedAt ? new Date() : order.shippedAt,
+          shippedAt:
+            statusMapping.markShipped && !order.shippedAt ? new Date() : order.shippedAt,
+          deliveredAt:
+            statusMapping.markDelivered && !order.deliveredAt ? new Date() : order.deliveredAt,
         },
       });
 
-      console.log(`✓ Order ${order.orderNumber} status updated to ${newStatus}`);
+      console.log(`Order ${order.orderNumber} status updated to ${derivedStatus}`);
 
       // Send shipped email if order just transitioned to SHIPPED status
-      if (newStatus === 'SHIPPED' && wasNotShipped) {
+      if (derivedStatus === 'SHIPPED' && wasNotShipped) {
         const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
         sendOrderShipped({
           customerName: order.user.firstName || order.user.email,
@@ -668,3 +797,7 @@ export async function handlePrintfulWebhook(webhookData: any): Promise<void> {
 }
 
 export default printfulApi;
+
+
+
+
