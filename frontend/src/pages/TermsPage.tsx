@@ -38,8 +38,8 @@ export default function TermsPage(): JSX.Element {
 
         <h3>4.2 Pricing</h3>
         <ul>
-          <li>Basic Tier: $24.99 (product + 1 design generation)</li>
-          <li>Premium Tier: $34.99 (product + unlimited design generations)</li>
+          <li>Basic Tier: $34.99 (product + 1 design generation)</li>
+          <li>Premium Tier: $54.99 (product + unlimited design generations)</li>
           <li>Prices include design generation but exclude shipping</li>
         </ul>
 

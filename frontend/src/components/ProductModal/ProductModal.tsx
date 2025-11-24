@@ -16,8 +16,8 @@ interface ProductModalProps {
 }
 
 const TIER_PRICES = {
-  BASIC: 24.99,
-  PREMIUM: 34.99,
+  BASIC: 34.99,
+  PREMIUM: 54.99,
 };
 
 export default function ProductModal({ product, isOpen, onClose }: ProductModalProps): JSX.Element | null {

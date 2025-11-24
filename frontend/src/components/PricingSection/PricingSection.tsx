@@ -11,12 +11,12 @@ export default function PricingSection(): JSX.Element {
   const tiers = [
     {
       name: 'Basic',
-      price: '$24.99',
+      price: '$34.99',
       description: 'Perfect for trying out AI-designed apparel',
       features: [
         '1 AI design generation',
         'Choose from 6 style options',
-        'Premium t-shirt or hoodie',
+        'Premium t-shirt or hoodie (coming soon)',
         'High-quality printing',
         'Worldwide shipping',
         'Email support',
@@ -26,12 +26,12 @@ export default function PricingSection(): JSX.Element {
     },
     {
       name: 'Premium',
-      price: '$34.99',
+      price: '$54.99',
       description: 'Best value for design perfectionists',
       features: [
         'Unlimited AI design generations',
         'All 6 style options',
-        'Premium t-shirt or hoodie',
+        'Premium t-shirt or hoodie (coming soon)',
         'High-quality printing',
         'Worldwide shipping',
         'Priority email support',

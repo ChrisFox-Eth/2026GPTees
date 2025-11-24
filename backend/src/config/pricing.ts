@@ -20,13 +20,13 @@ export interface TierConfig {
 export const TIERS: Record<TierType, TierConfig> = {
   [TierType.BASIC]: {
     name: 'Basic',
-    price: 0.50,
+    price: 34.99,
     maxDesigns: 1,
     description: 'Generate 1 AI design',
   },
   [TierType.PREMIUM]: {
     name: 'Premium',
-    price: 34.99,
+    price: 54.99,
     maxDesigns: 9999,
     description: 'Unlimited AI design regeneration',
   },
