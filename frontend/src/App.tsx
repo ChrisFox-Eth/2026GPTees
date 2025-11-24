@@ -11,8 +11,7 @@ import { Footer } from '@components/Footer';
 import { ErrorBoundary } from '@components/ErrorBoundary';
 import { trackEvent, trackPageView } from '@utils/analytics';
 import HomePage from './pages/HomePage';
-import SignInPage from './pages/SignInPage';
-import SignUpPage from './pages/SignUpPage';
+import AuthPage from './pages/AuthPage';
 import ShopPage from './pages/ShopPage';
 import CartPage from './pages/CartPage';
 import CheckoutSuccessPage from './pages/CheckoutSuccessPage';
@@ -119,8 +118,9 @@ export default function App(): JSX.Element {
             <Route path="/privacy" element={<PrivacyPage />} />
             <Route path="/terms" element={<TermsPage />} />
             <Route path="/refunds" element={<RefundsPage />} />
-            <Route path="/sign-in/*" element={<SignInPage />} />
-            <Route path="/sign-up/*" element={<SignUpPage />} />
+            <Route path="/auth/*" element={<AuthPage />} />
+            <Route path="/sign-in/*" element={<AuthPage />} />
+            <Route path="/sign-up/*" element={<AuthPage />} />
             <Route path="*" element={<NotFoundPage />} />
           </Routes>
         </div>

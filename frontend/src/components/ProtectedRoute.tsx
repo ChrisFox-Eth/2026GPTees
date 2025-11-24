@@ -24,9 +24,9 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps): JSX.E
     );
   }
 
-  // Redirect to sign-in if not authenticated
+  // Redirect to auth if not authenticated
   if (!isSignedIn) {
-    return <Navigate to="/sign-in" replace />;
+    return <Navigate to="/auth" replace />;
   }
 
   return <>{children}</>;

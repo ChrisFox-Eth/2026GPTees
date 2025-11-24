@@ -26,7 +26,7 @@ export default function CartPage(): JSX.Element {
     });
 
     if (!isSignedIn) {
-      navigate('/sign-in');
+      navigate('/auth');
       return;
     }
     navigate('/checkout');
