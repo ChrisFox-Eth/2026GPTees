@@ -5,8 +5,11 @@
  */
 
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@clerk/clerk-react';
 import { Product } from '../../types/product';
 import { Button } from '@components/Button';
+import { Toast } from '@components/Toast';
 import { useCart } from '../../hooks/useCart';
 import { trackEvent } from '@utils/analytics';
 
@@ -26,8 +29,11 @@ export default function ProductModal({ product, isOpen, onClose }: ProductModalP
   const [selectedColor, setSelectedColor] = useState(product.colors[0]);
   const [selectedTier, setSelectedTier] = useState<'BASIC' | 'PREMIUM'>('BASIC');
   const [quantity] = useState(1);
+  const [showToast, setShowToast] = useState(false);
 
   const { addToCart } = useCart();
+  const navigate = useNavigate();
+  const { isSignedIn } = useAuth();
 
   if (!isOpen) return null;
 
@@ -67,17 +73,6 @@ export default function ProductModal({ product, isOpen, onClose }: ProductModalP
   };
 
   const handleAddToCart = () => {
-    console.log('Adding to cart:', {
-      productId: product.id,
-      productName: product.name,
-      size: selectedSize,
-      color: selectedColor.name,
-      tier: selectedTier,
-      quantity,
-      basePrice,
-      tierPrice,
-    });
-    
     addToCart({
       productId: product.id,
       productName: product.name,
@@ -89,9 +84,47 @@ export default function ProductModal({ product, isOpen, onClose }: ProductModalP
       tierPrice,
       imageUrl: product.imageUrl,
     });
-    
-    console.log('Item added to cart, closing modal');
+
+    trackEvent('shop.product.add_to_cart', {
+      product_id: product.id,
+      product_name: product.name,
+      tier: selectedTier,
+      price: totalPrice,
+    });
+
+    setShowToast(true);
     onClose();
+  };
+
+  const handleBuyNow = () => {
+    addToCart({
+      productId: product.id,
+      productName: product.name,
+      size: selectedSize,
+      color: selectedColor.name,
+      tier: selectedTier,
+      quantity,
+      basePrice,
+      tierPrice,
+      imageUrl: product.imageUrl,
+    });
+
+    trackEvent('shop.product.buy_now', {
+      product_id: product.id,
+      product_name: product.name,
+      tier: selectedTier,
+      price: totalPrice,
+      is_signed_in: isSignedIn,
+    });
+
+    onClose();
+
+    // Navigate to checkout if signed in, otherwise to auth
+    if (isSignedIn) {
+      navigate('/checkout');
+    } else {
+      navigate('/auth');
+    }
   };
 
   return (
@@ -239,28 +272,48 @@ export default function ProductModal({ product, isOpen, onClose }: ProductModalP
                 </div>
               </div>
 
-              {/* Price & Add to Cart */}
+              {/* Price & Actions */}
               <div className="mt-auto">
-                <div className="flex items-center justify-between mb-4">
-                  <div>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">Total Price</p>
-                    <p className="text-3xl font-bold text-gray-900 dark:text-white">
-                      ${totalPrice.toFixed(2)}
-                    </p>
-                  </div>
+                <div className="mb-4">
+                  <p className="text-sm text-gray-500 dark:text-gray-400">Total Price</p>
+                  <p className="text-3xl font-bold text-gray-900 dark:text-white">
+                    ${totalPrice.toFixed(2)}
+                  </p>
                 </div>
-                <Button
-                  variant="primary"
-                  onClick={handleAddToCart}
-                  className="w-full"
-                >
-                  Add to Cart
-                </Button>
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <Button
+                    variant="secondary"
+                    onClick={handleAddToCart}
+                    className="flex-1"
+                  >
+                    Add to Cart
+                  </Button>
+                  <Button
+                    variant="primary"
+                    onClick={handleBuyNow}
+                    className="flex-1"
+                  >
+                    Buy Now
+                  </Button>
+                </div>
               </div>
             </div>
           </div>
         </div>
       </div>
+
+      {/* Toast Notification */}
+      {showToast && (
+        <Toast
+          message="Added to cart!"
+          type="success"
+          onClose={() => setShowToast(false)}
+          action={{
+            label: 'View Cart',
+            onClick: () => navigate('/cart'),
+          }}
+        />
+      )}
     </div>
   );
 }

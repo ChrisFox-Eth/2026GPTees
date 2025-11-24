@@ -127,11 +127,16 @@ export default function CheckoutPage(): JSX.Element {
   };
 
   return (
-    <div className="container-max py-8">
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+    <div className="container-max py-6 sm:py-8 pb-24 lg:pb-8">
+      <div className="mb-6 sm:mb-8">
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-2">Checkout</h1>
+        <p className="text-sm text-gray-600 dark:text-gray-400">Complete your order in just a few steps</p>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
         {/* Shipping Form */}
-        <div className="lg:col-span-2 bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">Shipping Details</h1>
+        <div className="lg:col-span-2 bg-white dark:bg-gray-800 rounded-lg shadow p-4 sm:p-6">
+          <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4 sm:mb-6">Shipping Details</h2>
 
           {error && (
             <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded p-4 mb-6">
@@ -267,20 +272,21 @@ export default function CheckoutPage(): JSX.Element {
             </div>
           </div>
 
-          <div className="mt-6">
+          {/* Desktop Submit Button */}
+          <div className="mt-6 hidden lg:block">
             <Button
               variant="primary"
               onClick={handleCheckout}
               disabled={isSubmitting || cart.length === 0}
-              className="w-full md:w-auto"
+              className="w-full md:w-auto px-8"
             >
-              {isSubmitting ? 'Starting checkout...' : 'Proceed to Payment'}
+              {isSubmitting ? 'Processing...' : 'Proceed to Payment'}
             </Button>
           </div>
         </div>
 
-        {/* Order Summary */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+        {/* Order Summary - Desktop */}
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4 sm:p-6 hidden lg:block sticky top-20 self-start">
           <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">Order Summary</h2>
 
           <div className="space-y-4 mb-6">
@@ -312,6 +318,20 @@ export default function CheckoutPage(): JSX.Element {
               <span>Total</span>
               <span>${subtotal.toFixed(2)}</span>
             </div>
+          </div>
+        </div>
+
+        {/* Mobile Sticky Checkout Button */}
+        <div className="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 p-4 lg:hidden z-30 shadow-lg">
+          <div className="container-max">
+            <Button
+              variant="primary"
+              onClick={handleCheckout}
+              disabled={isSubmitting || cart.length === 0}
+              className="w-full"
+            >
+              {isSubmitting ? 'Processing...' : `Pay $${subtotal.toFixed(2)}`}
+            </Button>
           </div>
         </div>
       </div>
