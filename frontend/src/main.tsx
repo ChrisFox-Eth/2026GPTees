@@ -25,8 +25,8 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
     publishableKey={CLERK_PUBLISHABLE_KEY || ''}
     signInFallbackRedirectUrl="/shop"
     signUpFallbackRedirectUrl="/shop"
-    signInUrl="/sign-in"
-    signUpUrl="/sign-up"
+    signInUrl="/auth"
+    signUpUrl="/auth/sign-up"
   >
     <BrowserRouter>
       <App />
