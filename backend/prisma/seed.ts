@@ -13,8 +13,8 @@ const PRODUCTS = [
   {
     name: 'Basic Tee',
     slug: 'basic-tee',
-    description: 'Classic cotton t-shirt, perfect for your custom designs',
-    basePrice: 24.99,
+    description: 'Custom AI-designed t-shirt with premium quality printing',
+    basePrice: 0,  // Tier pricing includes everything (shirt + printing + design)
     printfulId: '71',
     category: 'T_SHIRT',
     sizes: ['S', 'M', 'L', 'XL', '2XL'],

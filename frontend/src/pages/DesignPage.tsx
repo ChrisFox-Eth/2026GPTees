@@ -391,18 +391,6 @@ function DesignContent(): JSX.Element {
             />
           </div>
 
-          {/* Surprise Me Button */}
-          <div className="mb-4">
-            <Button
-              variant="secondary"
-              onClick={handleSurpriseMe}
-              disabled={!canGenerate || hasReachedLimit || isLoadingSurprise}
-              className="w-full"
-            >
-              {isLoadingSurprise ? 'Loading...' : 'Surprise Me'}
-            </Button>
-          </div>
-
           {/* Style Selector */}
           <div className="mb-6">
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
@@ -436,7 +424,7 @@ function DesignContent(): JSX.Element {
             variant="primary"
             onClick={handleGenerateDesign}
             disabled={!canGenerate || hasReachedLimit || isGenerating || !prompt.trim()}
-            className="w-full"
+            className="w-full mb-3"
           >
             {isGenerating ? (
               <span className="flex items-center justify-center gap-2">
@@ -446,6 +434,16 @@ function DesignContent(): JSX.Element {
             ) : (
               'Generate Design'
             )}
+          </Button>
+
+          {/* Surprise Me Button */}
+          <Button
+            variant="secondary"
+            onClick={handleSurpriseMe}
+            disabled={!canGenerate || hasReachedLimit || isLoadingSurprise}
+            className="w-full mb-3"
+          >
+            {isLoadingSurprise ? 'Loading...' : 'Surprise Me'}
           </Button>
 
           <p className="text-xs text-gray-500 dark:text-gray-400 mt-3 text-center">

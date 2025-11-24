@@ -25,8 +25,8 @@ export const PRODUCTS: ProductConfig[] = [
   {
     name: 'Basic Tee',
     slug: 'basic-tee',
-    description: 'Classic cotton tee; single design generation',
-    basePrice: 24.99,
+    description: 'Custom AI-designed t-shirt with premium quality printing',
+    basePrice: 0,  // Tier pricing includes everything (shirt + printing + design)
     printfulId: '71', // Bella + Canvas 3001
     category: 'T_SHIRT',
     sizes: ['S', 'M', 'L', 'XL', '2XL'],

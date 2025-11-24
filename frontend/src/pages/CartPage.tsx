@@ -52,10 +52,10 @@ export default function CartPage(): JSX.Element {
   }
 
   return (
-    <div className="container-max py-8">
-      <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-8">Shopping Cart</h1>
+    <div className="container-max py-6 sm:py-8 pb-24 lg:pb-8">
+      <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-6 sm:mb-8">Shopping Cart</h1>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
         {/* Cart Items */}
         <div className="lg:col-span-2 space-y-4">
           {cart.map((item, index) => (
@@ -132,9 +132,9 @@ export default function CartPage(): JSX.Element {
           ))}
         </div>
 
-        {/* Cart Summary */}
-        <div className="lg:col-span-1">
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 sticky top-4">
+        {/* Cart Summary - Desktop */}
+        <div className="lg:col-span-1 hidden lg:block">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 sticky top-20">
             <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
               Order Summary
             </h2>
@@ -187,6 +187,27 @@ export default function CartPage(): JSX.Element {
                 <li>✓ We print & ship to you</li>
               </ul>
             </div>
+          </div>
+        </div>
+
+        {/* Mobile Sticky Checkout Bar */}
+        <div className="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 p-4 lg:hidden z-30 shadow-lg">
+          <div className="container-max flex items-center justify-between gap-4">
+            <div>
+              <p className="text-xs text-gray-500 dark:text-gray-400">
+                {totalItems} {totalItems === 1 ? 'item' : 'items'}
+              </p>
+              <p className="text-lg font-bold text-gray-900 dark:text-white">
+                ${subtotal.toFixed(2)}
+              </p>
+            </div>
+            <Button
+              variant="primary"
+              onClick={handleCheckout}
+              className="flex-1 max-w-xs"
+            >
+              {isSignedIn ? 'Checkout' : 'Sign In to Checkout'}
+            </Button>
           </div>
         </div>
       </div>
