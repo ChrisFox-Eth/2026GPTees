@@ -5,6 +5,7 @@
  */
 
 import axios, { AxiosInstance } from 'axios';
+import { OrderStatus } from '@prisma/client';
 import prisma from '../config/database.js';
 import { sendOrderShipped } from './email.service.js';
 
@@ -526,7 +527,7 @@ async function waitForPrintfulOrderReady(
 }
 
 export function mapOrderStatusFromPrintful(status?: string): {
-  orderStatus?: string;
+  orderStatus?: OrderStatus;
   markShipped?: boolean;
   markDelivered?: boolean;
 } {
@@ -535,15 +536,15 @@ export function mapOrderStatusFromPrintful(status?: string): {
     case 'pending':
     case 'being_fulfilled':
     case 'inprocess':
-      return { orderStatus: 'SUBMITTED' };
+      return { orderStatus: OrderStatus.SUBMITTED };
     case 'partial':
     case 'fulfilled':
     case 'shipped':
-      return { orderStatus: 'SHIPPED', markShipped: true };
+      return { orderStatus: OrderStatus.SHIPPED, markShipped: true };
     case 'delivered':
-      return { orderStatus: 'DELIVERED', markShipped: true, markDelivered: true };
+      return { orderStatus: OrderStatus.DELIVERED, markShipped: true, markDelivered: true };
     case 'canceled':
-      return { orderStatus: 'CANCELLED' };
+      return { orderStatus: OrderStatus.CANCELLED };
     default:
       return {};
   }
