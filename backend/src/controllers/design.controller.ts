@@ -7,7 +7,7 @@
 import { Request, Response } from 'express';
 import { catchAsync, AppError } from '../middleware/error.middleware.js';
 import { generateDesign, generateRandomPrompt } from '../services/openai.service.js';
-import { uploadImage } from '../services/s3.service.js';
+import { uploadImage } from '../services/supabase-storage.service.js';
 import { createPrintfulOrder } from '../services/printful.service.js';
 import { sendDesignApproved } from '../services/email.service.js';
 import prisma from '../config/database.js';
@@ -83,22 +83,22 @@ export const createDesign = catchAsync(async (req: Request, res: Response) => {
     },
   });
 
-  // Upload to S3 in background (non-blocking)
+  // Upload to Supabase Storage in background (non-blocking)
   uploadImage(imageUrl, design.id)
-    .then(async ({ imageUrl: s3Url, thumbnailUrl: s3ThumbnailUrl }) => {
+    .then(async ({ imageUrl: supabaseUrl, thumbnailUrl: supabaseThumbnailUrl }) => {
       await prisma.design.update({
         where: { id: design.id },
         data: {
-          imageUrl: s3Url,
-          thumbnailUrl: s3ThumbnailUrl,
+          imageUrl: supabaseUrl,
+          thumbnailUrl: supabaseThumbnailUrl,
           status: 'COMPLETED',
         },
       });
-      console.log(`✓ Design ${design.id} uploaded to S3`);
+      console.log(`Design ${design.id} uploaded to Supabase Storage`);
     })
     .catch((error) => {
-      console.error('S3 upload error:', error);
-      // Keep the OpenAI URL if S3 fails
+      console.error('Supabase upload error:', error);
+      // Keep the OpenAI URL if Supabase fails
       prisma.design.update({
         where: { id: design.id },
         data: { status: 'COMPLETED' },
@@ -308,3 +308,4 @@ export const getRandomPrompt = catchAsync(async (_req: Request, res: Response) =
     data: { prompt },
   });
 });
+

@@ -24,6 +24,7 @@
   "dependencies": {
     "@clerk/clerk-sdk-node": "^4.13.23",
     "@prisma/client": "^5.20.0",
+    "@supabase/supabase-js": "^2.84.0",
     "aws-sdk": "^2.1692.0",
     "axios": "^1.13.2",
     "cors": "^2.8.5",
