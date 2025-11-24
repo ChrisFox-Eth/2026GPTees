@@ -45,6 +45,7 @@ interface Order {
   id: string;
   orderNumber: string;
   status: string;
+  fulfillmentStatus?: string | null;
   totalAmount: number;
   designTier: string;
   designsGenerated: number;
@@ -54,7 +55,6 @@ interface Order {
   designs: Design[];
   address?: Address | null;
   trackingNumber?: string | null;
-  fulfillmentStatus?: string | null;
 }
 
 function OrderDetailContent(): JSX.Element {
@@ -64,6 +64,9 @@ function OrderDetailContent(): JSX.Element {
   const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const formatStatus = (status?: string | null) =>
+    status ? status.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()) : 'Unknown';
 
   useEffect(() => {
     if (id && isLoaded && isSignedIn) {
@@ -130,9 +133,17 @@ function OrderDetailContent(): JSX.Element {
       <div className="flex items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">{order.orderNumber}</h1>
-          <p className="text-sm text-gray-600 dark:text-gray-400">
-            {new Date(order.createdAt).toLocaleString()} â€¢ {order.status.replace(/_/g, ' ')}
-          </p>
+          <div className="text-sm text-gray-600 dark:text-gray-400 space-x-2">
+            <span>{new Date(order.createdAt).toLocaleString()}</span>
+            <span>•</span>
+            <span>Order: {formatStatus(order.status)}</span>
+            {order.fulfillmentStatus && (
+              <>
+                <span>•</span>
+                <span>Fulfillment: {formatStatus(order.fulfillmentStatus)}</span>
+              </>
+            )}
+          </div>
         </div>
         <div className="flex gap-3">
           <Link to="/account">
@@ -238,16 +249,10 @@ function OrderDetailContent(): JSX.Element {
 
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-5">
             <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">Tracking</h2>
-            {order.trackingNumber ? (
-              <div className="text-sm text-gray-700 dark:text-gray-300 space-y-1">
-                <p>Status: {order.fulfillmentStatus || 'unknown'}</p>
-                <p>Tracking #: {order.trackingNumber}</p>
-              </div>
-            ) : (
-              <p className="text-sm text-gray-600 dark:text-gray-400">
-                Tracking will appear here after the order is submitted and shipped.
-              </p>
-            )}
+            <div className="text-sm text-gray-700 dark:text-gray-300 space-y-1">
+              <p>Status: {formatStatus(order.fulfillmentStatus || order.status)}</p>
+              <p>Tracking #: {order.trackingNumber || 'Not yet available'}</p>
+            </div>
           </div>
         </div>
       </div>
@@ -258,3 +263,5 @@ function OrderDetailContent(): JSX.Element {
 export default function OrderDetailPage(): JSX.Element {
   return <OrderDetailContent />;
 }
+
+

@@ -8,8 +8,11 @@ import { Request, Response } from 'express';
 import { catchAsync, AppError } from '../middleware/error.middleware.js';
 import { syncAllPrintfulOrders } from '../services/printful.service.js';
 
-const isAdminToolsEnabled = () =>
-  process.env.NODE_ENV === 'development' || process.env.ALLOW_ADMIN_SYNC === 'true';
+const isAdminToolsEnabled = () => {
+  const flag = process.env.ALLOW_ADMIN_SYNC || '';
+  const allowFlag = flag.trim().toLowerCase() === 'true';
+  return process.env.NODE_ENV === 'development' || allowFlag;
+};
 
 /**
  * Sync all Printful orders into local DB (dev-only)
