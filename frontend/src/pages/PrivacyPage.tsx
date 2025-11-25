@@ -9,7 +9,7 @@ export default function PrivacyPage(): JSX.Element {
     <div className="container-max py-12">
       <div className="max-w-4xl mx-auto prose prose-lg dark:prose-invert">
         <h1>Privacy Policy</h1>
-        <p className="text-gray-600 dark:text-gray-400">Last updated: November 21, 2025</p>
+        <p className="text-gray-600 dark:text-gray-400">Last updated: November 2025</p>
 
         <h2>1. Information We Collect</h2>
         <p>
@@ -41,7 +41,7 @@ export default function PrivacyPage(): JSX.Element {
           <li><strong>Stripe:</strong> Payment processing</li>
           <li><strong>OpenAI:</strong> AI design generation (prompts only)</li>
           <li><strong>Printful:</strong> Order fulfillment and shipping</li>
-          <li><strong>AWS S3:</strong> Secure image storage</li>
+          <li><strong>Supabase Storage:</strong> Secure image storage</li>
           <li><strong>Resend:</strong> Transactional email delivery</li>
         </ul>
         <p>We do not sell your personal information to third parties.</p>

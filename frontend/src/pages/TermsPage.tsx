@@ -9,16 +9,16 @@ export default function TermsPage(): JSX.Element {
     <div className="container-max py-12">
       <div className="max-w-4xl mx-auto prose prose-lg dark:prose-invert">
         <h1>Terms of Service</h1>
-        <p className="text-gray-600 dark:text-gray-400">Last updated: November 21, 2025</p>
+        <p className="text-gray-600 dark:text-gray-400">Last updated: November 2025</p>
 
         <h2>1. Acceptance of Terms</h2>
         <p>
-          By accessing or using 2026GPTees ("Service"), you agree to be bound by these Terms of Service. If you do not agree, you may not use our Service.
+          By accessing or using GPTees ("Service"), you agree to be bound by these Terms of Service. If you do not agree, you may not use our Service.
         </p>
 
         <h2>2. Service Description</h2>
         <p>
-          2026GPTees provides AI-powered custom apparel design and printing services. Users submit text prompts to generate unique designs using OpenAI's DALL-E 3, which are then printed on selected products and shipped by our fulfillment partner, Printful.
+          GPTees provides AI-powered custom apparel design and printing services. Users submit text prompts to generate unique designs using OpenAI's DALL-E 3, which are then printed on selected products and shipped by our fulfillment partner, Printful.
         </p>
 
         <h2>3. User Accounts</h2>
@@ -38,9 +38,8 @@ export default function TermsPage(): JSX.Element {
 
         <h3>4.2 Pricing</h3>
         <ul>
-          <li>Basic Tier: $34.99 (product + 1 design generation)</li>
-          <li>Premium Tier: $54.99 (product + unlimited design generations)</li>
-          <li>Prices include design generation but exclude shipping</li>
+          <li>Tier pricing is displayed at checkout and may change; current tiers: Basic (1 design), Premium (unlimited).</li>
+          <li>Prices include design generation; shipping is charged separately.</li>
         </ul>
 
         <h3>4.3 Order Processing</h3>

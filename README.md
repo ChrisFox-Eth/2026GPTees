@@ -14,7 +14,7 @@ Welcome to 2026GPTees, a full-stack e-commerce platform that combines AI design 
 - **Email Notifications**: Order confirmations, design approvals, shipping updates
 - **Secure Authentication**: Powered by Clerk
 - **Payment Processing**: Stripe integration with webhooks
-- **Image Storage**: AWS S3 with thumbnail generation
+- **Image Storage**: Supabase Storage with thumbnail generation
 - **Responsive Design**: Mobile-first UI with dark mode support
 
 ## 🛠️ Tech Stack
@@ -28,7 +28,7 @@ Welcome to 2026GPTees, a full-stack e-commerce platform that combines AI design 
 - **Authentication**: Clerk Backend SDK
 - **Payments**: Stripe SDK
 - **AI**: OpenAI SDK (DALL-E 3)
-- **Storage**: AWS SDK + Sharp
+- **Storage**: Supabase Storage + Sharp
 - **Fulfillment**: Printful API
 - **Email**: Resend SDK
 
@@ -44,7 +44,7 @@ Welcome to 2026GPTees, a full-stack e-commerce platform that combines AI design 
 
 - Node.js 18 or higher
 - PostgreSQL database (Supabase recommended)
-- API keys for: Clerk, Stripe, OpenAI, AWS S3, Printful, Resend
+- API keys for: Clerk, Stripe, OpenAI, Printful, Resend
 
 ## 🔧 Installation
 

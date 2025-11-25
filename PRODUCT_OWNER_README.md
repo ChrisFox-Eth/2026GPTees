@@ -54,7 +54,8 @@
 - **OpenAI** - DALL-E 3 image generation
 - **Printful** - Print-on-demand fulfillment
 - **Resend** - Transactional emails
-- **AWS S3** - Image storage (optional)
+- **Supabase Storage** - Active image storage
+- **AWS S3** - (Not used in current deployment)
 
 ---
 
@@ -602,7 +603,7 @@ PRINTFUL_API_KEY=...
 RESEND_API_KEY=re_...
 RESEND_FROM_EMAIL=noreply@yourdomain.com
 
-# AWS S3 (optional)
+# AWS S3 (optional - not used)
 AWS_ACCESS_KEY_ID=AKIA...
 AWS_SECRET_ACCESS_KEY=...
 AWS_REGION=us-east-2

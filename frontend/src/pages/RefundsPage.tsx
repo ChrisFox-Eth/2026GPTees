@@ -9,7 +9,7 @@ export default function RefundsPage(): JSX.Element {
     <div className="container-max py-12">
       <div className="max-w-4xl mx-auto prose prose-lg dark:prose-invert">
         <h1>Refund Policy</h1>
-        <p className="text-gray-600 dark:text-gray-400">Last updated: November 21, 2025</p>
+        <p className="text-gray-600 dark:text-gray-400">Last updated: November 2025</p>
 
         <h2>1. Overview</h2>
         <p>
