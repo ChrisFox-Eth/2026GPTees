@@ -68,7 +68,7 @@ export const createDesign = catchAsync(async (req: Request, res: Response) => {
     style,
   });
 
-  // Create design record in database (with temporary OpenAI URL)
+  // Create design record in database (with temporary OpenAI URL so we have an ID)
   const design = await prisma.design.create({
     data: {
       userId: req.user.id,
@@ -83,27 +83,31 @@ export const createDesign = catchAsync(async (req: Request, res: Response) => {
     },
   });
 
-  // Upload to Supabase Storage in background (non-blocking)
-  uploadImage(imageUrl, design.id)
-    .then(async ({ imageUrl: supabaseUrl, thumbnailUrl: supabaseThumbnailUrl }) => {
-      await prisma.design.update({
-        where: { id: design.id },
-        data: {
-          imageUrl: supabaseUrl,
-          thumbnailUrl: supabaseThumbnailUrl,
-          status: 'COMPLETED',
-        },
-      });
-      console.log(`Design ${design.id} uploaded to Supabase Storage`);
-    })
-    .catch((error) => {
-      console.error('Supabase upload error:', error);
-      // Keep the OpenAI URL if Supabase fails
-      prisma.design.update({
-        where: { id: design.id },
-        data: { status: 'COMPLETED' },
-      });
-    });
+  // Upload to Supabase Storage synchronously so we return a permanent URL
+  let finalImageUrl = imageUrl;
+  let finalThumbnailUrl = imageUrl;
+
+  try {
+    const { imageUrl: supabaseUrl, thumbnailUrl: supabaseThumbnailUrl } = await uploadImage(
+      imageUrl,
+      design.id
+    );
+    finalImageUrl = supabaseUrl;
+    finalThumbnailUrl = supabaseThumbnailUrl;
+    console.log(`Design ${design.id} uploaded to Supabase Storage`);
+  } catch (error) {
+    console.error('Supabase upload error:', error);
+    // Fall back to temporary OpenAI URL; status still marked as completed
+  }
+
+  const completedDesign = await prisma.design.update({
+    where: { id: design.id },
+    data: {
+      imageUrl: finalImageUrl,
+      thumbnailUrl: finalThumbnailUrl,
+      status: 'COMPLETED',
+    },
+  });
 
   // Increment design counter
   await prisma.order.update({
@@ -117,7 +121,7 @@ export const createDesign = catchAsync(async (req: Request, res: Response) => {
   res.json({
     success: true,
     data: {
-      ...design,
+      ...completedDesign,
       remainingDesigns:
         order.maxDesigns === 9999 ? 'unlimited' : order.maxDesigns - (order.designsGenerated + 1),
     },

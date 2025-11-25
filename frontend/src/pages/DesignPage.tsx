@@ -61,6 +61,7 @@ function DesignContent(): JSX.Element {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const hasTrackedOrderView = useRef(false);
+  const hasGeneratingDesign = designs.some((d) => d.status === 'GENERATING');
 
   useEffect(() => {
     if (!orderId) {
@@ -85,6 +86,36 @@ function DesignContent(): JSX.Element {
       });
     }
   }, [order]);
+
+  // Auto-refresh while any design is still uploading/generating so the image swaps to the
+  // permanent Supabase URL without a manual page refresh.
+  useEffect(() => {
+    if (!hasGeneratingDesign || !orderId) {
+      return;
+    }
+
+    let cancelled = false;
+    const pollDesigns = async () => {
+      try {
+        const token = await getToken();
+        if (!token || cancelled) {
+          return;
+        }
+        await fetchDesigns(token);
+      } catch (err) {
+        console.error('Error refreshing designs:', err);
+      }
+    };
+
+    // Immediate check, then poll until no generating designs remain
+    pollDesigns();
+    const intervalId = setInterval(pollDesigns, 5000);
+
+    return () => {
+      cancelled = true;
+      clearInterval(intervalId);
+    };
+  }, [hasGeneratingDesign, orderId, getToken]);
 
   const fetchDesigns = async (token: string) => {
     const designsResponse = await apiGet(`/api/designs?orderId=${orderId}`, token);
