@@ -8,6 +8,8 @@ Goal: validate the full user flow (landing → sign up → browse → customize 
 - Clerk test users enabled (or dev instance).
 - Stripe in **test mode** with publishable/secret keys configured in frontend/backend.
 - Pricing: keep `TierType.TEST` at `0.01` (backend `pricing.ts`) to minimize any real charges if live keys are ever used by mistake.
+- Tier pricing/max designs now come from Supabase `settings` table (keys: `basic_tier_price`, `premium_tier_price`, `test_tier_price`, `basic_tier_max_designs`, `premium_tier_max_designs`, `test_tier_max_designs`). Premium remains unlimited unless you override `premium_tier_max_designs`.
+- Shipping is charged as flat-rate: US $5.95, CA $7.95, International $9.95. Totals in checkout should reflect items + shipping.
 
 ### Happy-Path Checklist
 1) **Landing & Analytics**

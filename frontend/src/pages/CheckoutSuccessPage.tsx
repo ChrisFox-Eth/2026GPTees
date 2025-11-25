@@ -8,17 +8,35 @@ import { useEffect, useState } from 'react';
 import { Link, useSearchParams, useNavigate } from 'react-router-dom';
 import { Button } from '@components/Button';
 import { useCart } from '../hooks/useCart';
-import { apiPost } from '@utils/api';
+import { apiGet, apiPost } from '@utils/api';
 import { trackEvent } from '@utils/analytics';
+import { useAuth } from '@clerk/clerk-react';
+
+interface OrderItem {
+  productName: string;
+  size: string;
+  color: string;
+  quantity: number;
+  unitPrice: number;
+}
+
+interface OrderSummary {
+  totalAmount: number;
+  items: OrderItem[];
+  shipping?: number;
+}
 
 export default function CheckoutSuccessPage(): JSX.Element {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { clearCart } = useCart();
+  const { getToken } = useAuth();
   const [isCleared, setIsCleared] = useState(false);
   const [isConfirming, setIsConfirming] = useState(false);
   const [confirmError, setConfirmError] = useState<string | null>(null);
   const [shareMessage, setShareMessage] = useState<string | null>(null);
+  const [orderSummary, setOrderSummary] = useState<OrderSummary | null>(null);
+  const [isLoadingOrder, setIsLoadingOrder] = useState(false);
 
   const orderId = searchParams.get('order_id');
   const sessionId = searchParams.get('session_id');
@@ -37,8 +55,43 @@ export default function CheckoutSuccessPage(): JSX.Element {
         order_id: orderId,
         session_id: sessionId,
       });
+      void loadOrder();
     }
   }, [orderId, sessionId]);
+
+  const loadOrder = async () => {
+    if (!orderId) return;
+    try {
+      setIsLoadingOrder(true);
+      const token = await getToken();
+      if (!token) return;
+      const response = await apiGet(`/api/orders/${orderId}`, token);
+      const order = response?.data;
+      if (!order) return;
+
+      const itemTotal = (order.items || []).reduce(
+        (sum: number, item: any) => sum + Number(item.unitPrice) * item.quantity,
+        0
+      );
+      const shipping = Number(order.totalAmount) - itemTotal;
+
+      setOrderSummary({
+        totalAmount: Number(order.totalAmount),
+        items: (order.items || []).map((i: any) => ({
+          productName: i.product.name,
+          size: i.size,
+          color: i.color,
+          quantity: i.quantity,
+          unitPrice: Number(i.unitPrice),
+        })),
+        shipping,
+      });
+    } catch (error) {
+      console.error('Failed to load order summary', error);
+    } finally {
+      setIsLoadingOrder(false);
+    }
+  };
 
   const confirmPayment = async () => {
     if (!orderId || !sessionId) return;
@@ -72,7 +125,7 @@ export default function CheckoutSuccessPage(): JSX.Element {
       try {
         await navigator.share({
           title: 'I just ordered a custom AI tee on GPTees!',
-          text: 'Create your own in seconds.',
+          text: 'Create your own in seconds and get 10% off with code GPTEES10.',
           url: shareUrl,
         });
         setShareMessage('Thanks for sharing!');
@@ -170,13 +223,32 @@ export default function CheckoutSuccessPage(): JSX.Element {
         </div>
 
         {/* Order Details */}
-        <div className="bg-primary-50 dark:bg-primary-900/20 rounded-lg p-6 mb-6">
+        <div className="bg-primary-50 dark:bg-primary-900/20 rounded-lg p-6 mb-6 space-y-2">
           <p className="text-sm text-primary-800 dark:text-primary-200">
             <strong>Order ID:</strong> {orderId}
           </p>
-          <p className="text-sm text-primary-800 dark:text-primary-200 mt-1">
+          <p className="text-sm text-primary-800 dark:text-primary-200">
             <strong>Session ID:</strong> {sessionId}
           </p>
+          {isLoadingOrder && (
+            <p className="text-sm text-primary-800 dark:text-primary-200">Loading order details...</p>
+          )}
+          {orderSummary && (
+            <div className="text-sm text-primary-800 dark:text-primary-200 space-y-1">
+              <p>
+                <strong>Items:</strong> $
+                {orderSummary.items
+                  .reduce((sum, i) => sum + i.unitPrice * i.quantity, 0)
+                  .toFixed(2)}
+              </p>
+              <p>
+                <strong>Shipping:</strong> ${(orderSummary.shipping ?? 0).toFixed(2)}
+              </p>
+              <p className="text-base">
+                <strong>Total Paid:</strong> ${orderSummary.totalAmount.toFixed(2)}
+              </p>
+            </div>
+          )}
         </div>
 
         {/* Action Buttons */}
@@ -193,6 +265,16 @@ export default function CheckoutSuccessPage(): JSX.Element {
               View My Orders
             </Button>
           </Link>
+          <Button
+            variant="secondary"
+            onClick={() => {
+              trackEvent('checkout.success.add_on_click', { order_id: orderId, target: 'shop_upsell' });
+              navigate('/shop');
+            }}
+            className="flex-1"
+          >
+            Add a Hoodie With My Design
+          </Button>
           <Button variant="secondary" onClick={handleShare} className="flex-1">
             Share with Friends
           </Button>

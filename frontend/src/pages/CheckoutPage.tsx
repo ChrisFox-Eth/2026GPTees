@@ -11,6 +11,7 @@ import { apiPost } from '../utils/api';
 import { useCart } from '../hooks/useCart';
 import { Button } from '@components/Button';
 import { trackEvent } from '@utils/analytics';
+import { calculateShipping } from '@utils/shipping';
 
 interface ShippingAddress {
   name: string;
@@ -44,6 +45,8 @@ export default function CheckoutPage(): JSX.Element {
   const [error, setError] = useState<string | null>(null);
 
   const subtotal = getSubtotal();
+  const shippingCost = calculateShipping({ country: shipping.country });
+  const totalWithShipping = subtotal + shippingCost;
 
   useEffect(() => {
     // Wait for cart to load from localStorage before redirecting
@@ -91,6 +94,7 @@ export default function CheckoutPage(): JSX.Element {
         country: shipping.country,
         has_state: Boolean(shipping.state),
         has_phone: Boolean(shipping.phone),
+        shipping: Number(shippingCost.toFixed(2)),
       });
 
       const response = await apiPost(
@@ -105,6 +109,13 @@ export default function CheckoutPage(): JSX.Element {
         },
         token
       );
+
+      trackEvent('checkout.session_created', {
+        order_id: response.data.orderId,
+        session_id: response.data.sessionId,
+        shipping: Number(shippingCost.toFixed(2)),
+        subtotal: Number(subtotal.toFixed(2)),
+      });
 
       // Remember shipping info for the next checkout
       localStorage.setItem(SHIPPING_STORAGE_KEY, JSON.stringify(shipping));
@@ -131,6 +142,9 @@ export default function CheckoutPage(): JSX.Element {
       <div className="mb-6 sm:mb-8">
         <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-2">Checkout</h1>
         <p className="text-sm text-gray-600 dark:text-gray-400">Complete your order in just a few steps</p>
+        <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">
+          Printed & fulfilled by Printful · Secure payments via Stripe · Ships in 2–4 business days
+        </p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
@@ -312,11 +326,11 @@ export default function CheckoutPage(): JSX.Element {
             </div>
             <div className="flex justify-between text-gray-600 dark:text-gray-400">
               <span>Shipping</span>
-              <span>Calculated at checkout</span>
+              <span>${shippingCost.toFixed(2)}</span>
             </div>
             <div className="flex justify-between text-lg font-bold text-gray-900 dark:text-white border-t border-gray-200 dark:border-gray-700 pt-3">
               <span>Total</span>
-              <span>${subtotal.toFixed(2)}</span>
+              <span>${totalWithShipping.toFixed(2)}</span>
             </div>
           </div>
         </div>
@@ -330,7 +344,7 @@ export default function CheckoutPage(): JSX.Element {
               disabled={isSubmitting || cart.length === 0}
               className="w-full"
             >
-              {isSubmitting ? 'Processing...' : `Pay $${subtotal.toFixed(2)}`}
+              {isSubmitting ? 'Processing...' : `Pay $${totalWithShipping.toFixed(2)}`}
             </Button>
           </div>
         </div>

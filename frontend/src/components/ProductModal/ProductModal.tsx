@@ -19,16 +19,11 @@ interface ProductModalProps {
   onClose: () => void;
 }
 
-const TIER_PRICES = {
-  BASIC: 34.99,
-  PREMIUM: 54.99,
-};
-
 export default function ProductModal({ product, isOpen, onClose }: ProductModalProps): JSX.Element | null {
   const [selectedSize, setSelectedSize] = useState(product.sizes[0]);
   const [selectedColor, setSelectedColor] = useState(product.colors[0]);
-  const [selectedTier, setSelectedTier] = useState<'BASIC' | 'PREMIUM'>('BASIC');
-  const [quantity] = useState(1);
+  const [selectedTier, setSelectedTier] = useState<'BASIC' | 'PREMIUM'>('PREMIUM');
+  const [bundleDeal, setBundleDeal] = useState(false);
   const [showToast, setShowToast] = useState(false);
 
   const { addToCart } = useCart();
@@ -37,11 +32,15 @@ export default function ProductModal({ product, isOpen, onClose }: ProductModalP
 
   if (!isOpen) return null;
 
+  const tierPricing = product.tierPricing || {};
+  const basicTier = tierPricing['BASIC'];
+  const premiumTier = tierPricing['PREMIUM'];
+
   const basePrice = Number(product.basePrice);
-  const tierPrice =
-    product.tierPricing?.[selectedTier]?.price ??
-    (selectedTier === 'PREMIUM' ? TIER_PRICES.PREMIUM : TIER_PRICES.BASIC);
-  const totalPrice = basePrice + tierPrice;
+  const tierPriceRaw = tierPricing[selectedTier]?.price ?? 0;
+  const tierPrice = bundleDeal ? tierPriceRaw * 0.9 : tierPriceRaw; // 10% off with bundle
+  const quantity = bundleDeal ? 2 : 1;
+  const totalPrice = (basePrice + tierPrice) * quantity;
 
   const handleSizeChange = (size: string) => {
     setSelectedSize(size);
@@ -69,6 +68,15 @@ export default function ProductModal({ product, isOpen, onClose }: ProductModalP
       product_id: product.id,
       option_type: 'tier',
       option_value: tier,
+    });
+  };
+
+  const handleBundleToggle = () => {
+    const next = !bundleDeal;
+    setBundleDeal(next);
+    trackEvent('shop.upsell.bundle_toggle', {
+      product_id: product.id,
+      bundle_enabled: next,
     });
   };
 
@@ -236,12 +244,10 @@ export default function ProductModal({ product, isOpen, onClose }: ProductModalP
                     <div className="flex justify-between items-center">
                       <div>
                         <p className="font-semibold text-gray-900 dark:text-white">
-                          Basic - ${(
-                            product.tierPricing?.BASIC?.price ?? TIER_PRICES.BASIC
-                          ).toFixed(2)}
+                          Basic - ${Number(basicTier?.price ?? 0).toFixed(2)}
                         </p>
                         <p className="text-sm text-gray-600 dark:text-gray-400">
-                          {product.tierPricing?.BASIC?.description || 'Generate 1 AI design'}
+                          {basicTier?.description || 'Generate 1 AI design'}
                         </p>
                       </div>
                       {selectedTier === 'BASIC' && <span className="text-primary-600">✓</span>}
@@ -258,16 +264,41 @@ export default function ProductModal({ product, isOpen, onClose }: ProductModalP
                     <div className="flex justify-between items-center">
                       <div>
                         <p className="font-semibold text-gray-900 dark:text-white">
-                          Premium - ${(
-                            product.tierPricing?.PREMIUM?.price ?? TIER_PRICES.PREMIUM
-                          ).toFixed(2)}
+                          Premium - ${Number(premiumTier?.price ?? 0).toFixed(2)}
                         </p>
                         <p className="text-sm text-gray-600 dark:text-gray-400">
-                          {product.tierPricing?.PREMIUM?.description || 'Unlimited AI design regeneration'}
+                          {premiumTier?.description || 'Unlimited AI design regeneration'}
                         </p>
                       </div>
                       {selectedTier === 'PREMIUM' && <span className="text-primary-600">✓</span>}
                     </div>
+                  </button>
+                </div>
+              </div>
+
+              {/* Bundle Toggle */}
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Bundle & Save
+                </label>
+                <div className="flex items-center justify-between border border-gray-300 dark:border-gray-600 rounded-lg p-4">
+                  <div>
+                    <p className="font-semibold text-gray-900 dark:text-white">Buy 2, save 10%</p>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                      We’ll duplicate this item (same size/color) with a 10% tier discount.
+                    </p>
+                  </div>
+                  <button
+                    onClick={handleBundleToggle}
+                    className={`w-14 h-8 rounded-full border transition-colors flex items-center ${
+                      bundleDeal
+                        ? 'bg-primary-600 border-primary-600 justify-end'
+                        : 'bg-gray-200 dark:bg-gray-700 border-gray-300 dark:border-gray-600 justify-start'
+                    }`}
+                    aria-pressed={bundleDeal}
+                    aria-label="Toggle bundle discount"
+                  >
+                    <span className="w-6 h-6 bg-white rounded-full shadow" />
                   </button>
                 </div>
               </div>
@@ -279,6 +310,9 @@ export default function ProductModal({ product, isOpen, onClose }: ProductModalP
                   <p className="text-3xl font-bold text-gray-900 dark:text-white">
                     ${totalPrice.toFixed(2)}
                   </p>
+                  {bundleDeal && (
+                    <p className="text-xs text-gray-600 dark:text-gray-400">Includes 2 items with 10% tier discount</p>
+                  )}
                 </div>
                 <div className="flex flex-col sm:flex-row gap-3">
                   <Button

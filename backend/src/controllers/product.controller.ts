@@ -7,13 +7,14 @@
 import { Request, Response } from 'express';
 import { catchAsync } from '../middleware/error.middleware.js';
 import prisma from '../config/database.js';
-import { TIERS } from '../config/pricing.js';
+import { getTierPricingMap } from '../services/pricing.service.js';
 
 /**
  * Get all products
  * GET /api/products
  */
 export const getProducts = catchAsync(async (_req: Request, res: Response) => {
+  const tierPricing = await getTierPricingMap();
   const products = await prisma.product.findMany({
     where: {
       isActive: true,
@@ -25,7 +26,7 @@ export const getProducts = catchAsync(async (_req: Request, res: Response) => {
 
   res.json({
     success: true,
-    data: products.map((p) => ({ ...p, tierPricing: TIERS })),
+    data: products.map((p) => ({ ...p, tierPricing })),
     count: products.length,
   });
 });
@@ -37,6 +38,7 @@ export const getProducts = catchAsync(async (_req: Request, res: Response) => {
 export const getProductById = catchAsync(async (req: Request, res: Response) => {
   const { id } = req.params;
 
+  const tierPricing = await getTierPricingMap();
   const product = await prisma.product.findUnique({
     where: { id },
   });
@@ -51,7 +53,7 @@ export const getProductById = catchAsync(async (req: Request, res: Response) => 
 
   res.json({
     success: true,
-    data: product ? { ...product, tierPricing: TIERS } : null,
+    data: product ? { ...product, tierPricing } : null,
   });
 });
 
@@ -62,6 +64,7 @@ export const getProductById = catchAsync(async (req: Request, res: Response) => 
 export const getProductBySlug = catchAsync(async (req: Request, res: Response) => {
   const { slug } = req.params;
 
+  const tierPricing = await getTierPricingMap();
   const product = await prisma.product.findUnique({
     where: { slug },
   });
@@ -76,6 +79,6 @@ export const getProductBySlug = catchAsync(async (req: Request, res: Response) =
 
   res.json({
     success: true,
-    data: product ? { ...product, tierPricing: TIERS } : null,
+    data: product ? { ...product, tierPricing } : null,
   });
 });

@@ -14,7 +14,7 @@ const PRODUCTS = [
     name: 'Basic Tee',
     slug: 'basic-tee',
     description: 'Custom AI-designed t-shirt with premium quality printing',
-    basePrice: 0,  // Tier pricing includes everything (shirt + printing + design)
+    basePrice: 9.99,
     printfulId: '71',
     category: 'T_SHIRT',
     sizes: ['S', 'M', 'L', 'XL', '2XL'],
@@ -24,32 +24,29 @@ const PRODUCTS = [
       { name: 'Navy', hex: '#000080' },
       { name: 'Gray', hex: '#808080' },
     ],
-    imageUrl: 'https://placehold.co/400x400/e5e7eb/1f2937?text=Basic+Tee',
+    imageUrl: 'https://files.cdn.printful.com/o/upload/variant-image-jpg/9d/9d2757a2333a362030a37d607942588c_l',
     isActive: true,
   },
   {
     name: 'Premium Tee',
     slug: 'premium-tee',
     description: 'Premium quality cotton t-shirt with enhanced comfort',
-    basePrice: 29.99,
+    basePrice: 14.99,
     printfulId: '19',
     category: 'T_SHIRT',
     sizes: ['S', 'M', 'L', 'XL', '2XL', '3XL'],
     colors: [
       { name: 'Black', hex: '#000000' },
       { name: 'White', hex: '#FFFFFF' },
-      { name: 'Navy', hex: '#000080' },
-      { name: 'Red', hex: '#FF0000' },
-      { name: 'Royal Blue', hex: '#4169E1' },
     ],
-    imageUrl: 'https://placehold.co/400x400/e5e7eb/1f2937?text=Premium+Tee',
-    isActive: true,
+    imageUrl: 'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&w=800&q=80',
+    isActive: false, // Deactivated until variant mapping is added
   },
   {
     name: 'Hoodie',
     slug: 'hoodie',
     description: 'Comfortable pullover hoodie for cooler days',
-    basePrice: 44.99,
+    basePrice: 29.99,
     printfulId: '146',
     category: 'HOODIE',
     sizes: ['S', 'M', 'L', 'XL', '2XL'],
@@ -58,8 +55,8 @@ const PRODUCTS = [
       { name: 'Gray', hex: '#808080' },
       { name: 'Navy', hex: '#000080' },
     ],
-    imageUrl: 'https://placehold.co/400x400/e5e7eb/1f2937?text=Hoodie',
-    isActive: true,
+    imageUrl: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=800&q=80',
+    isActive: false, // Deactivated until variant mapping is added
   },
 ];
 

@@ -49,6 +49,23 @@ interface OrderShippedData {
   orderUrl: string;
 }
 
+interface AbandonedCheckoutData {
+  customerName: string;
+  customerEmail: string;
+  orderNumber: string;
+  resumeUrl: string;
+  createdAt: Date;
+  shipping?: number;
+  subtotal?: number;
+}
+
+interface PromptGuideData {
+  customerName: string;
+  customerEmail: string;
+  orderNumber: string;
+  orderUrl: string;
+}
+
 /**
  * Send order confirmation email
  * Triggered when payment is successful
@@ -285,6 +302,147 @@ export async function sendOrderShipped(
     return { success: true };
   } catch (error: any) {
     console.error('❌ Error sending order shipped email:', error);
+    return { success: false, error: error.message };
+  }
+}
+
+/**
+ * Send reminder for pending payment orders.
+ * Useful for abandoned checkout recovery.
+ */
+export async function sendAbandonedCheckoutReminder(
+  data: AbandonedCheckoutData
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    const emailHtml = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Complete Your Order - ${SITE_NAME}</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; }
+    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+    .header { background: #0f172a; color: white; padding: 26px; text-align: center; border-radius: 10px 10px 0 0; }
+    .content { background: #fff; padding: 26px; border: 1px solid #e5e7eb; border-radius: 0 0 10px 10px; }
+    .button { display: inline-block; background: #0ea5e9; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; margin: 20px 0; }
+    .footer { text-align: center; margin-top: 30px; color: #6b7280; font-size: 14px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>Finish your order</h1>
+    </div>
+    <div class="content">
+      <p>Hi ${data.customerName || 'there'},</p>
+      <p>You left your custom AI tee in checkout. Pick up where you left off and we’ll hold your cart for the next few hours.</p>
+
+      <p><strong>Order:</strong> ${data.orderNumber}</p>
+      <p><strong>Started:</strong> ${data.createdAt.toLocaleString()}</p>
+      ${
+        data.subtotal !== undefined
+          ? `<p><strong>Items:</strong> $${data.subtotal.toFixed(2)}</p>`
+          : ''
+      }
+      ${
+        data.shipping !== undefined
+          ? `<p><strong>Shipping:</strong> $${data.shipping.toFixed(2)}</p>`
+          : ''
+      }
+
+      <div style="text-align: center;">
+        <a href="${data.resumeUrl}" class="button">Return to checkout</a>
+      </div>
+
+      <p style="margin-top: 20px;">Need help? Reply to this email and we’ll get you sorted.</p>
+    </div>
+    <div class="footer">
+      <p>${SITE_NAME} - AI-Powered Custom Apparel</p>
+      <p><a href="${FRONTEND_URL}">Visit Our Store</a></p>
+    </div>
+  </div>
+</body>
+</html>
+    `;
+
+    await resend.emails.send({
+      from: getFromEmail(),
+      to: data.customerEmail,
+      subject: `Finish your order - ${data.orderNumber}`,
+      html: emailHtml,
+    });
+
+    console.log(`Order reminder email sent to ${data.customerEmail}`);
+    return { success: true };
+  } catch (error: any) {
+    console.error('Error sending abandoned checkout email:', error);
+    return { success: false, error: error.message };
+  }
+}
+
+/**
+ * Send prompt-writing guide to encourage design completion.
+ */
+export async function sendPromptGuide(
+  data: PromptGuideData
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    const emailHtml = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pro Tips for Your Design - ${SITE_NAME}</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; }
+    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+    .header { background: #0f172a; color: white; padding: 26px; text-align: center; border-radius: 10px 10px 0 0; }
+    .content { background: #fff; padding: 26px; border: 1px solid #e5e7eb; border-radius: 0 0 10px 10px; }
+    .tip { background: #f8fafc; padding: 14px; border-radius: 8px; margin-bottom: 10px; border: 1px solid #e2e8f0; }
+    .button { display: inline-block; background: #0ea5e9; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; margin: 20px 0; }
+    .footer { text-align: center; margin-top: 30px; color: #6b7280; font-size: 14px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>Write a winning prompt</h1>
+    </div>
+    <div class="content">
+      <p>Hey ${data.customerName || 'there'},</p>
+      <p>Here are quick tips to get a print-ready design:</p>
+      <div class="tip">🎯 Add subject + style: "vintage surf wave, minimal line art"</div>
+      <div class="tip">🎨 Keep it print-friendly: "no background, high contrast, centered design"</div>
+      <div class="tip">🧢 Call out apparel: "designed for a t-shirt, vector-style, screen-print friendly"</div>
+      <div class="tip">⚡️ Try 2–3 variations, then approve your favorite</div>
+
+      <div style="text-align: center;">
+        <a href="${data.orderUrl}" class="button">Generate your design</a>
+      </div>
+    </div>
+    <div class="footer">
+      <p>${SITE_NAME} - AI-Powered Custom Apparel</p>
+      <p><a href="${FRONTEND_URL}">Visit Our Store</a></p>
+    </div>
+  </div>
+</body>
+</html>
+    `;
+
+    await resend.emails.send({
+      from: getFromEmail(),
+      to: data.customerEmail,
+      subject: `Pro tips for your design - ${data.orderNumber}`,
+      html: emailHtml,
+    });
+
+    console.log(`Prompt tips email sent to ${data.customerEmail}`);
+    return { success: true };
+  } catch (error: any) {
+    console.error('Error sending prompt guide email:', error);
     return { success: false, error: error.message };
   }
 }

@@ -16,6 +16,7 @@ export default function ShopPage(): JSX.Element {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [categoryFilter, setCategoryFilter] = useState<string>('ALL');
 
   useEffect(() => {
     fetchProducts();
@@ -25,14 +26,12 @@ export default function ShopPage(): JSX.Element {
     try {
       setLoading(true);
       const response = await apiGet('/api/products');
-      const filtered = (response.data as Product[]).filter(
-        (p) => p.slug === 'basic-tee' || p.name.toLowerCase().includes('basic')
-      );
-      setProducts(filtered);
+      const fetched = (response.data as Product[]) || [];
+      setProducts(fetched);
       setError(null);
       trackEvent('shop.products.loaded', {
-        product_count: filtered.length,
-        has_basic: filtered.some((p) => p.slug === 'basic-tee'),
+        product_count: fetched.length,
+        has_basic: fetched.some((p) => p.slug === 'basic-tee'),
       });
     } catch (err: any) {
       setError(err.message || 'Failed to load products');
@@ -57,6 +56,11 @@ export default function ShopPage(): JSX.Element {
     });
   };
 
+  const visibleProducts =
+    categoryFilter === 'ALL'
+      ? products
+      : products.filter((p) => p.category === categoryFilter);
+
   return (
     <div className="container-max py-8">
       {/* Header */}
@@ -67,6 +71,21 @@ export default function ShopPage(): JSX.Element {
         <p className="text-lg text-gray-600 dark:text-gray-400">
           Choose your product and create unique AI-generated designs
         </p>
+        <div className="flex gap-2 mt-4">
+          {['ALL', 'T_SHIRT', 'HOODIE'].map((category) => (
+            <button
+              key={category}
+              onClick={() => setCategoryFilter(category)}
+              className={`px-4 py-2 rounded-md border transition-colors ${
+                categoryFilter === category
+                  ? 'border-primary-600 text-primary-600 bg-primary-50 dark:bg-primary-900'
+                  : 'border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300'
+              }`}
+            >
+              {category === 'ALL' ? 'All' : category.replace('_', ' ')}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Loading State */}
@@ -90,9 +109,9 @@ export default function ShopPage(): JSX.Element {
       )}
 
       {/* Product Grid */}
-      {!loading && !error && products.length > 0 && (
+      {!loading && !error && visibleProducts.length > 0 && (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {products.map((product) => (
+          {visibleProducts.map((product) => (
             <ProductCard
               key={product.id}
               product={product}
@@ -103,7 +122,7 @@ export default function ShopPage(): JSX.Element {
       )}
 
       {/* Empty State */}
-      {!loading && !error && products.length === 0 && (
+      {!loading && !error && visibleProducts.length === 0 && (
         <div className="text-center py-12">
           <p className="text-gray-600 dark:text-gray-400 text-lg">
             No products available at the moment.

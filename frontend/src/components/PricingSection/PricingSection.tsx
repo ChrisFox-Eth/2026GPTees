@@ -4,46 +4,108 @@
  * @since 2025-11-21
  */
 
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@components/Button';
 import { trackEvent } from '@utils/analytics';
+import { apiGet } from '@utils/api';
+
+interface TierCard {
+  name: string;
+  price: string;
+  description: string;
+  features: string[];
+  cta: string;
+  highlighted: boolean;
+  badge?: string;
+}
+
+const DEFAULT_TIERS: TierCard[] = [
+  {
+    name: 'Basic',
+    price: '$34.99',
+    description: 'Perfect for trying out AI-designed apparel',
+    features: [
+      '1 AI design generation',
+      'Choose from 6 style options',
+      'Premium t-shirt or hoodie (coming soon)',
+      'High-quality printing',
+      'Worldwide shipping',
+      'Email support',
+    ],
+    cta: 'Get Started',
+    highlighted: false,
+  },
+  {
+    name: 'Premium',
+    price: '$54.99',
+    description: 'Best value for design perfectionists',
+    features: [
+      'Unlimited AI design generations',
+      'All 6 style options',
+      'Premium t-shirt or hoodie (coming soon)',
+      'High-quality printing',
+      'Worldwide shipping',
+      'Priority email support',
+      'Perfect your design',
+      'No generation limits',
+    ],
+    cta: 'Go Premium',
+    highlighted: true,
+    badge: 'Popular',
+  },
+];
+
+/**
+ * Format price string with dollar sign.
+ * @param {number | undefined} value - Numeric price to format.
+ * @returns {string} Formatted price string.
+ */
+const formatPrice = (value: number | undefined): string =>
+  value !== undefined ? `$${Number(value).toFixed(2)}` : '$--';
 
 export default function PricingSection(): JSX.Element {
-  const tiers = [
-    {
-      name: 'Basic',
-      price: '$34.99',
-      description: 'Perfect for trying out AI-designed apparel',
-      features: [
-        '1 AI design generation',
-        'Choose from 6 style options',
-        'Premium t-shirt or hoodie (coming soon)',
-        'High-quality printing',
-        'Worldwide shipping',
-        'Email support',
-      ],
-      cta: 'Get Started',
-      highlighted: false,
-    },
-    {
-      name: 'Premium',
-      price: '$54.99',
-      description: 'Best value for design perfectionists',
-      features: [
-        'Unlimited AI design generations',
-        'All 6 style options',
-        'Premium t-shirt or hoodie (coming soon)',
-        'High-quality printing',
-        'Worldwide shipping',
-        'Priority email support',
-        'Perfect your design',
-        'No generation limits',
-      ],
-      cta: 'Go Premium',
-      highlighted: true,
-      badge: 'Popular',
-    },
-  ];
+  const [tiers, setTiers] = useState<TierCard[]>(DEFAULT_TIERS);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    /**
+     * Load tier pricing from the API so the frontend mirrors Supabase settings.
+     */
+    const loadPricing = async () => {
+      try {
+        const response = await apiGet('/api/products');
+        const products = response?.data || [];
+        const firstProduct = Array.isArray(products) ? products[0] : null;
+        const tierPricing = firstProduct?.tierPricing;
+
+        if (!tierPricing || cancelled) return;
+
+        setTiers((current) =>
+          current.map((tier) => {
+            const key = tier.name.toUpperCase();
+            const config = tierPricing[key];
+            if (!config) return tier;
+            return {
+              ...tier,
+              price: formatPrice(config.price),
+              description: config.description || tier.description,
+            };
+          })
+        );
+      } catch (error) {
+        // Non-blocking: fall back to defaults if pricing fetch fails
+        console.error('Failed to load pricing from API', error);
+      }
+    };
+
+    loadPricing();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   return (
     <section className="py-20 bg-gradient-to-b from-white to-gray-50 dark:from-gray-900 dark:to-gray-800">
@@ -87,6 +149,9 @@ export default function PricingSection(): JSX.Element {
                   </span>
                 </div>
                 <p className="text-gray-600 dark:text-gray-300">{tier.description}</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
+                  Ships in 2–4 business days · Secure checkout by Stripe
+                </p>
               </div>
 
               {/* Features */}

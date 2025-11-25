@@ -237,7 +237,7 @@ function normalizeStateCode(state: string | null | undefined): string {
 /**
  * Get Printful variant ID from product, color, and size
  */
-function getPrintfulVariantId(
+export function getPrintfulVariantId(
   printfulId: string,
   color: string,
   size: string
@@ -364,7 +364,7 @@ export async function createPrintfulOrder(
       retail_costs: {
         currency: 'USD',
         subtotal: order.totalAmount.toString(),
-        shipping: '0.00',
+        shipping: (order.totalAmount - order.items.reduce((acc: number, item: any) => acc + Number(item.unitPrice) * item.quantity, 0)).toFixed(2),
         tax: '0.00',
         total: order.totalAmount.toString(),
       },

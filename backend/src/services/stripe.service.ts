@@ -6,7 +6,13 @@
 
 import Stripe from 'stripe';
 import prisma from '../config/database.js';
-import { getTierConfig, TierType } from '../config/pricing.js';
+import { TierType } from '../config/pricing.js';
+import { getTierPricingMap } from './pricing.service.js';
+import { calculateShipping } from '../config/shipping.js';
+import { getPrintfulVariantId } from './printful.service.js';
+import { AppError } from '../middleware/error.middleware.js';
+import { sendPromptGuide } from './email.service.js';
+import { sendAnalyticsEvent } from './analytics.service.js';
 import { sendOrderConfirmation } from './email.service.js';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
@@ -44,12 +50,15 @@ interface CheckoutSessionData {
 /**
  * Create Stripe checkout session
  * @param {CheckoutSessionData} data - Checkout data
- * @returns {Promise<{sessionId: string, url: string}>} Checkout session
+ * @returns {Promise<{sessionId: string, url: string, orderId: string}>} Checkout session + order id
  */
 export async function createCheckoutSession(
   data: CheckoutSessionData
-): Promise<{ sessionId: string; url: string }> {
+): Promise<{ sessionId: string; url: string; orderId: string }> {
   const { userId, items, shippingAddress, successUrl, cancelUrl } = data;
+
+  const tierPricingMap = await getTierPricingMap();
+  const shippingAmount = calculateShipping(shippingAddress);
 
   // Load products from DB to prevent client-side price tampering
   const productIds = Array.from(new Set(items.map((item) => item.productId)));
@@ -66,15 +75,24 @@ export async function createCheckoutSession(
       throw new Error(`Invalid product: ${item.productId}`);
     }
 
-    const tierConfig = getTierConfig(item.tier as TierType);
+    const tierConfig = tierPricingMap[item.tier as TierType];
     const unitPrice = Number(product.basePrice) + tierConfig.price;
     totalAmount += unitPrice * item.quantity;
+
+    const variantId = getPrintfulVariantId(product.printfulId, item.color, item.size);
+    if (!variantId) {
+      throw new AppError(
+        `Selected variant unavailable: ${product.name} (${item.color} / ${item.size}). Please choose a supported color/size.`,
+        400
+      );
+    }
 
     return {
       product,
       unitPrice,
       tierConfig,
       payload: item,
+      variantId,
     };
   });
 
@@ -103,7 +121,7 @@ export async function createCheckoutSession(
       orderNumber,
       userId,
       status: 'PENDING_PAYMENT',
-      totalAmount,
+      totalAmount: totalAmount + shippingAmount,
       designTier: items[0].tier,
       maxDesigns: validatedItems[0].tierConfig.maxDesigns,
       designsGenerated: 0,
@@ -115,6 +133,7 @@ export async function createCheckoutSession(
           color: payload.color,
           quantity: payload.quantity,
           unitPrice,
+          printfulVariantId: validatedItems.find((v) => v.payload === payload)?.variantId?.toString(),
         })),
       },
     },
@@ -138,6 +157,21 @@ export async function createCheckoutSession(
     })
   );
 
+  // Add shipping as a separate line item to keep parity between Stripe and DB totals
+  if (shippingAmount > 0) {
+    lineItems.push({
+      price_data: {
+        currency: 'usd',
+        product_data: {
+          name: 'Shipping',
+          description: 'Flat-rate shipping',
+        },
+        unit_amount: Math.round(shippingAmount * 100),
+      },
+      quantity: 1,
+    });
+  }
+
   // Create Stripe checkout session
   const session = await stripe.checkout.sessions.create({
     payment_method_types: ['card'],
@@ -155,6 +189,7 @@ export async function createCheckoutSession(
       userId,
       addressId: address.id,
       tier: items[0].tier,
+      shippingAmount: shippingAmount.toString(),
     },
   });
 
@@ -167,6 +202,7 @@ export async function createCheckoutSession(
   return {
     sessionId: session.id,
     url: session.url || '',
+    orderId: order.id,
   };
 }
 
@@ -212,6 +248,7 @@ export async function handleSuccessfulPayment(sessionId: string): Promise<void> 
     include: {
       user: true,
       items: true,
+      address: true,
     },
   });
 
@@ -230,6 +267,29 @@ export async function handleSuccessfulPayment(sessionId: string): Promise<void> 
   }).catch((error) => {
     console.error('Failed to send order confirmation email:', error);
     // Don't throw - email failure shouldn't break the payment flow
+  });
+
+  // Send prompt guidance to encourage design completion (non-blocking)
+  sendPromptGuide({
+    customerName: order.user.firstName || order.user.email,
+    customerEmail: order.user.email,
+    orderNumber: order.orderNumber,
+    orderUrl: `${frontendUrl}/design?orderId=${order.id}`,
+  }).catch((error) => {
+    console.error('Failed to send prompt guide email:', error);
+  });
+
+  // Emit revenue event to optional analytics webhook
+  sendAnalyticsEvent({
+    event: 'order.paid',
+    properties: {
+      order_id: order.id,
+      order_number: order.orderNumber,
+      amount: order.totalAmount,
+      tier: order.designTier,
+      item_count: order.items.length,
+      country: order.address?.country || 'US',
+    },
   });
 }
 

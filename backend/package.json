@@ -16,7 +16,8 @@
     "db:push": "prisma db push",
     "db:migrate": "prisma migrate dev",
     "db:seed": "tsx prisma/seed.ts",
-    "db:studio": "prisma studio"
+    "db:studio": "prisma studio",
+    "remind:abandoned": "node --loader ts-node/esm scripts/send-abandoned-reminders.ts"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"

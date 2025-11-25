@@ -63,6 +63,7 @@ export const createCheckout = catchAsync(async (req: Request, res: Response) => 
     data: {
       sessionId: session.sessionId,
       url: session.url,
+      orderId: session.orderId,
     },
   });
 });

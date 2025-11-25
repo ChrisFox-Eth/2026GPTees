@@ -44,6 +44,15 @@ const STYLE_OPTIONS = [
   { value: 'trendy', label: 'Trendy', description: 'Contemporary design trends' },
 ];
 
+const PRESET_PROMPTS = [
+  'Minimal line art wave, bold outline, no background',
+  'Retro sunset with palm trees, vector style, high contrast',
+  'Vintage motorcycle badge, distressed texture, center composition',
+  'Playful cat astronaut, cartoon style, high contrast',
+  'Professional monogram logo, serif, simple and bold',
+  'Streetwear graffiti tag, neon accents, no background',
+];
+
 function DesignContent(): JSX.Element {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
@@ -207,6 +216,12 @@ function DesignContent(): JSX.Element {
         tier: order?.designTier,
       });
 
+      trackEvent('design.started', {
+        order_id: orderId,
+        prompt_length: promptText.length,
+        style: selectedStyle,
+      });
+
       const response = await apiPost('/api/designs/generate', {
         orderId,
         prompt: promptText,
@@ -257,6 +272,11 @@ function DesignContent(): JSX.Element {
         design_id: designId,
       });
 
+      trackEvent('design.approved', {
+        order_id: order?.id ?? orderId,
+        design_id: designId,
+      });
+
       // Update design in list
       setDesigns((prev) =>
         prev.map((d) =>
@@ -277,6 +297,14 @@ function DesignContent(): JSX.Element {
     } finally {
       setIsApproving(null);
     }
+  };
+
+  const handlePresetSelect = (preset: string) => {
+    setPrompt(preset);
+    trackEvent('design.prompt.preset_select', {
+      order_id: orderId,
+      prompt_length: preset.length,
+    });
   };
 
   if (!orderId) {
@@ -366,6 +394,14 @@ function DesignContent(): JSX.Element {
         </div>
       </div>
 
+      {typeof remainingDesigns === 'number' && remainingDesigns <= 1 && (
+        <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-3 mb-6">
+          <p className="text-yellow-800 dark:text-yellow-300 text-sm">
+            Only {remainingDesigns} design left on this tier. Make it count or consider Premium for unlimited retries.
+          </p>
+        </div>
+      )}
+
       {/* Error Display */}
       {error && (
         <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4 mb-6">
@@ -403,6 +439,16 @@ function DesignContent(): JSX.Element {
             </div>
           )}
 
+          {(isGenerating || hasGeneratingDesign) && (
+            <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 mb-4">
+              <p className="text-blue-800 dark:text-blue-300 text-sm">
+                {isGenerating
+                  ? 'Generating your design... this can take 10–30 seconds.'
+                  : 'Uploading to storage... image will refresh automatically.'}
+              </p>
+            </div>
+          )}
+
           {/* Prompt Input */}
           <div className="mb-4">
             <label
@@ -420,6 +466,33 @@ function DesignContent(): JSX.Element {
               disabled={!canGenerate || hasReachedLimit}
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white disabled:opacity-50 disabled:cursor-not-allowed"
             />
+          </div>
+
+          {/* Preset Prompts */}
+          <div className="mb-6">
+            <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Quick start</p>
+            <div className="flex flex-wrap gap-2">
+              {PRESET_PROMPTS.map((preset) => (
+                <button
+                  key={preset}
+                  onClick={() => handlePresetSelect(preset)}
+                  className="text-xs border border-gray-300 dark:border-gray-600 rounded-full px-3 py-2 hover:border-primary-400 hover:text-primary-600 dark:hover:text-primary-400 transition-colors"
+                  type="button"
+                >
+                  {preset}
+                </button>
+              ))}
+              <button
+                onClick={() => {
+                  setSelectedStyle('trendy');
+                  handlePresetSelect('Best-selling combo: streetwear illustration, bold outline, no background');
+                }}
+                className="text-xs border border-primary-400 text-primary-600 dark:text-primary-300 rounded-full px-3 py-2 bg-primary-50 dark:bg-primary-900/20"
+                type="button"
+              >
+                Use best-selling combo
+              </button>
+            </div>
           </div>
 
           {/* Style Selector */}
