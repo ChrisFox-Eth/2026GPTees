@@ -4,7 +4,7 @@
  * @since 2025-11-21
  */
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link, useSearchParams, useNavigate } from 'react-router-dom';
 import { Button } from '@components/Button';
 import { useCart } from '../hooks/useCart';
@@ -24,6 +24,8 @@ interface OrderSummary {
   totalAmount: number;
   items: OrderItem[];
   shipping?: number;
+  tier?: string;
+  country?: string;
 }
 
 export default function CheckoutSuccessPage(): JSX.Element {
@@ -37,6 +39,7 @@ export default function CheckoutSuccessPage(): JSX.Element {
   const [shareMessage, setShareMessage] = useState<string | null>(null);
   const [orderSummary, setOrderSummary] = useState<OrderSummary | null>(null);
   const [isLoadingOrder, setIsLoadingOrder] = useState(false);
+  const hasTrackedPaid = useRef(false);
 
   const orderId = searchParams.get('order_id');
   const sessionId = searchParams.get('session_id');
@@ -85,6 +88,8 @@ export default function CheckoutSuccessPage(): JSX.Element {
           unitPrice: Number(i.unitPrice),
         })),
         shipping,
+        tier: order.designTier,
+        country: order.address?.country || 'US',
       });
     } catch (error) {
       console.error('Failed to load order summary', error);
@@ -92,6 +97,20 @@ export default function CheckoutSuccessPage(): JSX.Element {
       setIsLoadingOrder(false);
     }
   };
+
+  useEffect(() => {
+    if (orderSummary && orderId && !hasTrackedPaid.current) {
+      hasTrackedPaid.current = true;
+      trackEvent('order.paid', {
+        order_id: orderId,
+        amount: Number(orderSummary.totalAmount.toFixed(2)),
+        shipping: Number((orderSummary.shipping ?? 0).toFixed(2)),
+        item_count: orderSummary.items.length,
+        tier: orderSummary.tier || null,
+        country: orderSummary.country || null,
+      });
+    }
+  }, [orderSummary, orderId]);
 
   const confirmPayment = async () => {
     if (!orderId || !sessionId) return;

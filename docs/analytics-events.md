@@ -36,12 +36,15 @@ GPTees uses [Vercel Analytics](https://vercel.com/docs/analytics) for automatic 
 | `checkout.success.confirm_click` | Manual “Confirm Payment” click | `order_id`, `session_id` |
 | `checkout.success.confirm_error` | Manual confirm failed | `order_id`, `message` |
 | `checkout.success.share` | Share/copy design link from success page | `order_id`, `method` (`web_share`/`clipboard`) |
+| `order.paid` | Checkout success page after fetching order | `order_id`, `amount`, `shipping`, `item_count`, `tier`, `country` |
 | `design.gallery.loaded` | Design list fetched for an order | `order_id`, `design_count` |
 | `design.page.loaded` | Design generator page ready with order | `order_id`, `status`, `design_tier`, `designs_generated`, `max_designs` |
 | `design.prompt.randomized` | “Surprise Me” prompt fetched | `order_id`, `prompt_length`, `style` |
 | `design.generate.submit` | Generate design button click | `order_id`, `prompt_length`, `style`, `remaining_designs`, `tier` |
 | `design.generate.success` | Design generation completed | `order_id`, `design_id`, `style` |
 | `design.approval.submit` | Approve design button click | `order_id`, `design_id` |
+| `design.started` | Generation started (pre API call) | `order_id`, `prompt_length`, `style` |
+| `design.approved` | Design approved | `order_id`, `design_id` |
 | `account.orders.loaded` | Account orders fetched | `order_count` |
 | `account.orders.error` | Account orders fetch error | `message` |
 | `account.order_detail.loaded` | Order detail view fetched | `order_id`, `status`, `design_count` |

@@ -7,6 +7,7 @@
 import ReactDOM from 'react-dom/client';
 import { ClerkProvider } from '@clerk/clerk-react';
 import { BrowserRouter } from 'react-router-dom';
+import { Analytics } from '@vercel/analytics/react';
 import App from './App';
 import { initAnalytics } from '@utils/analytics';
 import './index.css';
@@ -30,6 +31,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
   >
     <BrowserRouter>
       <App />
+      <Analytics />
     </BrowserRouter>
   </ClerkProvider>
 );
