@@ -10,6 +10,8 @@ import { apiGet } from '../utils/api';
 import { ProductCard } from '../components/ProductCard';
 import { ProductModal } from '../components/ProductModal';
 import { trackEvent } from '@utils/analytics';
+import { Quickstart } from '@components/Quickstart';
+import SocialProofStrip from '@components/SocialProofStrip/SocialProofStrip';
 
 export default function ShopPage(): JSX.Element {
   const [products, setProducts] = useState<Product[]>([]);
@@ -86,6 +88,14 @@ export default function ShopPage(): JSX.Element {
             </button>
           ))}
         </div>
+      </div>
+
+      <div className="mb-6">
+        <Quickstart />
+      </div>
+
+      <div className="mb-8">
+        <SocialProofStrip />
       </div>
 
       {/* Loading State */}

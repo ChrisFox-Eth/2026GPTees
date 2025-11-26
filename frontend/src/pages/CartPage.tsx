@@ -89,6 +89,14 @@ export default function CartPage(): JSX.Element {
                   <p className="font-medium">
                     Tier: {item.tier === 'BASIC' ? 'Basic (1 design)' : 'Premium (unlimited designs)'}
                   </p>
+                  {item.bundle && (
+                    <p className="text-xs text-primary-700 dark:text-primary-300">
+                      Bundle applied: 2 tees, 10% off tier price
+                    </p>
+                  )}
+                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                    {item.tier === 'PREMIUM' ? 'Unlimited design retries until approval.' : 'Includes 1 AI design.'}
+                  </p>
                 </div>
 
                 <div className="mt-3 flex items-center gap-4">
@@ -127,6 +135,11 @@ export default function CartPage(): JSX.Element {
                 <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                   ${(item.basePrice + item.tierPrice).toFixed(2)} each
                 </p>
+                {item.bundleDiscount && item.bundleDiscount > 0 && (
+                  <p className="text-xs text-primary-600 dark:text-primary-300">
+                    Savings: ${(item.bundleDiscount * item.quantity).toFixed(2)}
+                  </p>
+                )}
               </div>
             </div>
           ))}

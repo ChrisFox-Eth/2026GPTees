@@ -12,6 +12,7 @@ import { useCart } from '../hooks/useCart';
 import { Button } from '@components/Button';
 import { trackEvent } from '@utils/analytics';
 import { calculateShipping } from '@utils/shipping';
+import { ExamplesGallery } from '@components/ExamplesGallery';
 
 interface ShippingAddress {
   name: string;
@@ -43,6 +44,7 @@ export default function CheckoutPage(): JSX.Element {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showPhone, setShowPhone] = useState(false);
 
   const subtotal = getSubtotal();
   const shippingCost = calculateShipping({ country: shipping.country });
@@ -147,7 +149,11 @@ export default function CheckoutPage(): JSX.Element {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
+      <div className="mb-6">
+        <ExamplesGallery />
+      </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
         {/* Shipping Form */}
         <div className="lg:col-span-2 bg-white dark:bg-gray-800 rounded-lg shadow p-4 sm:p-6">
           <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4 sm:mb-6">Shipping Details</h2>
@@ -269,39 +275,80 @@ export default function CheckoutPage(): JSX.Element {
               />
             </div>
 
-            <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Phone (optional)
-              </label>
-              <input
-                type="tel"
-                value={shipping.phone || ''}
-                onChange={(e) => handleInputChange('phone', e.target.value)}
-                name="phone"
-                autoComplete="tel"
-                inputMode="tel"
-                className="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 px-3 py-2"
-                placeholder="For delivery updates"
-              />
-            </div>
+            {(shipping.country !== 'US' && shipping.country !== 'CA') && (
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Phone (recommended for international shipping)
+                </label>
+                <input
+                  type="tel"
+                  value={shipping.phone || ''}
+                  onChange={(e) => handleInputChange('phone', e.target.value)}
+                  name="phone"
+                  autoComplete="tel"
+                  inputMode="tel"
+                  className="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 px-3 py-2"
+                  placeholder="For delivery updates"
+                />
+              </div>
+            )}
+            {(shipping.country === 'US' || shipping.country === 'CA') && (
+              <div className="md:col-span-2 space-y-2">
+                <button
+                  type="button"
+                  onClick={() => setShowPhone(!showPhone)}
+                  className="text-sm text-primary-600 dark:text-primary-300 hover:underline"
+                >
+                  {showPhone ? 'Hide phone' : 'Add phone for delivery updates (optional)'}
+                </button>
+                {showPhone && (
+                  <input
+                    type="tel"
+                    value={shipping.phone || ''}
+                    onChange={(e) => handleInputChange('phone', e.target.value)}
+                    name="phone"
+                    autoComplete="tel"
+                    inputMode="tel"
+                    className="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 px-3 py-2"
+                    placeholder="For delivery updates"
+                  />
+                )}
+              </div>
+            )}
           </div>
 
           {/* Desktop Submit Button */}
           <div className="mt-6 hidden lg:block">
-            <Button
-              variant="primary"
-              onClick={handleCheckout}
-              disabled={isSubmitting || cart.length === 0}
-              className="w-full md:w-auto px-8"
-            >
-              {isSubmitting ? 'Processing...' : 'Proceed to Payment'}
-            </Button>
+            <div className="flex items-center gap-3 flex-wrap">
+              <Button
+                variant="primary"
+                onClick={handleCheckout}
+                disabled={isSubmitting || cart.length === 0}
+                className="w-full md:w-auto px-8"
+              >
+                {isSubmitting ? 'Processing...' : 'Proceed to Payment'}
+              </Button>
+              <p className="text-xs text-gray-600 dark:text-gray-400">
+                Ships in 2–4 business days · {cart[0]?.tier === 'PREMIUM' ? 'Unlimited edits' : '1 design included'}
+              </p>
+            </div>
           </div>
         </div>
 
         {/* Order Summary - Desktop */}
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4 sm:p-6 hidden lg:block sticky top-20 self-start">
           <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">Order Summary</h2>
+          <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-3 border border-gray-200 dark:border-gray-700 mb-4">
+            <p className="text-sm text-gray-800 dark:text-gray-200 font-semibold mb-1">What’s included</p>
+            <ul className="text-xs text-gray-600 dark:text-gray-400 space-y-1">
+              <li>✓ Bella 3001 tee</li>
+              <li>✓ AI design generation</li>
+              <li>✓ Free edits until you approve</li>
+              <li>✓ Printful fulfillment & shipping</li>
+            </ul>
+            <p className="text-xs text-gray-600 dark:text-gray-400 mt-2">Why Premium? Unlimited retries until you love it.</p>
+            <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">Ships in 2–4 business days.</p>
+          </div>
 
           <div className="space-y-4 mb-6">
             {cart.map((item, idx) => (
@@ -309,8 +356,16 @@ export default function CheckoutPage(): JSX.Element {
                 <div>
                   <p className="font-semibold text-gray-900 dark:text-white">{item.productName}</p>
                   <p className="text-sm text-gray-600 dark:text-gray-400">
-                    {item.size} / {item.color} / {item.tier}
+                    {item.size} / {item.color} / {item.tier === 'PREMIUM' ? 'Premium (unlimited)' : 'Basic (1 design)'}
                   </p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                    {item.tier === 'PREMIUM' ? 'Unlimited design retries until approval.' : 'Includes 1 AI design.'}
+                  </p>
+                  {item.bundle && (
+                    <p className="text-xs text-primary-700 dark:text-primary-300">
+                      Bundle: 2 tees · 10% off tier price (savings ${((item.bundleDiscount ?? 0) * item.quantity).toFixed(2)})
+                    </p>
+                  )}
                 </div>
                 <div className="text-right text-gray-900 dark:text-white">
                   ${(item.basePrice + item.tierPrice).toFixed(2)} x {item.quantity}
@@ -338,6 +393,9 @@ export default function CheckoutPage(): JSX.Element {
         {/* Mobile Sticky Checkout Button */}
         <div className="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 p-4 lg:hidden z-30 shadow-lg">
           <div className="container-max">
+            <p className="text-xs text-gray-600 dark:text-gray-400 mb-2 text-center">
+              Ships in 2–4 business days · {cart[0]?.tier === 'PREMIUM' ? 'Unlimited edits' : '1 design included'}
+            </p>
             <Button
               variant="primary"
               onClick={handleCheckout}

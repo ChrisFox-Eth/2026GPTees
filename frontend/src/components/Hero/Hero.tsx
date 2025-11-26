@@ -33,7 +33,7 @@ export default function Hero(): JSX.Element {
       </h1>
 
       <p className="text-xl md:text-2xl text-gray-600 dark:text-gray-300 mb-8 max-w-3xl mx-auto leading-relaxed">
-        Create unique, custom t-shirt designs with the power of AI. Describe your vision and let DALL-E 3 bring it to life in seconds.
+        Create a Bella 3001 tee with an AI design in under a minute. Pay once, get unlimited edits until you approve.
       </p>
 
       {/* Value Props */}

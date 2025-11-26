@@ -13,8 +13,8 @@ const PRODUCTS = [
   {
     name: 'Basic Tee',
     slug: 'basic-tee',
-    description: 'Custom AI-designed t-shirt with premium quality printing',
-    basePrice: 9.99,
+    description: 'Bella+Canvas 3001 tee with custom AI design and premium print',
+    basePrice: 12.5,
     printfulId: '71',
     category: 'T_SHIRT',
     sizes: ['S', 'M', 'L', 'XL', '2XL'],
@@ -24,7 +24,7 @@ const PRODUCTS = [
       { name: 'Navy', hex: '#000080' },
       { name: 'Gray', hex: '#808080' },
     ],
-    imageUrl: 'https://files.cdn.printful.com/o/upload/variant-image-jpg/9d/9d2757a2333a362030a37d607942588c_l',
+    imageUrl: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=1200&q=80',
     isActive: true,
   },
   {
@@ -39,7 +39,7 @@ const PRODUCTS = [
       { name: 'Black', hex: '#000000' },
       { name: 'White', hex: '#FFFFFF' },
     ],
-    imageUrl: 'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&w=800&q=80',
+    imageUrl: 'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&w=1200&q=80',
     isActive: false, // Deactivated until variant mapping is added
   },
   {

@@ -91,6 +91,8 @@ export default function ProductModal({ product, isOpen, onClose }: ProductModalP
       basePrice,
       tierPrice,
       imageUrl: product.imageUrl,
+      bundle: bundleDeal,
+      bundleDiscount: bundleDeal ? tierPriceRaw * 0.1 : undefined,
     });
 
     trackEvent('shop.product.add_to_cart', {
@@ -115,6 +117,8 @@ export default function ProductModal({ product, isOpen, onClose }: ProductModalP
       basePrice,
       tierPrice,
       imageUrl: product.imageUrl,
+      bundle: bundleDeal,
+      bundleDiscount: bundleDeal ? tierPriceRaw * 0.1 : undefined,
     });
 
     trackEvent('shop.product.buy_now', {
@@ -244,10 +248,10 @@ export default function ProductModal({ product, isOpen, onClose }: ProductModalP
                     <div className="flex justify-between items-center">
                       <div>
                         <p className="font-semibold text-gray-900 dark:text-white">
-                          Basic - ${Number(basicTier?.price ?? 0).toFixed(2)}
+                          Basic (1 design) - ${Number(basicTier?.price ?? 0).toFixed(2)}
                         </p>
                         <p className="text-sm text-gray-600 dark:text-gray-400">
-                          {basicTier?.description || 'Generate 1 AI design'}
+                          {basicTier?.description || 'Includes 1 AI design'}
                         </p>
                       </div>
                       {selectedTier === 'BASIC' && <span className="text-primary-600">✓</span>}
@@ -264,7 +268,7 @@ export default function ProductModal({ product, isOpen, onClose }: ProductModalP
                     <div className="flex justify-between items-center">
                       <div>
                         <p className="font-semibold text-gray-900 dark:text-white">
-                          Premium - ${Number(premiumTier?.price ?? 0).toFixed(2)}
+                          Premium (unlimited) - ${Number(premiumTier?.price ?? 0).toFixed(2)}
                         </p>
                         <p className="text-sm text-gray-600 dark:text-gray-400">
                           {premiumTier?.description || 'Unlimited AI design regeneration'}
@@ -283,9 +287,9 @@ export default function ProductModal({ product, isOpen, onClose }: ProductModalP
                 </label>
                 <div className="flex items-center justify-between border border-gray-300 dark:border-gray-600 rounded-lg p-4">
                   <div>
-                    <p className="font-semibold text-gray-900 dark:text-white">Buy 2, save 10%</p>
+                    <p className="font-semibold text-gray-900 dark:text-white">Buy 2, save 10% on tier</p>
                     <p className="text-sm text-gray-600 dark:text-gray-400">
-                      We’ll duplicate this item (same size/color) with a 10% tier discount.
+                      We’ll duplicate this tee (same size/color) and apply 10% off the tier price.
                     </p>
                   </div>
                   <button

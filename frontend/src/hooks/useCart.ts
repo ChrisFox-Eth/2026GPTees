@@ -17,6 +17,8 @@ export interface CartItem {
   basePrice: number;
   tierPrice: number;
   imageUrl: string | null;
+  bundle?: boolean;
+  bundleDiscount?: number; // per-unit discount on tier price when bundled
 }
 
 const CART_STORAGE_KEY = 'gptees_cart';
@@ -39,6 +41,7 @@ export function useCart() {
             basePrice: Number(item.basePrice),
             tierPrice: Number(item.tierPrice),
             quantity: Number(item.quantity),
+            bundleDiscount: item.bundleDiscount ? Number(item.bundleDiscount) : undefined,
           }));
           setCart(normalized);
         } catch (error) {
@@ -125,6 +128,7 @@ export function useCart() {
       has_image: Boolean(item.imageUrl),
       base_price: item.basePrice,
       tier_price: item.tierPrice,
+      bundle: item.bundle || false,
     });
   };
 
