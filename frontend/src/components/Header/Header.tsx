@@ -138,7 +138,7 @@ export default function Header({ isDark, onToggleTheme }: HeaderProps): JSX.Elem
             className="fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden"
             onClick={closeMobileMenu}
           />
-          <div className="fixed top-[73px] right-0 bottom-0 w-64 bg-white dark:bg-gray-800 shadow-lg z-50 md:hidden transform transition-transform duration-300">
+          <div className="fixed top-[73px] right-0 bottom-0 w-full bg-white dark:bg-gray-800 shadow-lg z-50 md:hidden transform transition-transform duration-300">
             <nav className="flex flex-col p-4 gap-4">
               <Link
                 to="/"

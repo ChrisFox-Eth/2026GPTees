@@ -135,7 +135,7 @@ export default function ShopPage(): JSX.Element {
       {!loading && !error && visibleProducts.length === 0 && (
         <div className="text-center py-12">
           <p className="text-gray-600 dark:text-gray-400 text-lg">
-            No products available at the moment.
+            Coming soon!
           </p>
         </div>
       )}
