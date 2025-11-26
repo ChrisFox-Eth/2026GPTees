@@ -34,13 +34,13 @@ export default function Header({ isDark, onToggleTheme }: HeaderProps): JSX.Elem
   return (
     <>
       <header className="bg-white dark:bg-gray-800 shadow-sm transition-colors duration-200 border-b border-gray-200 dark:border-gray-700 sticky top-0 z-[9999]">
-        <div className="container-max py-3 sm:py-4 flex items-center justify-between gap-2">
+        <div className="container-max py-2 sm:py-3 flex items-center justify-between gap-2">
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity shrink-0">
             <div className="h-8 w-8 bg-primary-600 rounded-md flex items-center justify-center text-white font-bold">
               G
             </div>
-            <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">2026GPTees</h1>
+            <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">GPTees</h1>
           </Link>
 
           {/* Desktop Navigation */}
@@ -86,7 +86,7 @@ export default function Header({ isDark, onToggleTheme }: HeaderProps): JSX.Elem
             </SignedIn>
 
             <Link to="/cart" className="relative">
-              <Button variant="secondary" size="sm">
+              <Button variant="secondary" size="sm" ariaLabel="Open cart">
                 Cart
                 {cartItemCount > 0 && (
                   <span className="absolute -top-2 -right-2 bg-primary-600 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
@@ -102,15 +102,15 @@ export default function Header({ isDark, onToggleTheme }: HeaderProps): JSX.Elem
               onClick={onToggleTheme}
               ariaLabel={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
             >
-              {isDark ? '☀️' : '🌙'}
+              {isDark ? 'Light' : 'Dark'}
             </Button>
           </div>
 
           {/* Mobile Controls */}
           <div className="flex md:hidden items-center gap-2">
             <Link to="/cart" className="relative">
-              <Button variant="secondary" size="sm">
-                🛒
+              <Button variant="secondary" size="sm" ariaLabel="Open cart">
+                Cart
                 {cartItemCount > 0 && (
                   <span className="absolute -top-1 -right-1 bg-primary-600 text-white text-xs font-bold rounded-full h-4 w-4 flex items-center justify-center text-[10px]">
                     {cartItemCount}
@@ -125,7 +125,7 @@ export default function Header({ isDark, onToggleTheme }: HeaderProps): JSX.Elem
               onClick={toggleMobileMenu}
               ariaLabel="Toggle menu"
             >
-              {isMobileMenuOpen ? '✕' : '☰'}
+              {isMobileMenuOpen ? 'Close' : 'Menu'}
             </Button>
           </div>
         </div>
@@ -138,7 +138,7 @@ export default function Header({ isDark, onToggleTheme }: HeaderProps): JSX.Elem
             className="fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden"
             onClick={closeMobileMenu}
           />
-          <div className="fixed top-[73px] right-0 bottom-0 w-full bg-white dark:bg-gray-800 shadow-lg z-50 md:hidden transform transition-transform duration-300">
+          <div className="fixed top-[64px] right-0 bottom-0 w-full bg-white dark:bg-gray-800 shadow-lg z-50 md:hidden transform transition-transform duration-300">
             <nav className="flex flex-col p-4 gap-4">
               <Link
                 to="/"
@@ -194,7 +194,7 @@ export default function Header({ isDark, onToggleTheme }: HeaderProps): JSX.Elem
                 }}
                 className="w-full"
               >
-                {isDark ? '☀️ Light Mode' : '🌙 Dark Mode'}
+                {isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
               </Button>
             </nav>
           </div>

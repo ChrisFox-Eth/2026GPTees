@@ -8,7 +8,7 @@ export default function Features(): JSX.Element {
   const features = [
     {
       title: 'Unlimited Creativity',
-      description: 'No design skills needed. Just describe what you want and let AI do the work. From abstract art to photorealistic scenes.',
+      description: 'No design skills needed. Describe what you want and we craft the art. From abstract to photorealistic.',
       icon: (
         <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
@@ -67,7 +67,7 @@ export default function Features(): JSX.Element {
       <div className="container-max">
         <div className="text-center mb-16">
           <h2 className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-4">
-            Why Choose 2026GPTees?
+            Why Choose GPTees?
           </h2>
           <p className="text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
             The easiest way to create and wear your imagination

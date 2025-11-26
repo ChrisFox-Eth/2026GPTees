@@ -1,6 +1,6 @@
 /**
  * @module main
- * @description React application entry point for 2026GPTees
+ * @description React application entry point for GPTees
  * @since 2025-11-21
  */
 

@@ -51,7 +51,6 @@ export default function CheckoutPage(): JSX.Element {
   const totalWithShipping = subtotal + shippingCost;
 
   useEffect(() => {
-    // Wait for cart to load from localStorage before redirecting
     if (!isLoaded) return;
     if (cart.length === 0) {
       trackEvent('checkout.redirect.cart_empty', {});
@@ -59,7 +58,6 @@ export default function CheckoutPage(): JSX.Element {
     }
   }, [cart.length, isLoaded, navigate]);
 
-  // Load saved shipping info for faster mobile checkout
   useEffect(() => {
     const saved = localStorage.getItem(SHIPPING_STORAGE_KEY);
     if (saved) {
@@ -119,7 +117,6 @@ export default function CheckoutPage(): JSX.Element {
         subtotal: Number(subtotal.toFixed(2)),
       });
 
-      // Remember shipping info for the next checkout
       localStorage.setItem(SHIPPING_STORAGE_KEY, JSON.stringify(shipping));
 
       const checkoutUrl = response.data.url;
@@ -145,7 +142,7 @@ export default function CheckoutPage(): JSX.Element {
         <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-2">Checkout</h1>
         <p className="text-sm text-gray-600 dark:text-gray-400">Complete your order in just a few steps</p>
         <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">
-          Printed & fulfilled by Printful · Secure payments via Stripe · Ships in 2–4 business days
+          Printed & fulfilled by Printful • Secure payments via Stripe • Ships in 5-8 business days
         </p>
       </div>
 
@@ -153,7 +150,7 @@ export default function CheckoutPage(): JSX.Element {
         <ExamplesGallery />
       </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
         {/* Shipping Form */}
         <div className="lg:col-span-2 bg-white dark:bg-gray-800 rounded-lg shadow p-4 sm:p-6">
           <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4 sm:mb-6">Shipping Details</h2>
@@ -329,7 +326,7 @@ export default function CheckoutPage(): JSX.Element {
                 {isSubmitting ? 'Processing...' : 'Proceed to Payment'}
               </Button>
               <p className="text-xs text-gray-600 dark:text-gray-400">
-                Ships in 2–4 business days · {cart[0]?.tier === 'PREMIUM' ? 'Unlimited edits' : '1 design included'}
+                Ships in 5-8 business days • {cart[0]?.tier === 'PREMIUM' ? 'Unlimited redraws' : '1 artwork included'}
               </p>
             </div>
           </div>
@@ -339,15 +336,15 @@ export default function CheckoutPage(): JSX.Element {
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4 sm:p-6 hidden lg:block sticky top-20 self-start">
           <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">Order Summary</h2>
           <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-3 border border-gray-200 dark:border-gray-700 mb-4">
-            <p className="text-sm text-gray-800 dark:text-gray-200 font-semibold mb-1">What’s included</p>
+            <p className="text-sm text-gray-800 dark:text-gray-200 font-semibold mb-1">What is included</p>
             <ul className="text-xs text-gray-600 dark:text-gray-400 space-y-1">
-              <li>✓ Bella 3001 tee</li>
-              <li>✓ AI design generation</li>
-              <li>✓ Free edits until you approve</li>
-              <li>✓ Printful fulfillment & shipping</li>
+              <li>• Super-soft GPTee</li>
+              <li>• Artwork crafted from your words</li>
+              <li>• Free redraws until you approve</li>
+              <li>• Printful fulfillment & shipping</li>
             </ul>
-            <p className="text-xs text-gray-600 dark:text-gray-400 mt-2">Why Premium? Unlimited retries until you love it.</p>
-            <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">Ships in 2–4 business days.</p>
+            <p className="text-xs text-gray-600 dark:text-gray-400 mt-2">Why go Limitless? We redraw until you love it.</p>
+            <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">Ships in 5-8 business days.</p>
           </div>
 
           <div className="space-y-4 mb-6">
@@ -356,14 +353,14 @@ export default function CheckoutPage(): JSX.Element {
                 <div>
                   <p className="font-semibold text-gray-900 dark:text-white">{item.productName}</p>
                   <p className="text-sm text-gray-600 dark:text-gray-400">
-                    {item.size} / {item.color} / {item.tier === 'PREMIUM' ? 'Premium (unlimited)' : 'Basic (1 design)'}
+                    {item.size} / {item.color} / {item.tier === 'PREMIUM' ? 'Limitless redraws' : 'Classic (1 artwork)'}
                   </p>
                   <p className="text-xs text-gray-500 dark:text-gray-400">
-                    {item.tier === 'PREMIUM' ? 'Unlimited design retries until approval.' : 'Includes 1 AI design.'}
+                    {item.tier === 'PREMIUM' ? 'Unlimited redraws until approval.' : 'Includes 1 artwork.'}
                   </p>
                   {item.bundle && (
                     <p className="text-xs text-primary-700 dark:text-primary-300">
-                      Bundle: 2 tees · 10% off tier price (savings ${((item.bundleDiscount ?? 0) * item.quantity).toFixed(2)})
+                      Bundle: 2 tees • 10% off tier price (savings ${((item.bundleDiscount ?? 0) * item.quantity).toFixed(2)})
                     </p>
                   )}
                 </div>
@@ -394,7 +391,7 @@ export default function CheckoutPage(): JSX.Element {
         <div className="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 p-4 lg:hidden z-30 shadow-lg">
           <div className="container-max">
             <p className="text-xs text-gray-600 dark:text-gray-400 mb-2 text-center">
-              Ships in 2–4 business days · {cart[0]?.tier === 'PREMIUM' ? 'Unlimited edits' : '1 design included'}
+              Ships in 5-8 business days • {cart[0]?.tier === 'PREMIUM' ? 'Unlimited redraws' : '1 artwork included'}
             </p>
             <Button
               variant="primary"

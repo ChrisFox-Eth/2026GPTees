@@ -1,6 +1,6 @@
 /**
  * @module App
- * @description Root application component for 2026GPTees
+ * @description Root application component for GPTees
  * @since 2025-11-21
  */
 

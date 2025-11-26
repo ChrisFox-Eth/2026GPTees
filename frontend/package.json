@@ -1,7 +1,7 @@
 {
   "name": "2026gptees-frontend",
   "version": "1.0.0",
-  "description": "Frontend for 2026GPTees - AI-Powered Custom Apparel Platform",
+  "description": "Frontend for GPTees - AI-Powered Custom Apparel Platform",
   "type": "module",
   "scripts": {
     "dev": "vite",

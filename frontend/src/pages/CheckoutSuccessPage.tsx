@@ -143,8 +143,8 @@ export default function CheckoutSuccessPage(): JSX.Element {
     if (navigator.share) {
       try {
         await navigator.share({
-          title: 'I just ordered a custom AI tee on GPTees!',
-          text: 'Create your own in seconds and get 10% off with code GPTEES10.',
+          title: 'I just ordered a one-of-one GPTee!',
+          text: 'Describe your dream tee and wear it. Use code GPTEES10 for 10% off.',
           url: shareUrl,
         });
         setShareMessage('Thanks for sharing!');
@@ -212,7 +212,7 @@ export default function CheckoutSuccessPage(): JSX.Element {
               <div>
                 <h3 className="font-semibold text-gray-900 dark:text-white">Generate Your Design</h3>
                 <p className="text-sm text-gray-600 dark:text-gray-400">
-                  Use AI to create your custom t-shirt design
+                  Tell us what to print and we will craft the artwork
                 </p>
               </div>
             </div>
@@ -223,7 +223,7 @@ export default function CheckoutSuccessPage(): JSX.Element {
               <div>
                 <h3 className="font-semibold text-gray-900 dark:text-white">Approve Your Design</h3>
                 <p className="text-sm text-gray-600 dark:text-gray-400">
-                  Review and approve your AI-generated design
+                  Review and approve your one-of-one GPTee art
                 </p>
               </div>
             </div>

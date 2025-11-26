@@ -15,9 +15,9 @@ export default function Footer(): JSX.Element {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
           {/* Brand */}
           <div>
-            <h3 className="text-white font-bold text-xl mb-4">2026GPTees</h3>
+            <h3 className="text-white font-bold text-xl mb-4">GPTees</h3>
             <p className="text-sm text-gray-400">
-              AI-powered custom apparel. Turn your imagination into wearable art.
+              One-of-one custom apparel. Turn your imagination into wearable art.
             </p>
           </div>
 
@@ -70,7 +70,7 @@ export default function Footer(): JSX.Element {
             <h4 className="text-white font-semibold mb-4">Support</h4>
             <ul className="space-y-2 text-sm">
               <li>
-                <a href="mailto:support@2026gptees.com" className="hover:text-white transition-colors">
+                <a href="mailto:support@gptees.com" className="hover:text-white transition-colors">
                   Contact Us
                 </a>
               </li>
@@ -80,14 +80,9 @@ export default function Footer(): JSX.Element {
                 </Link>
               </li>
               <li>
-                <a
-                  href="https://github.com/yourusername/2026gptees"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="hover:text-white transition-colors"
-                >
-                  GitHub
-                </a>
+                <Link to="/shop" className="hover:text-white transition-colors">
+                  Shop GPTees
+                </Link>
               </li>
             </ul>
           </div>
@@ -95,11 +90,9 @@ export default function Footer(): JSX.Element {
 
         {/* Bottom Bar */}
         <div className="border-t border-gray-800 pt-8 flex flex-col md:flex-row justify-between items-center text-sm">
-          <p className="text-gray-400 mb-4 md:mb-0">
-            (c) {currentYear} 2026GPTees. All rights reserved.
-          </p>
+          <p className="text-gray-400 mb-4 md:mb-0">(c) {currentYear} GPTees. All rights reserved.</p>
           <div className="flex items-center gap-6 text-gray-400">
-            <span>Powered by OpenAI DALL-E 3</span>
+            <span>Hand-crafted artwork from your prompt</span>
             <span>|</span>
             <span>Fulfilled by Printful</span>
           </div>

@@ -1,6 +1,6 @@
 /**
  * @module pages/HomePage
- * @description Home page for 2026GPTees - AI-powered custom apparel
+ * @description Home page for GPTees - one-of-one custom apparel
  * @since 2025-11-21
  */
 
@@ -18,11 +18,11 @@ export default function HomePage(): JSX.Element {
     <main>
       <div className="container-max py-8">
         <Hero />
-        <div className="mt-8">
-          <Quickstart />
-        </div>
         <div className="mt-6">
           <SocialProofStrip />
+        </div>
+        <div className="mt-8">
+          <Quickstart />
         </div>
       </div>
       <HowItWorks />

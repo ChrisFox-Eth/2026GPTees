@@ -12,6 +12,7 @@ import { apiGet } from '@utils/api';
 
 interface TierCard {
   name: string;
+  displayName: string;
   price: string;
   description: string;
   features: string[];
@@ -23,12 +24,13 @@ interface TierCard {
 const DEFAULT_TIERS: TierCard[] = [
   {
     name: 'Basic',
+    displayName: 'Classic',
     price: '$34.99',
-    description: '1 AI design included',
+    description: '1 artwork included',
     features: [
-      'Bella 3001 tee',
-      '1 AI design generation',
-      'Free edits until you approve',
+      'Super-soft GPTee',
+      '1 artwork crafted from your words',
+      'Free redraws until you approve',
       'High-quality printing & shipping',
     ],
     cta: 'Get Started',
@@ -36,16 +38,16 @@ const DEFAULT_TIERS: TierCard[] = [
   },
   {
     name: 'Premium',
+    displayName: 'Limitless',
     price: '$54.99',
-    description: 'Unlimited AI designs',
+    description: 'Unlimited redraws',
     features: [
-      'Bella 3001 tee',
-      'Unlimited AI design generations',
-      'Free edits until you approve',
+      'Super-soft GPTee',
+      'Unlimited redraws until you love it',
+      'Free redraws until you approve',
       'High-quality printing & shipping',
-      'Priority email support',
     ],
-    cta: 'Go Premium',
+    cta: 'Go Limitless',
     highlighted: true,
     badge: 'Most choose this',
   },
@@ -53,8 +55,6 @@ const DEFAULT_TIERS: TierCard[] = [
 
 /**
  * Format price string with dollar sign.
- * @param {number | undefined} value - Numeric price to format.
- * @returns {string} Formatted price string.
  */
 const formatPrice = (value: number | undefined): string =>
   value !== undefined ? `$${Number(value).toFixed(2)}` : '$--';
@@ -65,9 +65,6 @@ export default function PricingSection(): JSX.Element {
   useEffect(() => {
     let cancelled = false;
 
-    /**
-     * Load tier pricing from the API so the frontend mirrors Supabase settings.
-     */
     const loadPricing = async () => {
       try {
         const response = await apiGet('/api/products');
@@ -90,7 +87,6 @@ export default function PricingSection(): JSX.Element {
           })
         );
       } catch (error) {
-        // Non-blocking: fall back to defaults if pricing fetch fails
         console.error('Failed to load pricing from API', error);
       }
     };
@@ -110,7 +106,7 @@ export default function PricingSection(): JSX.Element {
             Simple, Transparent Pricing
           </h2>
           <p className="text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
-            Choose the plan that works for you. Both include premium quality and fast shipping.
+            Both options include the tee, custom artwork from your words, and fast shipping.
           </p>
         </div>
 
@@ -136,7 +132,7 @@ export default function PricingSection(): JSX.Element {
               {/* Header */}
               <div className="text-center mb-6">
                 <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-                  {tier.name}
+                  {tier.displayName}
                 </h3>
                 <div className="mb-2">
                   <span className="text-5xl font-bold text-gray-900 dark:text-white">
@@ -145,7 +141,7 @@ export default function PricingSection(): JSX.Element {
                 </div>
                 <p className="text-gray-600 dark:text-gray-300">{tier.description}</p>
                 <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
-                  Ships in 2–4 business days · Secure checkout by Stripe
+                  Ships in 5-8 business days • Secure checkout by Stripe
                 </p>
               </div>
 
@@ -190,7 +186,7 @@ export default function PricingSection(): JSX.Element {
         </div>
 
         <p className="text-center text-gray-500 dark:text-gray-400 mt-12">
-          All prices include the product, printing, and design generation. Shipping calculated at checkout.
+          All prices include the tee, printing, and artwork creation. Shipping calculated at checkout.
         </p>
       </div>
     </section>

@@ -26,7 +26,9 @@ export default function ProductModal({ product, isOpen, onClose }: ProductModalP
   const [bundleDeal, setBundleDeal] = useState(false);
   const [showToast, setShowToast] = useState(false);
 
-  const { addToCart } = useCart();
+  const { addToCart, getTotalItems, getSubtotal } = useCart();
+  const cartItems = getTotalItems();
+  const cartSubtotal = getSubtotal();
   const navigate = useNavigate();
   const { isSignedIn } = useAuth();
 
@@ -41,6 +43,7 @@ export default function ProductModal({ product, isOpen, onClose }: ProductModalP
   const tierPrice = bundleDeal ? tierPriceRaw * 0.9 : tierPriceRaw; // 10% off with bundle
   const quantity = bundleDeal ? 2 : 1;
   const totalPrice = (basePrice + tierPrice) * quantity;
+  const deliveryText = 'Ships in 5-8 business days';
 
   const handleSizeChange = (size: string) => {
     setSelectedSize(size);
@@ -106,6 +109,14 @@ export default function ProductModal({ product, isOpen, onClose }: ProductModalP
     onClose();
   };
 
+  const goToCheckout = () => {
+    if (isSignedIn) {
+      navigate('/checkout');
+    } else {
+      navigate('/auth');
+    }
+  };
+
   const handleBuyNow = () => {
     addToCart({
       productId: product.id,
@@ -130,13 +141,7 @@ export default function ProductModal({ product, isOpen, onClose }: ProductModalP
     });
 
     onClose();
-
-    // Navigate to checkout if signed in, otherwise to auth
-    if (isSignedIn) {
-      navigate('/checkout');
-    } else {
-      navigate('/auth');
-    }
+    goToCheckout();
   };
 
   return (
@@ -152,14 +157,15 @@ export default function ProductModal({ product, isOpen, onClose }: ProductModalP
 
       {/* Modal */}
       <div className="flex min-h-full items-center justify-center p-4">
-        <div 
-          className="relative bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-4xl w-full p-6"
+        <div
+          className="relative bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-4xl w-full p-6 pb-16 md:pb-6"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Close Button */}
           <button
             onClick={onClose}
             className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+            aria-label="Close product modal"
           >
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -170,10 +176,17 @@ export default function ProductModal({ product, isOpen, onClose }: ProductModalP
             {/* Product Image */}
             <div className="aspect-square bg-gray-200 dark:bg-gray-700 rounded-lg overflow-hidden">
               {product.imageUrl ? (
-                <img src={product.imageUrl} alt={product.name} className="w-full h-full object-cover" />
+                <img
+                  src={product.imageUrl}
+                  alt={product.name}
+                  loading="lazy"
+                  width={800}
+                  height={800}
+                  className="w-full h-full object-cover"
+                />
               ) : (
                 <div className="w-full h-full flex items-center justify-center">
-                  <span className="text-gray-400 text-6xl">👕</span>
+                  <span className="text-gray-400 text-sm uppercase tracking-wide">Image coming soon</span>
                 </div>
               )}
             </div>
@@ -184,15 +197,16 @@ export default function ProductModal({ product, isOpen, onClose }: ProductModalP
                 {product.name}
               </h2>
               {product.description && (
-                <p className="text-gray-600 dark:text-gray-400 mb-6">{product.description}</p>
+                <p className="text-gray-600 dark:text-gray-400 mb-4">{product.description}</p>
               )}
+              <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">{deliveryText}</p>
 
               {/* Size Selection */}
               <div className="mb-6">
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Size
                 </label>
-                <div className="flex gap-2">
+                <div className="flex gap-2 flex-wrap">
                   {product.sizes.map((size) => (
                     <button
                       key={size}
@@ -226,6 +240,7 @@ export default function ProductModal({ product, isOpen, onClose }: ProductModalP
                       }`}
                       style={{ backgroundColor: color.hex }}
                       title={color.name}
+                      aria-label={`Choose ${color.name}`}
                     />
                   ))}
                 </div>
@@ -248,13 +263,13 @@ export default function ProductModal({ product, isOpen, onClose }: ProductModalP
                     <div className="flex justify-between items-center">
                       <div>
                         <p className="font-semibold text-gray-900 dark:text-white">
-                          Basic (1 design) - ${Number(basicTier?.price ?? 0).toFixed(2)}
+                          Classic (1 design) - ${Number(basicTier?.price ?? 0).toFixed(2)}
                         </p>
                         <p className="text-sm text-gray-600 dark:text-gray-400">
-                          {basicTier?.description || 'Includes 1 AI design'}
+                          {basicTier?.description || 'One custom design crafted from your prompt'}
                         </p>
                       </div>
-                      {selectedTier === 'BASIC' && <span className="text-primary-600">✓</span>}
+                      {selectedTier === 'BASIC' && <span className="text-primary-600 text-sm">Selected</span>}
                     </div>
                   </button>
                   <button
@@ -268,13 +283,13 @@ export default function ProductModal({ product, isOpen, onClose }: ProductModalP
                     <div className="flex justify-between items-center">
                       <div>
                         <p className="font-semibold text-gray-900 dark:text-white">
-                          Premium (unlimited) - ${Number(premiumTier?.price ?? 0).toFixed(2)}
+                          Limitless redraws - ${Number(premiumTier?.price ?? 0).toFixed(2)}
                         </p>
                         <p className="text-sm text-gray-600 dark:text-gray-400">
-                          {premiumTier?.description || 'Unlimited AI design regeneration'}
+                          {premiumTier?.description || 'We redraw until you love it—no extra charges'}
                         </p>
                       </div>
-                      {selectedTier === 'PREMIUM' && <span className="text-primary-600">✓</span>}
+                      {selectedTier === 'PREMIUM' && <span className="text-primary-600 text-sm">Selected</span>}
                     </div>
                   </button>
                 </div>
@@ -285,11 +300,11 @@ export default function ProductModal({ product, isOpen, onClose }: ProductModalP
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Bundle & Save
                 </label>
-                <div className="flex items-center justify-between border border-gray-300 dark:border-gray-600 rounded-lg p-4">
+                <div className="flex items-center justify-between border border-gray-300 dark:border-gray-600 rounded-lg p-4 gap-3">
                   <div>
                     <p className="font-semibold text-gray-900 dark:text-white">Buy 2, save 10% on tier</p>
                     <p className="text-sm text-gray-600 dark:text-gray-400">
-                      We’ll duplicate this tee (same size/color) and apply 10% off the tier price.
+                      We will duplicate this tee (same size and color) and apply 10% off the tier price.
                     </p>
                   </div>
                   <button
@@ -314,8 +329,11 @@ export default function ProductModal({ product, isOpen, onClose }: ProductModalP
                   <p className="text-3xl font-bold text-gray-900 dark:text-white">
                     ${totalPrice.toFixed(2)}
                   </p>
+                  <p className="text-xs text-gray-600 dark:text-gray-400">{deliveryText}</p>
                   {bundleDeal && (
-                    <p className="text-xs text-gray-600 dark:text-gray-400">Includes 2 items with 10% tier discount</p>
+                    <p className="text-xs text-gray-600 dark:text-gray-400">
+                      Includes 2 items with 10% tier discount.
+                    </p>
                   )}
                 </div>
                 <div className="flex flex-col sm:flex-row gap-3">
@@ -339,6 +357,28 @@ export default function ProductModal({ product, isOpen, onClose }: ProductModalP
           </div>
         </div>
       </div>
+
+      {/* Mobile Cart Summary Bar */}
+      {cartItems > 0 && (
+        <div className="fixed bottom-0 inset-x-0 z-[60] md:hidden">
+          <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 shadow-lg p-3 flex items-center justify-between gap-3">
+            <div>
+              <p className="text-xs text-gray-500 dark:text-gray-400">Cart</p>
+              <p className="text-sm font-semibold text-gray-900 dark:text-white">
+                {cartItems} item{cartItems !== 1 ? 's' : ''} · ${cartSubtotal.toFixed(2)}
+              </p>
+            </div>
+            <div className="flex gap-2">
+              <Button variant="secondary" size="sm" onClick={() => navigate('/cart')}>
+                View
+              </Button>
+              <Button variant="primary" size="sm" onClick={goToCheckout}>
+                Checkout
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Toast Notification */}
       {showToast && (

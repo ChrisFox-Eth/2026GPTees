@@ -5,34 +5,34 @@
 
 const EXAMPLES = [
   {
-    src: 'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&w=400&q=80',
+    src: 'https://ncgvjcormulfgtxkuvat.supabase.co/storage/v1/object/public/designs/ExampleImages/img-czLKfdUwU1d41urmntC7zjzG.png',
     alt: 'Vintage surf wave tee',
-    label: 'Vintage surf',
+    label: 'A fluffy cat dressed as a pink princess',
   },
   {
-    src: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=400&q=80',
-    alt: 'Minimal line art',
-    label: 'Minimal line art',
-  },
-  {
-    src: 'https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?auto=format&fit=crop&w=400&q=80',
-    alt: 'Bold graphic',
-    label: 'Bold graphic',
-  },
-  {
-    src: 'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&w=400&q=80',
-    alt: 'Retro badge',
-    label: 'Retro badge',
-  },
-  {
-    src: 'https://images.unsplash.com/photo-1503341455253-b2e723bb3dbb?auto=format&fit=crop&w=400&q=80',
-    alt: 'Streetwear graphic',
-    label: 'Streetwear',
-  },
-  {
-    src: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=400&q=80',
+    src: 'https://ncgvjcormulfgtxkuvat.supabase.co/storage/v1/object/public/designs/ExampleImages/content%20(5).png',
     alt: 'Clean monogram',
-    label: 'Clean monogram',
+    label: 'An old-timey telephone with a silly pun on the line.',
+  },
+  {
+    src: 'https://ncgvjcormulfgtxkuvat.supabase.co/storage/v1/object/public/designs/ExampleImages/img-xK173YaVJi4uhQxzeQoBNeow.png',
+    alt: 'Minimal line art',
+    label: 'A majestic dragon with flowing lines',
+  },
+  {
+    src: 'https://ncgvjcormulfgtxkuvat.supabase.co/storage/v1/object/public/designs/ExampleImages/ChatGPT%20Image%20Nov%2026,%202025,%2009_56_03%20AM.png',
+    alt: 'Retro badge',
+    label: 'A T-Rex playing video games',
+  },
+  {
+    src: 'https://ncgvjcormulfgtxkuvat.supabase.co/storage/v1/object/public/designs/ExampleImages/ChatGPT%20Image%20Nov%2026,%202025,%2009_56_07%20AM.png',
+    alt: 'Streetwear graphic',
+    label: 'The planet Saturn, but its rings are made of cheese',
+  },
+  {
+    src: 'https://ncgvjcormulfgtxkuvat.supabase.co/storage/v1/object/public/designs/ExampleImages/img-k3tVkSmu5oyBTJhf1WPCQPsm.png',
+    alt: 'Bold graphic',
+    label: 'A trendy fashionable pop star diva admiring her closet, wardrobe, and shoe collection',
   },
 ];
 

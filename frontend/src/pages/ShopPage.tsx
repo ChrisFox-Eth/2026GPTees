@@ -5,13 +5,35 @@
  */
 
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Product } from '../types/product';
 import { apiGet } from '../utils/api';
 import { ProductCard } from '../components/ProductCard';
 import { ProductModal } from '../components/ProductModal';
 import { trackEvent } from '@utils/analytics';
-import { Quickstart } from '@components/Quickstart';
+// import { Quickstart } from '@components/Quickstart';
 import SocialProofStrip from '@components/SocialProofStrip/SocialProofStrip';
+import { Button } from '@components/Button';
+import { useCart } from '../hooks/useCart';
+
+const FAQ_ITEMS = [
+  {
+    question: 'How long does shipping take?',
+    answer: 'Most US orders ship in 5-8 business days after you approve your design. You get tracking as soon as it leaves the facility.',
+  },
+  {
+    question: 'What if I do not like the design?',
+    answer: 'Premium includes unlimited redraws before print. We only print after you approve a design you love.',
+  },
+  {
+    question: 'What is your return policy?',
+    answer: 'If there is a defect, misprint, or damage, we will reprint or refund. Unworn items can be returned within 30 days.',
+  },
+  {
+    question: 'How does sizing fit?',
+    answer: 'Our Bella 3001 tees are unisex and true to size. Size up for a relaxed fit; size down for a tailored fit.',
+  },
+];
 
 export default function ShopPage(): JSX.Element {
   const [products, setProducts] = useState<Product[]>([]);
@@ -19,9 +41,33 @@ export default function ShopPage(): JSX.Element {
   const [error, setError] = useState<string | null>(null);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [categoryFilter, setCategoryFilter] = useState<string>('ALL');
+  const navigate = useNavigate();
+  const { cart, getTotalItems, getSubtotal } = useCart();
+  const cartItems = getTotalItems();
+  const cartSubtotal = getSubtotal();
+  const hasCartItems = cart.length > 0;
 
   useEffect(() => {
     fetchProducts();
+  }, []);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const source = params.get('utm_source') || params.get('source');
+    const campaign = params.get('utm_campaign');
+    const medium = params.get('utm_medium');
+    const clickId = params.get('fbclid') || params.get('gclid');
+
+    if (source || campaign || clickId) {
+      const payload = {
+        source: source || undefined,
+        campaign: campaign || undefined,
+        medium: medium || undefined,
+        click_id: clickId || undefined,
+      };
+      localStorage.setItem('gptees_attribution', JSON.stringify(payload));
+      trackEvent('marketing.attribution.capture', payload);
+    }
   }, []);
 
   const fetchProducts = async () => {
@@ -62,31 +108,45 @@ export default function ShopPage(): JSX.Element {
     categoryFilter === 'ALL'
       ? products
       : products.filter((p) => p.category === categoryFilter);
+  const skeletonCards = Array.from({ length: 6 });
 
   return (
-    <div className="container-max py-8">
+    <div className="container-max py-8 pb-24 md:pb-12">
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-2">
           Shop Custom Apparel
         </h1>
         <p className="text-lg text-gray-600 dark:text-gray-400">
-          Choose your product and create unique AI-generated designs
+          Describe the tee you want and we will make a one-of-one GPTee you approve before we print.
         </p>
-        <div className="flex gap-2 mt-4">
-          {['ALL', 'T_SHIRT', 'HOODIE'].map((category) => (
-            <button
-              key={category}
-              onClick={() => setCategoryFilter(category)}
-              className={`px-4 py-2 rounded-md border transition-colors ${
-                categoryFilter === category
-                  ? 'border-primary-600 text-primary-600 bg-primary-50 dark:bg-primary-900'
-                  : 'border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300'
-              }`}
+        <div className="flex flex-wrap gap-2 mt-3 text-sm text-gray-600 dark:text-gray-300">
+          {['Super-soft GPTee', 'Flexible pay options'].map((badge) => (
+            <span
+              key={badge}
+              className="px-3 py-1 rounded-full bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700"
             >
-              {category === 'ALL' ? 'All' : category.replace('_', ' ')}
-            </button>
+              {badge}
+            </span>
           ))}
+        </div>
+        <div className="-mx-4 sm:mx-0">
+          <div className="flex gap-2 mt-4 overflow-x-auto pb-2 px-4 sm:px-0">
+            {['ALL', 'T_SHIRT', 'HOODIE'].map((category) => (
+              <button
+                key={category}
+                onClick={() => setCategoryFilter(category)}
+                aria-pressed={categoryFilter === category}
+                className={`px-4 py-2 rounded-full border whitespace-nowrap transition-colors ${
+                  categoryFilter === category
+                    ? 'border-primary-600 text-primary-600 bg-primary-50 dark:bg-primary-900'
+                    : 'border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300'
+                }`}
+              >
+                {category === 'ALL' ? 'All' : category.replace('_', ' ')}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
@@ -96,8 +156,21 @@ export default function ShopPage(): JSX.Element {
 
       {/* Loading State */}
       {loading && (
-        <div className="flex items-center justify-center py-12">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
+        <div className="grid grid-cols-1 min-[360px]:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6 mb-8">
+          {skeletonCards.map((_, idx) => (
+            <div
+              key={idx}
+              className="bg-white dark:bg-gray-800 rounded-lg shadow-md border border-gray-100 dark:border-gray-700 overflow-hidden animate-pulse"
+            >
+              <div className="aspect-square bg-gray-200 dark:bg-gray-700" />
+              <div className="p-4 space-y-3">
+                <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-3/4" />
+                <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-full" />
+                <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-2/3" />
+                <div className="h-10 bg-gray-200 dark:bg-gray-700 rounded mt-2" />
+              </div>
+            </div>
+          ))}
         </div>
       )}
 
@@ -116,7 +189,7 @@ export default function ShopPage(): JSX.Element {
 
       {/* Product Grid */}
       {!loading && !error && visibleProducts.length > 0 && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
           {visibleProducts.map((product) => (
             <ProductCard
               key={product.id}
@@ -145,8 +218,49 @@ export default function ShopPage(): JSX.Element {
         />
       )}
 
-      <div className="mb-6">
+      {hasCartItems && !selectedProduct && (
+        <div className="fixed bottom-0 inset-x-0 z-40 md:hidden">
+          <div className="container-max pb-4">
+            <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg p-3 flex items-center justify-between gap-3">
+              <div>
+                <p className="text-xs text-gray-500 dark:text-gray-400">Cart</p>
+                <p className="text-sm font-semibold text-gray-900 dark:text-white">
+                  {cartItems} item{cartItems !== 1 ? 's' : ''} · ${cartSubtotal.toFixed(2)}
+                </p>
+              </div>
+              <div className="flex gap-2">
+                <Button variant="secondary" size="sm" onClick={() => navigate('/cart')}>
+                  View
+                </Button>
+                <Button variant="primary" size="sm" onClick={() => navigate('/checkout')}>
+                  Checkout
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* <div className="mb-6">
         <Quickstart />
+      </div> */}
+
+      <div className="my-10">
+        <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-3">Answers at a glance</h2>
+        <div className="space-y-3">
+          {FAQ_ITEMS.map((faq) => (
+            <details
+              key={faq.question}
+              className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4"
+            >
+              <summary className="flex items-center justify-between cursor-pointer text-gray-900 dark:text-white font-semibold">
+                <span>{faq.question}</span>
+                <span className="text-primary-600 dark:text-primary-400">+</span>
+              </summary>
+              <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">{faq.answer}</p>
+            </details>
+          ))}
+        </div>
       </div>
     </div>
   );

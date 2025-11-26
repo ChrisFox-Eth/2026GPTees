@@ -1,6 +1,6 @@
 /**
  * @module pages/DesignPage
- * @description AI design generation page with DALL-E 3
+ * @description Design studio page for creating and approving artwork
  * @since 2025-11-21
  */
 
@@ -365,10 +365,10 @@ function DesignContent(): JSX.Element {
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-          AI Design Generator
+          Design Studio
         </h1>
         <p className="text-gray-600 dark:text-gray-400">
-          Create your custom t-shirt design using AI
+          Describe your idea and we will craft the artwork for your GPTee
         </p>
       </div>
 
@@ -396,9 +396,9 @@ function DesignContent(): JSX.Element {
 
       {typeof remainingDesigns === 'number' && remainingDesigns <= 1 && (
         <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-3 mb-6">
-          <p className="text-yellow-800 dark:text-yellow-300 text-sm">
-            Only {remainingDesigns} design left on this tier. Make it count or consider Premium for unlimited retries.
-          </p>
+            <p className="text-yellow-800 dark:text-yellow-300 text-sm">
+              Only {remainingDesigns} design left on this tier. Make it count or consider Premium for unlimited redraws.
+            </p>
         </div>
       )}
 

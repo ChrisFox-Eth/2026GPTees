@@ -215,7 +215,7 @@ function AccountContent(): JSX.Element {
               No orders yet
             </h3>
             <p className="text-gray-600 dark:text-gray-400 mb-6">
-              Start shopping to create your first AI-designed t-shirt!
+              Start shopping to create your first one-of-one GPTee!
             </p>
             <Link to="/shop">
               <Button variant="primary">Browse Products</Button>

@@ -36,12 +36,12 @@ export default function CartPage(): JSX.Element {
     return (
       <div className="container-max py-12">
         <div className="max-w-2xl mx-auto text-center">
-          <div className="text-6xl mb-4">🛒</div>
+          <div className="text-6xl mb-4" aria-hidden="true">Cart</div>
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">
             Your cart is empty
           </h1>
           <p className="text-gray-600 dark:text-gray-400 mb-8">
-            Start shopping to add items to your cart
+            Start shopping to add your first GPTee.
           </p>
           <Link to="/shop">
             <Button variant="primary">Browse Products</Button>
@@ -70,10 +70,11 @@ export default function CartPage(): JSX.Element {
                     src={item.imageUrl}
                     alt={item.productName}
                     className="w-full h-full object-cover rounded"
+                    loading="lazy"
                   />
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center text-2xl">
-                    👕
+                  <div className="w-full h-full flex items-center justify-center text-xs uppercase tracking-wide px-2 text-gray-500">
+                    Preview coming soon
                   </div>
                 )}
               </div>
@@ -87,7 +88,7 @@ export default function CartPage(): JSX.Element {
                   <p>Size: {item.size}</p>
                   <p>Color: {item.color}</p>
                   <p className="font-medium">
-                    Tier: {item.tier === 'BASIC' ? 'Basic (1 design)' : 'Premium (unlimited designs)'}
+                    {item.tier === 'BASIC' ? 'Classic (1 artwork)' : 'Limitless redraws'}
                   </p>
                   {item.bundle && (
                     <p className="text-xs text-primary-700 dark:text-primary-300">
@@ -95,7 +96,7 @@ export default function CartPage(): JSX.Element {
                     </p>
                   )}
                   <p className="text-xs text-gray-500 dark:text-gray-400">
-                    {item.tier === 'PREMIUM' ? 'Unlimited design retries until approval.' : 'Includes 1 AI design.'}
+                    {item.tier === 'PREMIUM' ? 'Unlimited redraws until you approve.' : 'Includes 1 artwork.'}
                   </p>
                 </div>
 
@@ -195,9 +196,9 @@ export default function CartPage(): JSX.Element {
                 What's next?
               </h3>
               <ul className="text-sm text-primary-800 dark:text-primary-200 space-y-1">
-                <li>✓ Complete payment</li>
-                <li>✓ Generate AI designs</li>
-                <li>✓ We print & ship to you</li>
+                <li>• Complete payment</li>
+                <li>• We craft your artwork and share it</li>
+                <li>• Approve, then we print & ship</li>
               </ul>
             </div>
           </div>

@@ -75,7 +75,7 @@ export default function TermsPage(): JSX.Element {
         <h2>7. Intellectual Property</h2>
         <h3>7.1 Our Rights</h3>
         <p>
-          The Service, including its design, features, and code, is owned by 2026GPTees and protected by intellectual property laws.
+          The Service, including its design, features, and code, is owned by GPTees and protected by intellectual property laws.
         </p>
 
         <h3>7.2 User Content</h3>
@@ -100,7 +100,7 @@ export default function TermsPage(): JSX.Element {
 
         <h2>10. Limitation of Liability</h2>
         <p>
-          To the fullest extent permitted by law, 2026GPTees shall not be liable for indirect, incidental, special, or consequential damages arising from your use of the Service.
+          To the fullest extent permitted by law, GPTees shall not be liable for indirect, incidental, special, or consequential damages arising from your use of the Service.
         </p>
 
         <h2>11. Termination</h2>
