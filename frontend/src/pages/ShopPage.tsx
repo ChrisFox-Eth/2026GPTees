@@ -90,10 +90,6 @@ export default function ShopPage(): JSX.Element {
         </div>
       </div>
 
-      <div className="mb-6">
-        <Quickstart />
-      </div>
-
       <div className="mb-8">
         <SocialProofStrip />
       </div>
@@ -148,6 +144,10 @@ export default function ShopPage(): JSX.Element {
           onClose={() => setSelectedProduct(null)}
         />
       )}
+
+      <div className="mb-6">
+        <Quickstart />
+      </div>
     </div>
   );
 }
