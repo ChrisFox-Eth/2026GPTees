@@ -33,7 +33,7 @@ export default function Header({ isDark, onToggleTheme }: HeaderProps): JSX.Elem
 
   return (
     <>
-      <header className="bg-white dark:bg-gray-800 shadow-sm transition-colors duration-200 border-b border-gray-200 dark:border-gray-700 sticky top-0 z-40">
+      <header className="bg-white dark:bg-gray-800 shadow-sm transition-colors duration-200 border-b border-gray-200 dark:border-gray-700 sticky top-0 z-[9999]">
         <div className="container-max py-3 sm:py-4 flex items-center justify-between gap-2">
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity shrink-0">
