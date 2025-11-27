@@ -61,7 +61,7 @@ export default function CartPage(): JSX.Element {
           {cart.map((item, index) => (
             <div
               key={index}
-              className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 flex gap-4"
+              className="bg-white dark:bg-gray-800 rounded-lg shadow p-4 sm:p-6 flex flex-col sm:flex-row gap-4 overflow-hidden"
             >
               {/* Product Image */}
               <div className="w-24 h-24 bg-gray-200 dark:bg-gray-700 rounded flex-shrink-0">
@@ -80,8 +80,8 @@ export default function CartPage(): JSX.Element {
               </div>
 
               {/* Product Details */}
-              <div className="flex-grow">
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-1">
+              <div className="flex-grow min-w-0">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-1 break-words">
                   {item.productName}
                 </h3>
                 <div className="text-sm text-gray-600 dark:text-gray-400 space-y-1">
@@ -100,7 +100,7 @@ export default function CartPage(): JSX.Element {
                   </p>
                 </div>
 
-                <div className="mt-3 flex items-center gap-4">
+                <div className="mt-3 flex items-center gap-4 flex-wrap">
                   {/* Quantity */}
                   <div className="flex items-center gap-2">
                     <button
@@ -129,11 +129,11 @@ export default function CartPage(): JSX.Element {
               </div>
 
               {/* Price */}
-              <div className="text-right">
-                <p className="text-lg font-bold text-gray-900 dark:text-white">
+              <div className="text-right sm:text-right flex sm:block items-start justify-between sm:justify-end gap-3">
+                <p className="text-lg font-bold text-gray-900 dark:text-white whitespace-nowrap">
                   ${((item.basePrice + item.tierPrice) * item.quantity).toFixed(2)}
                 </p>
-                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 whitespace-nowrap">
                   ${(item.basePrice + item.tierPrice).toFixed(2)} each
                 </p>
                 {item.bundleDiscount && item.bundleDiscount > 0 && (

@@ -54,8 +54,8 @@ export default function SocialProofStrip(): JSX.Element {
     const target = document.querySelector('#quickstart');
     if (target) {
       target.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      // Nudge up so the QuickStart header is fully visible on mobile
-      setTimeout(() => window.scrollBy({ top: -120, behavior: 'smooth' }), 250);
+      // Slight nudge up so QuickStart header is visible on mobile
+      setTimeout(() => window.scrollBy({ top: -100, behavior: 'smooth' }), 200);
     }
   };
 

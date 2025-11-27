@@ -173,7 +173,7 @@ export default function CheckoutPage(): JSX.Element {
                 name="name"
                 autoComplete="name"
                 placeholder="Jane Doe"
-                className="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 px-3 py-2"
+                className="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 px-3 py-2 text-gray-900 dark:text-white placeholder:text-gray-500 dark:placeholder:text-gray-500"
                 required
               />
             </div>
@@ -189,7 +189,7 @@ export default function CheckoutPage(): JSX.Element {
                 name="address1"
                 autoComplete="address-line1"
                 placeholder="123 Main St"
-                className="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 px-3 py-2"
+                className="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 px-3 py-2 text-gray-900 dark:text-white placeholder:text-gray-500 dark:placeholder:text-gray-500"
                 required
               />
             </div>
@@ -204,7 +204,7 @@ export default function CheckoutPage(): JSX.Element {
                 onChange={(e) => handleInputChange('address2', e.target.value)}
                 name="address2"
                 autoComplete="address-line2"
-                className="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 px-3 py-2"
+                className="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 px-3 py-2 text-gray-900 dark:text-white placeholder:text-gray-500 dark:placeholder:text-gray-500"
               />
             </div>
 
@@ -219,7 +219,7 @@ export default function CheckoutPage(): JSX.Element {
                 name="city"
                 autoComplete="address-level2"
                 placeholder="Austin"
-                className="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 px-3 py-2"
+                className="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 px-3 py-2 text-gray-900 dark:text-white placeholder:text-gray-500 dark:placeholder:text-gray-500"
                 required
               />
             </div>
@@ -235,7 +235,7 @@ export default function CheckoutPage(): JSX.Element {
                 name="state"
                 autoComplete="address-level1"
                 placeholder="TX"
-                className="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 px-3 py-2"
+                className="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 px-3 py-2 text-gray-900 dark:text-white placeholder:text-gray-500 dark:placeholder:text-gray-500"
               />
             </div>
 
@@ -251,7 +251,7 @@ export default function CheckoutPage(): JSX.Element {
                 autoComplete="postal-code"
                 inputMode="numeric"
                 placeholder="78701"
-                className="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 px-3 py-2"
+                className="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 px-3 py-2 text-gray-900 dark:text-white placeholder:text-gray-500 dark:placeholder:text-gray-500"
                 required
               />
             </div>
@@ -267,7 +267,7 @@ export default function CheckoutPage(): JSX.Element {
                 name="country"
                 autoComplete="country"
                 placeholder="US"
-                className="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 px-3 py-2"
+                className="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 px-3 py-2 text-gray-900 dark:text-white placeholder:text-gray-500 dark:placeholder:text-gray-500"
                 required
               />
             </div>
@@ -278,16 +278,16 @@ export default function CheckoutPage(): JSX.Element {
                   Phone (recommended for international shipping)
                 </label>
                 <input
-                  type="tel"
-                  value={shipping.phone || ''}
-                  onChange={(e) => handleInputChange('phone', e.target.value)}
-                  name="phone"
-                  autoComplete="tel"
-                  inputMode="tel"
-                  className="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 px-3 py-2"
-                  placeholder="For delivery updates"
-                />
-              </div>
+                type="tel"
+                value={shipping.phone || ''}
+                onChange={(e) => handleInputChange('phone', e.target.value)}
+                name="phone"
+                autoComplete="tel"
+                inputMode="tel"
+                className="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 px-3 py-2 text-gray-900 dark:text-white placeholder:text-gray-500 dark:placeholder:text-gray-500"
+                placeholder="For delivery updates"
+              />
+            </div>
             )}
             {(shipping.country === 'US' || shipping.country === 'CA') && (
               <div className="md:col-span-2 space-y-2">
@@ -306,7 +306,7 @@ export default function CheckoutPage(): JSX.Element {
                     name="phone"
                     autoComplete="tel"
                     inputMode="tel"
-                    className="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 px-3 py-2"
+                    className="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 px-3 py-2 text-gray-900 dark:text-white placeholder:text-gray-500 dark:placeholder:text-gray-500"
                     placeholder="For delivery updates"
                   />
                 )}
