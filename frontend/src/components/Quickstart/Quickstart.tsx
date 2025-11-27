@@ -110,7 +110,7 @@ export default function Quickstart(): JSX.Element {
       has_prompt: Boolean(prompt.trim()),
     });
 
-    navigate(isSignedIn ? '/checkout' : '/auth');
+    navigate(isSignedIn ? '/checkout' : '/auth#');
   };
 
   if (loading || !product) {
