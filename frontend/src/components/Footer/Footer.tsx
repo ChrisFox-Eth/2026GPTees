@@ -12,7 +12,7 @@ export default function Footer(): JSX.Element {
   return (
     <footer className="bg-gray-900 text-gray-300 py-12 mt-20">
       <div className="container-max">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-8">
           {/* Brand */}
           <div>
             <h3 className="text-white font-bold text-xl mb-4">GPTees</h3>

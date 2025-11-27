@@ -20,11 +20,10 @@ export default function CallToAction(): JSX.Element {
     <section className="py-20 bg-gradient-to-r from-primary-600 to-purple-600">
       <div className="container-max text-center">
         <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
-          Ready to Create Your Unique Design?
+          Ready to drop your 1/1 GPTee?
         </h2>
         <p className="text-xl text-white/90 mb-8 max-w-2xl mx-auto">
-          Join thousands of customers who've turned their imagination into wearable art.
-          Start designing your custom t-shirt today!
+          Classic is one-shot. Limitless lets you keep redrawing with new prompts until you approve. Your idea, your call.
         </p>
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
           <Link to="/shop">
@@ -33,7 +32,7 @@ export default function CallToAction(): JSX.Element {
               className="bg-white text-primary-600 hover:bg-gray-100 px-8 py-3 text-lg"
               onClick={() => handleCtaClick('browse_products')}
             >
-              Browse Products →
+              Browse Products
             </Button>
           </Link>
           <Link to="/account">

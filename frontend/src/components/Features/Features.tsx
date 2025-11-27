@@ -7,8 +7,8 @@
 export default function Features(): JSX.Element {
   const features = [
     {
-      title: 'Unlimited Creativity',
-      description: 'No design skills needed. Describe what you want and we craft the art. From abstract to photorealistic.',
+      title: 'One-of-one urgency',
+      description: 'Every tee is a single, custom creation from your words—no template library or reselling.',
       icon: (
         <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
@@ -16,8 +16,8 @@ export default function Features(): JSX.Element {
       ),
     },
     {
-      title: 'Multiple Style Options',
-      description: 'Choose from modern, vintage, artistic, playful, professional, or trendy styles to match your vision perfectly.',
+      title: 'Two ways to play',
+      description: 'Classic: one-and-done. Limitless: redraw with fresh prompts until you approve.',
       icon: (
         <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
@@ -34,8 +34,8 @@ export default function Features(): JSX.Element {
       ),
     },
     {
-      title: 'Fast Turnaround',
-      description: 'Design generated in seconds. Printing and shipping typically takes 5-10 business days. Track your order every step of the way.',
+      title: 'Fast turnaround',
+      description: 'Designs in seconds. Printing and shipping typically 5-8 business days with tracking.',
       icon: (
         <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -43,8 +43,8 @@ export default function Features(): JSX.Element {
       ),
     },
     {
-      title: 'Regenerate Until Perfect',
-      description: 'Not happy with the first design? Premium tier gives you unlimited generations until you find the perfect one.',
+      title: 'Limitless redraws (Premium)',
+      description: 'Keep changing the prompt and regenerating until you approve the one we print.',
       icon: (
         <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -63,14 +63,14 @@ export default function Features(): JSX.Element {
   ];
 
   return (
-    <section className="py-20">
+    <section className="hidden py-20">
       <div className="container-max">
         <div className="text-center mb-16">
           <h2 className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-4">
             Why Choose GPTees?
           </h2>
           <p className="text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
-            The easiest way to create and wear your imagination
+            One-of-one drops made from your words—pick Classic or go Limitless.
           </p>
         </div>
 

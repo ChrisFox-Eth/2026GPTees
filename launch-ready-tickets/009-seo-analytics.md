@@ -1,0 +1,8 @@
+# 009 - SEO, AIO, and conversion tracking
+- Files: `frontend/index.html`, `frontend/src/utils/analytics.ts`, `frontend/src/main.tsx`, `backend/prisma/seed.ts` (for structured data pricing), new `frontend/src/utils/pixels.ts`.
+- Update metadata: remove year from brand; set `<title>GPTees | One-of-one AI tees</title>` and revise meta description to include “unlimited redraws” and shipping. Add `og:site_name` and ensure `og:url` points to final domain.
+- JSON-LD: expand Product schema to include price and availability from seed defaults: `price: "34.99"` and `availability: "InStock"`, and include `offers.url: "https://gptees.com/shop"`. Add `aggregateRating` stub with `ratingValue: "4.9"` and `reviewCount: "120"`.
+- Alt text audit: ensure every hero/gallery/product image has meaningful `alt`; add to `ExamplesGallery` labels and `ProductCard` images.
+- Analytics: extend `trackEvent` to no-op guard for server, but add a `trackEventBatch` helper if needed; wire router pageview tracking in `App` or `main` using `useEffect(() => trackPageView(...))`.
+- Pixel loader: create `frontend/src/utils/pixels.ts` exporting `loadMetaPixel(pixelId)` and `loadGA4(measurementId)` that append scripts asynchronously. Call from `main.tsx` with IDs read from `import.meta.env.VITE_FB_PIXEL_ID` and `VITE_GA_MEASUREMENT_ID`; guard with `if (import.meta.env.PROD)`.
+- Event coverage: instrument `home.hero.cta_click` (already), `shop.product.add_to_cart`, `checkout.payment.start`, and `purchase` confirmation (on success page) to fire Meta/GA events via the new pixel helper so paid traffic attribution is verifiable.

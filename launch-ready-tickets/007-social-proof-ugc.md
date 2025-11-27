@@ -1,0 +1,7 @@
+# 007 - Social proof and UGC placement
+- Files: `frontend/src/components/SocialProofStrip/SocialProofStrip.tsx`, `frontend/src/components/ExamplesGallery/ExamplesGallery.tsx`, `frontend/src/pages/HomePage.tsx`, `frontend/src/pages/ShopPage.tsx`.
+- Convert `SocialProofStrip` into a review ticker: swap `Need help?` pill with star rating and count; change blurbs to include rating text (e.g., “4.9/5 from 120+ tees”). Keep motion toggle for reduced motion but lower padding to `px-3 py-2` for mobile.
+- Inline trust badges: uncomment the TRUST_BADGES block and render 3 badges (`Super-soft`, `Secure checkout`, `Easy returns`) with `text-[11px]` font and wrap to two rows on small screens.
+- Move strip placement: in `HomePage`, place `SocialProofStrip` directly under the hero buttons (replace `mt-6` with `mt-3`) and reduce padding on its container to `className="px-4"`. In `ShopPage`, place it immediately above the grid header with `mb-3`.
+- UGC labels: in `ExamplesGallery`, add `loading="lazy"` and `className="w-full h-24 sm:h-28 object-cover rounded-lg border ..."` and include a `data-label` overlay on mobile (`absolute bottom-1 left-1 text-[10px] bg-black/65 px-1.5 py-0.5` always visible, not just hover).
+- Add a short “Why GPTees” blurb under the gallery on `HomePage`: add a 3-bullet list (soft tees, unlimited redraws, tracked shipping) with `text-sm` so it’s visible without extra scroll.

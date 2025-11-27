@@ -12,16 +12,18 @@ import { CallToAction } from '@components/CallToAction';
 import { Quickstart } from '@components/Quickstart';
 import SocialProofStrip from '@components/SocialProofStrip/SocialProofStrip';
 import { ExamplesGallery } from '@components/ExamplesGallery';
+import { StickyCtaBar } from '@components/StickyCtaBar/StickyCtaBar';
+import { Link } from 'react-router-dom';
 
 export default function HomePage(): JSX.Element {
   return (
     <main>
       <div className="container-max py-8">
         <Hero />
-        <div className="mt-6">
+        <div className="mt-3">
           <SocialProofStrip />
         </div>
-        <div className="mt-8">
+        <div className="mt-8" id="quickstart">
           <Quickstart />
         </div>
       </div>
@@ -32,6 +34,13 @@ export default function HomePage(): JSX.Element {
       <Features />
       <PricingSection />
       <CallToAction />
+      <Link to="/shop">
+        <StickyCtaBar
+          primaryLabel="Feeling lucky? One-shot Classic for $34.99"
+          subcopy=""
+          href="#"
+        />
+      </Link>
     </main>
   );
 }

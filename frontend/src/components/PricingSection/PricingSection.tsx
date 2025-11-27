@@ -26,11 +26,11 @@ const DEFAULT_TIERS: TierCard[] = [
     name: 'Basic',
     displayName: 'Classic',
     price: '$34.99',
-    description: '1 artwork included',
+    description: '1 artwork included (one-shot)',
     features: [
       'Super-soft GPTee',
       '1 artwork crafted from your words',
-      'Free redraws until you approve',
+      'One shot: approve it or rerun as Limitless',
       'High-quality printing & shipping',
     ],
     cta: 'Get Started',
@@ -44,7 +44,7 @@ const DEFAULT_TIERS: TierCard[] = [
     features: [
       'Super-soft GPTee',
       'Unlimited redraws until you love it',
-      'Free redraws until you approve',
+      'Change the prompt between redraws',
       'High-quality printing & shipping',
     ],
     cta: 'Go Limitless',
@@ -106,7 +106,7 @@ export default function PricingSection(): JSX.Element {
             Simple, Transparent Pricing
           </h2>
           <p className="text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
-            Both options include the tee, custom artwork from your words, and fast shipping.
+            Classic is one-and-done. Limitless lets you redraw with new prompts until you approve. Both include the tee, artwork, and fast shipping.
           </p>
         </div>
 

@@ -150,7 +150,7 @@ export default function ShopPage(): JSX.Element {
         </div>
       </div>
 
-      <div className="mb-8">
+      <div className="hidden mb-8">
         <SocialProofStrip />
       </div>
 

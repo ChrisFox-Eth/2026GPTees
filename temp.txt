@@ -3,6 +3,7 @@
  * @description Hero section with trust signals and CTAs.
  */
 
+import { Link } from 'react-router-dom';
 import { Button } from '@components/Button';
 import { trackEvent } from '@utils/analytics';
 
@@ -15,11 +16,15 @@ const handleHeroCta = (cta: 'start_creating' | 'how_it_works') => {
 
 export default function Hero(): JSX.Element {
   return (
-    <section className="pt-10 pb-8 md:py-16 text-center container-max px-4">
+    <section className="pb-12 md:py-20 text-center">
       {/* Main Headline */}
 
-      <h1 className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-4">
-        One-of-one tees. One shot or unlimited redraws.
+      <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold text-gray-900 dark:text-white mb-6">
+        Your ideas,
+        <br />
+        <span className="bg-gradient-to-r from-primary-600 to-purple-600 bg-clip-text text-transparent">
+          now wearable
+        </span>
       </h1>
 
       <div className="mb-6">
@@ -27,8 +32,8 @@ export default function Hero(): JSX.Element {
           Make a one-of-one tee in minutes
         </span>
       </div>
-      <p className="text-base md:text-lg text-gray-600 dark:text-gray-300 mb-8 max-w-2xl mx-auto leading-relaxed">
-        Choose Classic for a one-and-done creation, or Limitless to keep redrawing with new prompts until you approve. Every tee is a 1/1 made from your words.
+      <p className="text-xl md:text-2xl text-gray-600 dark:text-gray-300 mb-8 max-w-3xl mx-auto leading-relaxed">
+        Describe the shirt you have always wanted—gift, inside joke, band-that-doesn’t-exist—and we turn it into a soft, print-ready GPTee. You approve it before we ship.
       </p>
 
       {/* Value Props */}
@@ -54,21 +59,21 @@ export default function Hero(): JSX.Element {
       </div> */}
 
       {/* CTA Buttons */}
-      <div className="flex flex-col sm:flex-row gap-3 justify-center mb-8">
-        <a href="#quickstart">
+      <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
+        <Link to="/shop">
           <Button
-            size="md"
-            className="px-6 py-3 text-base"
+            size="lg"
+            className="px-8 py-3 text-lg"
             onClick={() => handleHeroCta('start_creating')}
           >
-            Start in 60 seconds (Limitless)
+            Make my GPTee
           </Button>
-        </a>
+        </Link>
         <a href="#how-it-works">
           <Button
             variant="secondary"
-            size="md"
-            className="px-6 py-3 text-base"
+            size="lg"
+            className="px-8 py-3 text-lg"
             onClick={() => handleHeroCta('how_it_works')}
           >
             How It Works
@@ -91,10 +96,12 @@ export default function Hero(): JSX.Element {
           Ships in 5-8 business days
         </span>
       </div>
+
       {/* Trust Badge */}
-      {/* <div className="mt-6 text-sm text-gray-500 dark:text-gray-400">
+      <div className="mt-6 text-sm text-gray-500 dark:text-gray-400">
         <p>One prompt • Unlimited redraws • You approve before we print</p>
-      </div> */}
+      </div>
     </section>
   );
 }
+
