@@ -53,7 +53,9 @@ export default function SocialProofStrip(): JSX.Element {
     );
     const target = document.querySelector('#quickstart');
     if (target) {
-      target.scrollIntoView({ behavior: 'smooth' });
+      target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      // Nudge up so the QuickStart header is fully visible on mobile
+      setTimeout(() => window.scrollBy({ top: -120, behavior: 'smooth' }), 250);
     }
   };
 
@@ -65,7 +67,7 @@ export default function SocialProofStrip(): JSX.Element {
           onClick={handleUseIdea}
           className="inline-flex items-center justify-center h-7 px-3 rounded-full bg-primary-100 text-primary-700 dark:bg-primary-900 dark:text-primary-200 text-xs font-semibold whitespace-nowrap hover:bg-primary-200 dark:hover:bg-primary-800 transition-colors"
         >
-          Use this idea
+          Try it
         </button>
         <span className="text-sm text-gray-700 dark:text-gray-200">{currentBlurb}</span>
       </div>

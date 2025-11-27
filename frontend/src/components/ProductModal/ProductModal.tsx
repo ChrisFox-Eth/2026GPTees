@@ -4,7 +4,7 @@
  * @since 2025-11-21
  */
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@clerk/clerk-react';
 import { Product } from '../../types/product';
@@ -33,6 +33,17 @@ export default function ProductModal({ product, isOpen, onClose }: ProductModalP
   const { isSignedIn } = useAuth();
 
   if (!isOpen) return null;
+
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+      document.documentElement.style.overflow = 'hidden';
+    }
+    return () => {
+      document.body.style.overflow = '';
+      document.documentElement.style.overflow = '';
+    };
+  }, [isOpen]);
 
   const tierPricing = product.tierPricing || {};
   const basicTier = tierPricing['BASIC'];

@@ -42,6 +42,14 @@ function PageViewTracker(): JSX.Element | null {
   return null;
 }
 
+function ScrollToTop(): JSX.Element | null {
+  const { pathname } = useLocation();
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [pathname]);
+  return null;
+}
+
 export default function App(): JSX.Element {
   const [isDark, setIsDark] = useState(false);
   const [, setIsInitialized] = useState(false);
@@ -90,7 +98,8 @@ export default function App(): JSX.Element {
   return (
     <ErrorBoundary>
       <PageViewTracker />
-      <div className="min-h-screen bg-white dark:bg-gray-900 transition-colors duration-200 flex flex-col">
+      <ScrollToTop />
+      <div className="min-h-screen bg-white dark:bg-gray-900 transition-colors duration-200 flex flex-col overflow-x-hidden">
         <Header isDark={isDark} onToggleTheme={toggleTheme} />
         <div className="flex-1">
           <Routes>
