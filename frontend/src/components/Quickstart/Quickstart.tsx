@@ -13,8 +13,8 @@ import { trackEvent } from '@utils/analytics';
 import { Product } from '../../types/product';
 
 const QUICKSTART_PROMPT_KEY = 'gptees_quickstart_prompt';
-const STYLE_PRESETS = ['Retro surf', 'Minimal line art', 'Neon cyberpunk', 'Vintage anime', 'Bold typographic'];
-const PROMPT_SUGGESTIONS = ['Birthday gift', 'Band tee', 'Inside joke', 'Sports drop', 'Team merch'];
+// const STYLE_PRESETS = ['Retro surf', 'Minimal line art', 'Neon cyberpunk', 'Vintage anime', 'Bold typographic'];
+// const PROMPT_SUGGESTIONS = ['Birthday gift', 'Band tee', 'Inside joke', 'Sports drop', 'Team merch'];
 
 export default function Quickstart(): JSX.Element {
   const [products, setProducts] = useState<Product[]>([]);
@@ -131,13 +131,13 @@ export default function Quickstart(): JSX.Element {
 
   return (
     <div className="bg-white dark:bg-gray-800 rounded-xl shadow border border-gray-200 dark:border-gray-700 p-5 sm:p-6 flex flex-col sm:flex-row gap-4 items-start w-full max-w-full overflow-hidden">
-      <div className="flex-1 space-y-2">
-        <h3 className="text-xl font-bold text-gray-900 dark:text-white">
+      <div className="flex-1 space-y-2 w-full">
+        {/* <h3 className="text-xl font-bold text-gray-900 dark:text-white">
           Design a tee in 60 seconds
-        </h3>
-        <p className="text-sm text-gray-600 dark:text-gray-400">
+        </h3> */}
+        {/* <p className="text-sm text-gray-600 dark:text-gray-400">
           QuickStart uses Limitless (Premium) so you can redraw with fresh prompts until you approve. Prefer one-and-done? Pick Classic at checkout.
-        </p>
+        </p> */}
         {product && (
           <div className="space-y-3">
             <div className="space-y-1">
@@ -193,7 +193,7 @@ export default function Quickstart(): JSX.Element {
         )}
         <div className="space-y-2">
           <div className="flex flex-wrap gap-2 pb-1 px-1 text-xs">
-            {STYLE_PRESETS.map((style) => (
+            {/* {STYLE_PRESETS.map((style) => (
               <button
                 key={style}
                 type="button"
@@ -213,9 +213,9 @@ export default function Quickstart(): JSX.Element {
               >
                 {style}
               </button>
-            ))}
+            ))} */}
           </div>
-          <div className="flex flex-wrap gap-2 pb-1 px-1 text-[11px]">
+          {/* <div className="flex flex-wrap gap-2 pb-1 px-1 text-[11px]">
             {PROMPT_SUGGESTIONS.map((idea) => (
               <button
                 key={idea}
@@ -229,10 +229,10 @@ export default function Quickstart(): JSX.Element {
                 {idea}
               </button>
             ))}
-          </div>
-          <p className="text-xs text-gray-500 dark:text-gray-400">
-            Describe vibe + any text; we handle layout.
-          </p>
+          </div> */}
+          {/* <p className="text-xs text-gray-500 dark:text-gray-400">
+            Birthday gift + any text; we handle layout.
+          </p> */}
         </div>
         <div className="space-y-2">
           <label className="text-xs font-semibold text-gray-700 dark:text-gray-300">
@@ -264,16 +264,16 @@ export default function Quickstart(): JSX.Element {
             <div>
               <p className="text-sm font-semibold text-gray-900 dark:text-white">{product.name}</p>
               <p className="text-xs text-gray-600 dark:text-gray-400">
-                {color || defaultColor} - {size || defaultSize} - Limitless redraws
+                {color || defaultColor} - {size || defaultSize} - Limitless redraws - ${quickstartTotal.toFixed(2)} all-in
               </p>
             </div>
           </div>
-          <p className="text-xs text-gray-600 dark:text-gray-400 mt-2">
-            Unlimited retries until you approve. Ships in 5-8 business days.
-          </p>
-          <p className="text-sm font-semibold text-gray-900 dark:text-white mt-2">
+          {/* <p className="text-xs text-gray-600 dark:text-gray-400 mt-2">
             ${quickstartTotal.toFixed(2)} all-in
-          </p>
+          </p> */}
+          {/* <p className="text-sm font-semibold text-gray-900 dark:text-white mt-2">
+            ${quickstartTotal.toFixed(2)} all-in
+          </p> */}
         </div>
         <Button variant="primary" className="w-full" onClick={handleSubmit}>
           Create in 60s

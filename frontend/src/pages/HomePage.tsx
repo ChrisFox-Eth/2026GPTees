@@ -20,10 +20,10 @@ export default function HomePage(): JSX.Element {
     <main>
       <div className="container-max py-8">
         <Hero />
-        <div className="mt-3">
+        <div className="mt-3" id="quickstart">
           <SocialProofStrip />
         </div>
-        <div className="mt-8" id="quickstart">
+        <div className="mt-8">
           <Quickstart />
         </div>
       </div>

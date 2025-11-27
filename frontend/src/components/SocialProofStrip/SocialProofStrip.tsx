@@ -69,9 +69,6 @@ export default function SocialProofStrip(): JSX.Element {
         </button>
         <span className="text-sm text-gray-700 dark:text-gray-200">{currentBlurb}</span>
       </div>
-      <div className="flex flex-wrap gap-2 text-[11px] text-gray-600 dark:text-gray-300">
-        
-      </div>
     </div>
   );
 }

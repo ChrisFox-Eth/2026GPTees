@@ -164,7 +164,7 @@ export default function ProductModal({ product, isOpen, onClose }: ProductModalP
           {/* Close Button */}
           <button
             onClick={onClose}
-            className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+            className="absolute top-0 right-4 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
             aria-label="Close product modal"
           >
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">

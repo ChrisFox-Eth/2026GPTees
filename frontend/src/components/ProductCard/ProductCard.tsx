@@ -33,12 +33,14 @@ export default function ProductCard({ product, onClick }: ProductCardProps): JSX
       }}
     >
       {/* Product Image */}
-      <div className="aspect-square bg-gray-200 dark:bg-gray-700 relative overflow-hidden">
+      <div className="aspect-[4/5] bg-gray-200 dark:bg-gray-700 relative overflow-hidden">
         {product.imageUrl ? (
           <img
             src={product.imageUrl}
             alt={product.name}
             loading="lazy"
+            decoding="async"
+            sizes="(max-width: 768px) 50vw, 25vw"
             width={640}
             height={640}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"

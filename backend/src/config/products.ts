@@ -23,7 +23,7 @@ export interface ProductConfig {
 
 export const PRODUCTS: ProductConfig[] = [
   {
-    name: 'Basic Tee',
+    name: 'Limitless Tee',
     slug: 'basic-tee',
     description: 'Custom AI-designed t-shirt with premium quality printing',
     basePrice: 0,  // Tier pricing includes everything (shirt + printing + design)

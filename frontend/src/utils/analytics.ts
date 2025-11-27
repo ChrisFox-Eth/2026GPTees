@@ -4,6 +4,7 @@
  */
 
 import { inject, track } from '@vercel/analytics';
+// import { loadMetaPixel, loadGA4 } from './pixels';
 
 type Primitive = string | number | boolean | null;
 type AnalyticsPayload = Record<string, Primitive>;
@@ -50,7 +51,17 @@ export function trackEvent(eventName: string, payload?: Record<string, unknown>)
   if (!isClient) return;
 
   try {
-    track(eventName, sanitizePayload(payload));
+    const clean = sanitizePayload(payload);
+    track(eventName, clean);
+
+    const fbq = (window as any).fbq;
+    if (fbq) {
+      fbq('trackCustom', eventName, clean);
+    }
+    const gtag = (window as any).gtag;
+    if (gtag) {
+      gtag('event', eventName, clean);
+    }
   } catch (error) {
     if (import.meta.env.DEV) {
       console.warn(`Analytics event failed: ${eventName}`, error);

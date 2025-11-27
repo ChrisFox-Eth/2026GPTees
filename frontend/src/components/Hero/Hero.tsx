@@ -3,19 +3,19 @@
  * @description Hero section with trust signals and CTAs.
  */
 
-import { Button } from '@components/Button';
-import { trackEvent } from '@utils/analytics';
+// import { Button } from '@components/Button';
+// import { trackEvent } from '@utils/analytics';
 
-const handleHeroCta = (cta: 'start_creating' | 'how_it_works') => {
-  trackEvent('home.hero.cta_click', {
-    cta,
-    surface: 'hero',
-  });
-};
+// const handleHeroCta = (cta: 'start_creating' | 'how_it_works') => {
+//   trackEvent('home.hero.cta_click', {
+//     cta,
+//     surface: 'hero',
+//   });
+// };
 
 export default function Hero(): JSX.Element {
   return (
-    <section className="pt-10 pb-8 md:py-16 text-center container-max px-4">
+    <section className="pt-10 md:py-16 text-center container-max px-4">
       {/* Main Headline */}
 
       <h1 className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-4">
@@ -23,9 +23,9 @@ export default function Hero(): JSX.Element {
       </h1>
 
       <div className="mb-6">
-        <span className="inline-block bg-gradient-to-r from-primary-600 to-purple-600 text-white text-sm font-semibold px-4 py-2 rounded-full mb-4">
+        {/* <span className="inline-block bg-gradient-to-r from-primary-600 to-purple-600 text-white text-sm font-semibold px-4 py-2 rounded-full mb-4">
           Make a one-of-one tee in minutes
-        </span>
+        </span> */}
       </div>
       <p className="text-base md:text-lg text-gray-600 dark:text-gray-300 mb-8 max-w-2xl mx-auto leading-relaxed">
         Choose Classic for a one-and-done creation, or Limitless to keep redrawing with new prompts until you approve. Every tee is a 1/1 made from your words.
@@ -54,7 +54,7 @@ export default function Hero(): JSX.Element {
       </div> */}
 
       {/* CTA Buttons */}
-      <div className="flex flex-col sm:flex-row gap-3 justify-center mb-8">
+      {/* <div className="flex flex-col sm:flex-row gap-3 justify-center mb-8">
         <a href="#quickstart">
           <Button
             size="md"
@@ -64,7 +64,7 @@ export default function Hero(): JSX.Element {
             Start in 60 seconds (Limitless)
           </Button>
         </a>
-        <a href="#how-it-works">
+         <a href="#how-it-works">
           <Button
             variant="secondary"
             size="md"
@@ -73,11 +73,11 @@ export default function Hero(): JSX.Element {
           >
             How It Works
           </Button>
-        </a>
-      </div>
+        </a> 
+      </div> */}
 
       {/* Trust + Delivery */}
-      <div className="flex flex-wrap justify-center gap-4 mb-10 text-sm text-gray-600 dark:text-gray-300">
+      {/* <div className="flex flex-wrap justify-center gap-4 mb-10 text-sm text-gray-600 dark:text-gray-300">
         <span className="inline-flex items-center gap-2 px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-full">
           <svg className="w-4 h-4 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 11c0-1.105-.672-2-1.5-2S9 9.895 9 11s.672 2 1.5 2S12 12.105 12 11z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19.5 11c0-1.105-.672-2-1.5-2s-1.5.895-1.5 2 .672 2 1.5 2 1.5-.895 1.5-2zM3 11c0-1.105.672-2 1.5-2S6 9.895 6 11s-.672 2-1.5 2S3 12.105 3 11z" /></svg>
           Super-soft premium tees
@@ -90,7 +90,7 @@ export default function Hero(): JSX.Element {
           <svg className="w-4 h-4 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89-5.26a2 2 0 012.22 0L21 8m-9 13V10" /></svg>
           Ships in 5-8 business days
         </span>
-      </div>
+      </div> */}
       {/* Trust Badge */}
       {/* <div className="mt-6 text-sm text-gray-500 dark:text-gray-400">
         <p>One prompt • Unlimited redraws • You approve before we print</p>

@@ -51,6 +51,9 @@ export default function ExamplesGallery(): JSX.Element {
             <img
               src={ex.src}
               alt={ex.alt}
+              loading="lazy"
+              decoding="async"
+              sizes="(max-width: 640px) 30vw, 16vw"
               className="w-full h-20 sm:h-24 object-cover rounded-lg border border-gray-200 dark:border-gray-700"
             />
             <span className="absolute bottom-1 left-1 bg-black/60 text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity">
