@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * @module utils/pixels
  * @description Lightweight loaders for Meta Pixel and GA4.
@@ -14,7 +15,7 @@ export function loadMetaPixel(pixelId?: string): void {
     if ((f as any).fbq) return;
     const n: any = (f as any).fbq = function (...args: any[]) {
       if (n.callMethod) {
-        n.callMethod.apply(n, args);
+        n.callMethod(...args);
       } else {
         n.queue.push(args);
       }

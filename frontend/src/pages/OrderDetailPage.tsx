@@ -538,31 +538,19 @@ function OrderDetailContent(): JSX.Element {
               {order.trackingNumber ? (
 
                 <p>
-
-                  Tracking #: 
-
+                  Tracking #:{' '}
                   <a
-
                     href={`https://parcelsapp.com/en/tracking/${encodeURIComponent(order.trackingNumber)}`}
-
                     target="_blank"
-
                     rel="noopener noreferrer"
-
                     className="text-primary-600 dark:text-primary-400 hover:underline"
-
                   >
-
                     {order.trackingNumber}
-
                   </a>
-
                 </p>
 
               ) : (
-
                 <p>Tracking #: Not yet available</p>
-
               )}
 
             </div>

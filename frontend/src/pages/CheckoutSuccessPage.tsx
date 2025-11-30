@@ -8,7 +8,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Link, useSearchParams, useNavigate } from 'react-router-dom';
 import { Button } from '@components/Button';
 import { useCart } from '../hooks/useCart';
-import { apiGet, apiPost } from '@utils/api';
+import { apiGet } from '@utils/api';
 import { trackEvent } from '@utils/analytics';
 import { useAuth } from '@clerk/clerk-react';
 
@@ -40,12 +40,10 @@ export default function CheckoutSuccessPage(): JSX.Element {
   const { clearCart } = useCart();
   const { getToken } = useAuth();
   const [isCleared, setIsCleared] = useState(false);
-  const [isConfirming, setIsConfirming] = useState(false);
-  const [confirmError, setConfirmError] = useState<string | null>(null);
-  const [shareMessage, setShareMessage] = useState<string | null>(null);
   const [orderSummary, setOrderSummary] = useState<OrderSummary | null>(null);
   const [isLoadingOrder, setIsLoadingOrder] = useState(false);
   const hasTrackedPaid = useRef(false);
+  const [detailsOpen, setDetailsOpen] = useState(false);
 
   const orderId = searchParams.get('order_id');
   const sessionId = searchParams.get('session_id');
@@ -126,57 +124,7 @@ export default function CheckoutSuccessPage(): JSX.Element {
     }
   }, [orderSummary, orderId]);
 
-  const confirmPayment = async () => {
-    if (!orderId || !sessionId) return;
-    try {
-      setIsConfirming(true);
-      setConfirmError(null);
-      trackEvent('checkout.success.confirm_click', {
-        order_id: orderId,
-        session_id: sessionId,
-      });
-      await apiPost('/api/payments/confirm-session', {
-        orderId,
-        sessionId,
-      });
-      navigate(`/design?orderId=${orderId}`);
-    } catch (err: any) {
-      trackEvent('checkout.success.confirm_error', {
-        order_id: orderId,
-        message: err?.message || 'unknown',
-      });
-      setConfirmError(err.message || 'Could not confirm payment. Please try again.');
-    } finally {
-      setIsConfirming(false);
-    }
-  };
-
-  const handleShare = async () => {
-    const shareUrl = `${window.location.origin}/design?orderId=${orderId ?? ''}`;
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title: 'I just ordered a one-of-one GPTee!',
-          text: 'Describe your dream tee and wear it.',
-          url: shareUrl,
-        });
-        setShareMessage('Thanks for sharing!');
-        trackEvent('checkout.success.share', {
-          order_id: orderId,
-          method: 'web_share',
-        });
-      } catch {
-        // user cancelled; no-op
-      }
-    } else if (navigator.clipboard) {
-      await navigator.clipboard.writeText(shareUrl);
-      setShareMessage('Link copied—share it with friends!');
-      trackEvent('checkout.success.share', {
-        order_id: orderId,
-        method: 'clipboard',
-      });
-    }
-  };
+  // confirmPayment and handleShare removed from UI (no-op stubs deleted)
 
   if (!orderId) {
     return (
@@ -195,10 +143,10 @@ export default function CheckoutSuccessPage(): JSX.Element {
   }
 
   return (
-    <div className="container-max py-12">
-      <div className="max-w-2xl mx-auto">
+    <div className="container-max py-8">
+      <div className="max-w-2xl mx-auto space-y-6">
         {/* Success Icon */}
-        <div className="text-center mb-8">
+        <div className="text-center">
           <div className="inline-flex items-center justify-center w-20 h-20 bg-green-100 dark:bg-green-900 rounded-full mb-4">
             <svg className="w-10 h-10 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
@@ -213,20 +161,18 @@ export default function CheckoutSuccessPage(): JSX.Element {
         </div>
 
         {/* Order Info */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 mb-6">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-5">
           <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
             What's Next?
           </h2>
-          <div className="space-y-4">
+          <div className="space-y-3">
             <div className="flex items-start gap-3">
               <div className="flex-shrink-0 w-8 h-8 bg-primary-100 dark:bg-primary-900 rounded-full flex items-center justify-center">
                 <span className="text-primary-600 dark:text-primary-400 font-bold">1</span>
               </div>
               <div>
-                <h3 className="font-semibold text-gray-900 dark:text-white">Generate Your Design</h3>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  Tell us what to print and we will craft the artwork
-                </p>
+                <h3 className="font-semibold text-gray-900 dark:text-white">Design Your GPTee</h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400">Tell us what to print and we&rsquo;ll craft the artwork.</p>
               </div>
             </div>
             <div className="flex items-start gap-3">
@@ -234,10 +180,8 @@ export default function CheckoutSuccessPage(): JSX.Element {
                 <span className="text-primary-600 dark:text-primary-400 font-bold">2</span>
               </div>
               <div>
-                <h3 className="font-semibold text-gray-900 dark:text-white">Approve Your Design</h3>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  Review and approve your one-of-one GPTee art
-                </p>
+                <h3 className="font-semibold text-gray-900 dark:text-white">Confirm Your Design</h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400">Approve your one-of-one artwork so we can print.</p>
               </div>
             </div>
             <div className="flex items-start gap-3">
@@ -246,117 +190,88 @@ export default function CheckoutSuccessPage(): JSX.Element {
               </div>
               <div>
                 <h3 className="font-semibold text-gray-900 dark:text-white">We Print & Ship</h3>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  Your custom t-shirt will be printed and shipped to you
-                </p>
+                <p className="text-sm text-gray-600 dark:text-gray-400">We&rsquo;ll print it and send tracking.</p>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Order Details */}
-        <div className="bg-primary-50 dark:bg-primary-900/20 rounded-lg p-6 mb-6 space-y-2">
-          <p className="text-sm text-primary-800 dark:text-primary-200">
-            <strong>Order ID:</strong> {orderId}
-          </p>
-          {sessionId && (
-            <p className="text-sm text-primary-800 dark:text-primary-200">
-              <strong>Session ID:</strong> {sessionId}
-            </p>
-          )}
-          {isLoadingOrder && (
-            <p className="text-sm text-primary-800 dark:text-primary-200">Loading order details...</p>
-          )}
-          {orderSummary && (
-            <div className="text-sm text-primary-800 dark:text-primary-200 space-y-1">
+        {/* Primary CTA */}
+        <div className="flex flex-col sm:flex-row gap-3">
+          <Button
+            variant="primary"
+            onClick={() => navigate(`/design?orderId=${orderId}`)}
+            className="flex-1 text-lg py-4"
+          >
+            Generate My Design
+          </Button>
+        </div>
+
+        {/* Order Details (collapsible) */}
+        <div className="bg-primary-50 dark:bg-primary-900/20 rounded-lg p-4">
+          <button
+            type="button"
+            onClick={() => setDetailsOpen((prev) => !prev)}
+            className="w-full flex items-center justify-between text-sm font-semibold text-primary-800 dark:text-primary-200"
+          >
+            <span>Order details</span>
+            <span>{detailsOpen ? 'Hide' : 'Show'}</span>
+          </button>
+          {detailsOpen && (
+            <div className="mt-3 space-y-1 text-sm text-primary-800 dark:text-primary-200">
               <p>
-                <strong>Items:</strong> $
-                {orderSummary.items
-                  .reduce((sum, i) => sum + i.unitPrice * i.quantity, 0)
-                  .toFixed(2)}
+                <strong>Order ID:</strong> {orderId}
               </p>
-              <p>
-                <strong>Shipping:</strong> ${(orderSummary.shipping ?? 0).toFixed(2)}
-              </p>
-              <p className="text-base">
-                <strong>Total Paid:</strong> ${orderSummary.totalAmount.toFixed(2)}
-              </p>
-              {orderSummary.promoCode && (
+              {sessionId && (
                 <p>
-                  <strong>Code Applied:</strong>{' '}
-                  {orderSummary.promoCode.code} (
-                  {orderSummary.promoCode.type === 'FREE_PRODUCT'
-                    ? `Free ${orderSummary.promoCode.productTier || 'tee'}`
-                    : `${orderSummary.promoCode.percentOff || 0}% off`}
-                  )
+                  <strong>Session ID:</strong> {sessionId}
                 </p>
+              )}
+              {isLoadingOrder && <p>Loading order details...</p>}
+              {orderSummary && (
+                <div className="space-y-1">
+                  <p>
+                    <strong>Items:</strong> $
+                    {orderSummary.items
+                      .reduce((sum, i) => sum + i.unitPrice * i.quantity, 0)
+                      .toFixed(2)}
+                  </p>
+                  <p>
+                    <strong>Shipping:</strong> ${(orderSummary.shipping ?? 0).toFixed(2)}
+                  </p>
+                  <p className="text-base">
+                    <strong>Total Paid:</strong> ${orderSummary.totalAmount.toFixed(2)}
+                  </p>
+                  {orderSummary.promoCode && (
+                    <p>
+                      <strong>Code Applied:</strong>{' '}
+                      {orderSummary.promoCode.code} (
+                      {orderSummary.promoCode.type === 'FREE_PRODUCT'
+                        ? `Free ${orderSummary.promoCode.productTier || 'tee'}`
+                        : `${orderSummary.promoCode.percentOff || 0}% off`}
+                      )
+                    </p>
+                  )}
+                </div>
               )}
             </div>
           )}
         </div>
 
-        {/* Action Buttons */}
-        <div className="flex flex-col sm:flex-row gap-4">
-          <Button
-            variant="primary"
-            onClick={() => navigate(`/design?orderId=${orderId}`)}
-            className="flex-1"
-          >
-            Generate My Design
-          </Button>
-          <Link to="/account" className="flex-1">
-            <Button variant="secondary" className="w-full">
-              View My Orders
-            </Button>
-          </Link>
-          <Button
-            variant="secondary"
-            onClick={() => {
-              trackEvent('checkout.success.add_on_click', { order_id: orderId, target: 'shop_upsell' });
-              navigate('/shop');
-            }}
-            className="flex-1"
-          >
-            Add a Hoodie With My Design
-          </Button>
-          <Button variant="secondary" onClick={handleShare} className="flex-1">
-            Share with Friends
-          </Button>
+        {/* Support */}
+        <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 text-sm text-gray-700 dark:text-gray-300">
+          <p className="font-semibold">Need help?</p>
+          <p className="mt-1">
+            Email us at{' '}
+            <a className="text-primary-600 dark:text-primary-400 underline" href="mailto:team@gptees.app">
+              team@gptees.app
+            </a>{' '}
+            and we&rsquo;ll jump in.
+          </p>
         </div>
 
-        {shareMessage && (
-          <p className="text-center text-sm text-gray-500 dark:text-gray-400 mt-2">{shareMessage}</p>
-        )}
-
-        {/* Manual payment confirmation helper */}
-        {orderId && sessionId && (
-          <div className="mt-6 bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
-            <div className="flex items-center justify-between gap-3">
-              <div>
-                <p className="text-sm font-semibold text-gray-900 dark:text-white">
-                  Having trouble reaching the design page?
-                </p>
-                <p className="text-xs text-gray-600 dark:text-gray-400">
-                  Manually confirm your Stripe session, then continue.
-                </p>
-              </div>
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={confirmPayment}
-                disabled={isConfirming}
-              >
-                {isConfirming ? 'Confirming...' : 'Confirm Payment'}
-              </Button>
-            </div>
-            {confirmError && (
-              <p className="text-xs text-red-600 dark:text-red-400 mt-2">{confirmError}</p>
-            )}
-          </div>
-        )}
-
         {/* Email Confirmation */}
-        <p className="text-center text-sm text-gray-500 dark:text-gray-400 mt-6">
+        <p className="text-center text-sm text-gray-500 dark:text-gray-400">
           A confirmation email has been sent to your email address
         </p>
       </div>

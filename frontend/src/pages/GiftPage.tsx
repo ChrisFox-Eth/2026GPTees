@@ -16,7 +16,7 @@ export default function GiftPage(): JSX.Element {
   const { isSignedIn, isLoaded, getToken } = useAuth();
   const navigate = useNavigate();
   const [tier, setTier] = useState<TierOption>('BASIC');
-  const [usageLimit, setUsageLimit] = useState(1);
+  const [usageLimit, ] = useState(1);
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -95,7 +95,7 @@ export default function GiftPage(): JSX.Element {
           </button>
         </div>
 
-        <div className="space-y-2">
+        {/* <div className="space-y-2">
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
             Uses (optional)
           </label>
@@ -109,7 +109,7 @@ export default function GiftPage(): JSX.Element {
           <p className="text-xs text-gray-500 dark:text-gray-400">
             Default is single-use. Increase if you want the code to work multiple times.
           </p>
-        </div>
+        </div> */}
 
         {error && (
           <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded p-3 text-sm text-red-700 dark:text-red-300">
@@ -131,7 +131,7 @@ export default function GiftPage(): JSX.Element {
           <ol className="list-decimal list-inside space-y-1">
             <li>You pay for the code now via Stripe.</li>
             <li>We email you the code.</li>
-            <li>Recipient redeems at checkout for the chosen tier (shipping not included).</li>
+            <li>Recipient redeems at checkout for the chosen tier (Classic or Limitless).</li>
           </ol>
         </div>
       </div>

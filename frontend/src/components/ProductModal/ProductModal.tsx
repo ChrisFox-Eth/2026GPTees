@@ -32,8 +32,6 @@ export default function ProductModal({ product, isOpen, onClose }: ProductModalP
   const navigate = useNavigate();
   const { isSignedIn } = useAuth();
 
-  if (!isOpen) return null;
-
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = 'hidden';
@@ -154,6 +152,8 @@ export default function ProductModal({ product, isOpen, onClose }: ProductModalP
     onClose();
     goToCheckout();
   };
+
+  if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto">
