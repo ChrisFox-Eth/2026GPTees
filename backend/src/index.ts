@@ -21,6 +21,8 @@ import paymentRoutes from './routes/payment.routes.js';
 import designRoutes from './routes/design.routes.js';
 import orderRoutes from './routes/order.routes.js';
 import adminRoutes from './routes/admin.routes.js';
+import giftCodeRoutes from './routes/giftcode.routes.js';
+import promoCodeRoutes from './routes/promocode.routes.js';
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -78,6 +80,8 @@ app.use('/api/payments', paymentRoutes);
 app.use('/api/designs', designRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/gift-codes', giftCodeRoutes);
+app.use('/api/promo', promoCodeRoutes);
 
 // Add more routes here as needed
 // Printful and email integrations pending

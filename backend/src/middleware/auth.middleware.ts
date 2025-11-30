@@ -21,6 +21,15 @@ export const requireAuth = async (
   _res: Response,
   next: NextFunction
 ): Promise<void> => {
+  // Local/dev bypass: set SKIP_AUTH=true and optionally SKIP_AUTH_EMAIL
+  if ((process.env.SKIP_AUTH || '').toLowerCase() === 'true') {
+    req.user = {
+      id: process.env.SKIP_AUTH_USER_ID || 'dev-user-id',
+      clerkId: process.env.SKIP_AUTH_CLERK_ID || 'dev-clerk-id',
+      email: process.env.SKIP_AUTH_EMAIL || 'dev@example.com',
+    };
+    return next();
+  }
   try {
     const authHeader = req.headers.authorization;
 

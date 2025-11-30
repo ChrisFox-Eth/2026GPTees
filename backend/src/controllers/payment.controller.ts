@@ -21,7 +21,7 @@ export const createCheckout = catchAsync(async (req: Request, res: Response) => 
     return;
   }
 
-  const { items, shippingAddress } = req.body;
+  const { items, shippingAddress, code } = req.body;
 
   if (!items || !Array.isArray(items) || items.length === 0) {
     res.status(400).json({
@@ -54,6 +54,7 @@ export const createCheckout = catchAsync(async (req: Request, res: Response) => 
     shippingAddress,
     successUrl: `${frontendUrl}/checkout/success`,
     cancelUrl: `${frontendUrl}/cart`,
+    code: code ? String(code).trim() : undefined,
   };
 
   const session = await createCheckoutSession(checkoutData);
@@ -64,6 +65,7 @@ export const createCheckout = catchAsync(async (req: Request, res: Response) => 
       sessionId: session.sessionId,
       url: session.url,
       orderId: session.orderId,
+      freeOrder: session.freeOrder || false,
     },
   });
 });

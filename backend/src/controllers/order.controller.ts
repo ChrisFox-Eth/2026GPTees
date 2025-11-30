@@ -33,6 +33,7 @@ export const getUserOrders = catchAsync(async (req: Request, res: Response) => {
       designs: true,
       payment: true,
       address: true,
+      promoCode: true,
     },
     orderBy: { createdAt: 'desc' },
   });
@@ -70,6 +71,7 @@ export const getOrderById = catchAsync(async (req: Request, res: Response) => {
       designs: true,
       payment: true,
       address: true,
+      promoCode: true,
     },
   });
 

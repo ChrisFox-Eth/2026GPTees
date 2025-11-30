@@ -13,7 +13,12 @@ interface ProtectedRouteProps {
 }
 
 export default function ProtectedRoute({ children }: ProtectedRouteProps): JSX.Element {
+  const skipAuth = import.meta.env.VITE_SKIP_AUTH === 'true';
   const { isLoaded, isSignedIn } = useAuth();
+
+  if (skipAuth) {
+    return <>{children}</>;
+  }
 
   // Wait for auth to load
   if (!isLoaded) {

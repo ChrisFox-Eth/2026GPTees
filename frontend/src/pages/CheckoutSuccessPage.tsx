@@ -26,6 +26,12 @@ interface OrderSummary {
   shipping?: number;
   tier?: string;
   country?: string;
+  promoCode?: {
+    code: string;
+    type: string;
+    percentOff?: number | null;
+    productTier?: string | null;
+  } | null;
 }
 
 export default function CheckoutSuccessPage(): JSX.Element {
@@ -53,10 +59,10 @@ export default function CheckoutSuccessPage(): JSX.Element {
   }, [clearCart, isCleared]);
 
   useEffect(() => {
-    if (orderId && sessionId) {
+    if (orderId) {
       trackEvent('checkout.success.view', {
         order_id: orderId,
-        session_id: sessionId,
+        session_id: sessionId || 'none',
       });
       void loadOrder();
     }
@@ -76,7 +82,7 @@ export default function CheckoutSuccessPage(): JSX.Element {
         (sum: number, item: any) => sum + Number(item.unitPrice) * item.quantity,
         0
       );
-      const shipping = Number(order.totalAmount) - itemTotal;
+      const shipping = Math.max(0, Number(order.totalAmount) - itemTotal);
 
       setOrderSummary({
         totalAmount: Number(order.totalAmount),
@@ -90,6 +96,14 @@ export default function CheckoutSuccessPage(): JSX.Element {
         shipping,
         tier: order.designTier,
         country: order.address?.country || 'US',
+        promoCode: order.promoCode
+          ? {
+              code: order.promoCode.code,
+              type: order.promoCode.type,
+              percentOff: order.promoCode.percentOff,
+              productTier: order.promoCode.productTier,
+            }
+          : null,
       });
     } catch (error) {
       console.error('Failed to load order summary', error);
@@ -125,7 +139,6 @@ export default function CheckoutSuccessPage(): JSX.Element {
         orderId,
         sessionId,
       });
-      // After confirming, push user to design page
       navigate(`/design?orderId=${orderId}`);
     } catch (err: any) {
       trackEvent('checkout.success.confirm_error', {
@@ -144,7 +157,7 @@ export default function CheckoutSuccessPage(): JSX.Element {
       try {
         await navigator.share({
           title: 'I just ordered a one-of-one GPTee!',
-          text: 'Describe your dream tee and wear it. Use code GPTEES10 for 10% off.',
+          text: 'Describe your dream tee and wear it.',
           url: shareUrl,
         });
         setShareMessage('Thanks for sharing!');
@@ -165,7 +178,7 @@ export default function CheckoutSuccessPage(): JSX.Element {
     }
   };
 
-  if (!orderId || !sessionId) {
+  if (!orderId) {
     return (
       <div className="container-max py-12">
         <div className="max-w-2xl mx-auto text-center">
@@ -246,9 +259,11 @@ export default function CheckoutSuccessPage(): JSX.Element {
           <p className="text-sm text-primary-800 dark:text-primary-200">
             <strong>Order ID:</strong> {orderId}
           </p>
-          <p className="text-sm text-primary-800 dark:text-primary-200">
-            <strong>Session ID:</strong> {sessionId}
-          </p>
+          {sessionId && (
+            <p className="text-sm text-primary-800 dark:text-primary-200">
+              <strong>Session ID:</strong> {sessionId}
+            </p>
+          )}
           {isLoadingOrder && (
             <p className="text-sm text-primary-800 dark:text-primary-200">Loading order details...</p>
           )}
@@ -266,6 +281,16 @@ export default function CheckoutSuccessPage(): JSX.Element {
               <p className="text-base">
                 <strong>Total Paid:</strong> ${orderSummary.totalAmount.toFixed(2)}
               </p>
+              {orderSummary.promoCode && (
+                <p>
+                  <strong>Code Applied:</strong>{' '}
+                  {orderSummary.promoCode.code} (
+                  {orderSummary.promoCode.type === 'FREE_PRODUCT'
+                    ? `Free ${orderSummary.promoCode.productTier || 'tee'}`
+                    : `${orderSummary.promoCode.percentOff || 0}% off`}
+                  )
+                </p>
+              )}
             </div>
           )}
         </div>

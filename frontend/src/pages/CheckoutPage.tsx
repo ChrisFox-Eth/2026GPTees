@@ -7,7 +7,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@clerk/clerk-react';
-import { apiPost } from '../utils/api';
+import { apiPost, apiGet } from '@utils/api';
 import { useCart } from '../hooks/useCart';
 import { Button } from '@components/Button';
 import { trackEvent } from '@utils/analytics';
@@ -45,10 +45,46 @@ export default function CheckoutPage(): JSX.Element {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showPhone, setShowPhone] = useState(false);
+  const [codeInput, setCodeInput] = useState('');
+  const [appliedCode, setAppliedCode] = useState<string | null>(null);
+  const [appliedCodeInfo, setAppliedCodeInfo] = useState<{
+    code: string;
+    type: 'FREE_PRODUCT' | 'PERCENT_OFF';
+    percentOff?: number | null;
+    productTier?: string | null;
+  } | null>(null);
+  const [codeMessage, setCodeMessage] = useState<string | null>(null);
+  const [codeError, setCodeError] = useState<string | null>(null);
+  const [isApplyingCode, setIsApplyingCode] = useState(false);
 
   const subtotal = getSubtotal();
   const shippingCost = calculateShipping({ country: shipping.country });
-  const totalWithShipping = subtotal + shippingCost;
+  const { discountedItemsTotal, discountAmount } = (() => {
+    if (!appliedCodeInfo) {
+      return { discountedItemsTotal: subtotal, discountAmount: 0 };
+    }
+
+    if (appliedCodeInfo.type === 'FREE_PRODUCT') {
+      const firstItem = cart[0];
+      const itemTotal =
+        firstItem && typeof firstItem.basePrice === 'number' && typeof firstItem.tierPrice === 'number'
+          ? (firstItem.basePrice + firstItem.tierPrice) * firstItem.quantity
+          : subtotal;
+      const discount = cart.length === 1 ? itemTotal : 0;
+      return {
+        discountedItemsTotal: Math.max(0, subtotal - discount),
+        discountAmount: Math.min(discount, subtotal),
+      };
+    }
+
+    const percent = appliedCodeInfo.percentOff ?? 0;
+    const discount = Math.min(subtotal * (percent / 100), subtotal);
+    return {
+      discountedItemsTotal: Math.max(0, subtotal - discount),
+      discountAmount: discount,
+    };
+  })();
+  const totalWithShipping = discountedItemsTotal + shippingCost;
 
   useEffect(() => {
     if (!isLoaded) return;
@@ -106,6 +142,7 @@ export default function CheckoutPage(): JSX.Element {
             address2: shipping.address2 || undefined,
             phone: shipping.phone || undefined,
           },
+          code: appliedCode || undefined,
         },
         token
       );
@@ -119,9 +156,13 @@ export default function CheckoutPage(): JSX.Element {
 
       localStorage.setItem(SHIPPING_STORAGE_KEY, JSON.stringify(shipping));
 
-      const checkoutUrl = response.data.url;
+      const checkoutUrl = response.data.url as string | undefined;
+      const orderId = response.data.orderId as string | undefined;
+      const freeOrder = response.data.freeOrder as boolean | undefined;
       if (checkoutUrl) {
         window.location.href = checkoutUrl;
+      } else if (orderId) {
+        navigate(`/checkout/success?order_id=${orderId}${freeOrder ? '' : ''}`);
       } else {
         throw new Error('No checkout URL returned from server.');
       }
@@ -135,6 +176,62 @@ export default function CheckoutPage(): JSX.Element {
       setIsSubmitting(false);
     }
   };
+
+  const handleApplyCode = async () => {
+    const trimmed = codeInput.trim();
+    if (!trimmed) {
+      setCodeError('Enter a code to apply.');
+      return;
+    }
+
+    try {
+      setIsApplyingCode(true);
+      setCodeError(null);
+      setCodeMessage(null);
+      const token = await getToken();
+      if (!token) {
+        setCodeError('Authentication required. Please sign in.');
+        return;
+      }
+      const res = await apiGet(`/api/promo/validate?code=${encodeURIComponent(trimmed)}`, token);
+      setAppliedCode(res?.data?.code || trimmed);
+      setAppliedCodeInfo({
+        code: res?.data?.code || trimmed,
+        type: res?.data?.type,
+        percentOff: res?.data?.percentOff,
+        productTier: res?.data?.productTier,
+      });
+      setCodeMessage(
+        res?.data?.type === 'FREE_PRODUCT'
+          ? `Gift code applied for a ${res?.data?.productTier || 'tee'}`
+          : `Promo code applied: ${res?.data?.percentOff || 0}% off`
+      );
+      trackEvent('checkout.code.applied', {
+        code: res?.data?.code || trimmed,
+        type: res?.data?.type || 'unknown',
+      });
+    } catch (err: any) {
+      setAppliedCode(null);
+      setAppliedCodeInfo(null);
+      setCodeMessage(null);
+      setCodeError(err?.message || 'Could not validate code.');
+      trackEvent('checkout.code.error', {
+        code: trimmed,
+        message: err?.message || 'unknown',
+      });
+    } finally {
+      setIsApplyingCode(false);
+    }
+  };
+
+  const handleRemoveCode = () => {
+      setAppliedCode(null);
+      setAppliedCodeInfo(null);
+      setCodeMessage(null);
+      setCodeError(null);
+      setCodeInput('');
+      trackEvent('checkout.code.removed', {});
+    };
 
   return (
     <div className="container-max py-6 sm:py-8 pb-24 lg:pb-8">
@@ -312,6 +409,43 @@ export default function CheckoutPage(): JSX.Element {
                 )}
               </div>
             )}
+
+            {/* Promo/Gift Code */}
+            <div className="md:col-span-2 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Have a gift or promo code?
+              </label>
+              <div className="flex flex-col sm:flex-row gap-2">
+                <input
+                  type="text"
+                  value={codeInput}
+                  onChange={(e) => setCodeInput(e.target.value)}
+                  placeholder="Enter code"
+                  className="flex-1 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 px-3 py-2 text-gray-900 dark:text-white placeholder:text-gray-500 dark:placeholder:text-gray-500"
+                  disabled={Boolean(appliedCode)}
+                />
+                {appliedCode ? (
+                  <Button variant="secondary" onClick={handleRemoveCode} className="w-full sm:w-auto">
+                    Remove
+                  </Button>
+                ) : (
+                  <Button
+                    variant="secondary"
+                    onClick={handleApplyCode}
+                    disabled={isApplyingCode}
+                    className="w-full sm:w-auto"
+                  >
+                    {isApplyingCode ? 'Applying...' : 'Apply'}
+                  </Button>
+                )}
+              </div>
+              {codeMessage && (
+                <p className="text-sm text-green-700 dark:text-green-300 mt-2">{codeMessage}</p>
+              )}
+              {codeError && (
+                <p className="text-sm text-red-600 dark:text-red-400 mt-2">{codeError}</p>
+              )}
+            </div>
           </div>
 
           {/* Desktop Submit Button */}
@@ -376,6 +510,12 @@ export default function CheckoutPage(): JSX.Element {
               <span>Items</span>
               <span>${subtotal.toFixed(2)}</span>
             </div>
+            {discountAmount > 0 && (
+              <div className="flex justify-between text-sm text-green-700 dark:text-green-300">
+                <span>Discount</span>
+                <span>- ${discountAmount.toFixed(2)}</span>
+              </div>
+            )}
             <div className="flex justify-between text-gray-600 dark:text-gray-400">
               <span>Shipping</span>
               <span>${shippingCost.toFixed(2)}</span>
@@ -384,6 +524,11 @@ export default function CheckoutPage(): JSX.Element {
               <span>Total</span>
               <span>${totalWithShipping.toFixed(2)}</span>
             </div>
+            {totalWithShipping === 0 && (
+              <p className="text-xs text-primary-700 dark:text-primary-300">
+                This order will complete without Stripe.
+              </p>
+            )}
           </div>
         </div>
 

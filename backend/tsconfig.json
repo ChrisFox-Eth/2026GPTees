@@ -18,6 +18,7 @@
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
     "baseUrl": ".",
+    "types": ["node"],
     "paths": {
       "@controllers/*": ["src/controllers/*"],
       "@routes/*": ["src/routes/*"],

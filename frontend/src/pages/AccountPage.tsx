@@ -25,6 +25,12 @@ interface Order {
   designs: any[];
   fulfillmentStatus?: string | null;
   trackingNumber?: string | null;
+  promoCode?: {
+    code: string;
+    type: string;
+    percentOff?: number | null;
+    productTier?: string | null;
+  } | null;
 }
 
 function AccountContent(): JSX.Element {
@@ -40,7 +46,7 @@ function AccountContent(): JSX.Element {
     }
   }, [isLoaded, isSignedIn]);
 
-  const fetchOrders = async () => {
+  const fetchOrders = async () => {
     try {
       setLoading(true);
       const token = await getToken();
@@ -60,7 +66,16 @@ function AccountContent(): JSX.Element {
       setLoading(false);
     }
   };
-
+
+  const formatPromo = (promo?: Order['promoCode']) => {
+    if (!promo) return null;
+    const isGift = promo.type === 'FREE_PRODUCT';
+    const detail = isGift
+      ? `Free ${promo.productTier || 'tee'}`
+      : `${promo.percentOff || 0}% off`;
+    return `${promo.code} (${detail})`;
+  };
+
   const getStatusBadge = (status: string) => {
     const styles: Record<string, string> = {
       PENDING_PAYMENT: 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300',
@@ -170,6 +185,12 @@ function AccountContent(): JSX.Element {
                       >
                         {order.trackingNumber}
                       </a>
+                    </>
+                  )}
+                  {order.promoCode && (
+                    <>
+                      <span>•</span>
+                      <span>Code: {formatPromo(order.promoCode)}</span>
                     </>
                   )}
                 </div>

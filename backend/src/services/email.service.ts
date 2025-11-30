@@ -66,6 +66,15 @@ interface PromptGuideData {
   orderUrl: string;
 }
 
+interface GiftCodeEmailData {
+  customerName?: string;
+  customerEmail: string;
+  code: string;
+  tier: string;
+  usageLimit?: number | null;
+  redeemUrl: string;
+}
+
 /**
  * Send order confirmation email
  * Triggered when payment is successful
@@ -443,6 +452,83 @@ export async function sendPromptGuide(
     return { success: true };
   } catch (error: any) {
     console.error('Error sending prompt guide email:', error);
+    return { success: false, error: error.message };
+  }
+}
+
+/**
+ * Send gift code email to purchaser.
+ */
+export async function sendGiftCodeEmail(
+  data: GiftCodeEmailData
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    const usageText =
+      data.usageLimit && data.usageLimit > 0
+        ? `${data.usageLimit} ${data.usageLimit === 1 ? 'use' : 'uses'}`
+        : 'unlimited uses';
+
+    const emailHtml = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Your ${SITE_NAME} Gift Code</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; }
+    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+    .header { background: linear-gradient(135deg, #0f172a 0%, #334155 100%); color: white; padding: 28px; text-align: center; border-radius: 12px 12px 0 0; }
+    .content { background: #fff; padding: 28px; border: 1px solid #e5e7eb; border-radius: 0 0 12px 12px; }
+    .code-box { font-size: 24px; letter-spacing: 2px; font-weight: 700; background: #0ea5e9; color: white; padding: 14px 18px; text-align: center; border-radius: 10px; margin: 20px 0; }
+    .button { display: inline-block; background: #0ea5e9; color: white; padding: 12px 30px; text-decoration: none; border-radius: 6px; margin: 18px 0; }
+    .footer { text-align: center; margin-top: 24px; color: #6b7280; font-size: 14px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>You're gifting a GPTee!</h1>
+    </div>
+    <div class="content">
+      <p>Hi ${data.customerName || 'there'},</p>
+      <p>Thanks for purchasing a gift code. Share it with a friend (or keep it for yourself) to redeem a ${data.tier === 'PREMIUM' ? 'Limitless' : 'Classic'} tee.</p>
+
+      <div class="code-box" aria-label="Gift code">${data.code}</div>
+      <p style="text-align:center; margin-top:-10px;">${usageText} · Tier: ${data.tier}</p>
+
+      <ol style="padding-left:18px; color:#334155;">
+        <li>Go to <a href="${data.redeemUrl}">${data.redeemUrl}</a></li>
+        <li>Add a ${data.tier === 'PREMIUM' ? 'Premium (Limitless)' : 'Basic (Classic)'} tee to cart</li>
+        <li>Enter the code at checkout to apply it</li>
+      </ol>
+
+      <div style="text-align:center;">
+        <a href="${data.redeemUrl}" class="button">Start shopping</a>
+      </div>
+
+      <p style="margin-top: 18px;">If you need help, just reply to this email and we'll jump in.</p>
+    </div>
+    <div class="footer">
+      <p>${SITE_NAME} - AI-Powered Custom Apparel</p>
+      <p><a href="${FRONTEND_URL}">Visit Our Store</a></p>
+    </div>
+  </div>
+</body>
+</html>
+    `;
+
+    await resend.emails.send({
+      from: getFromEmail(),
+      to: data.customerEmail,
+      subject: `Your ${SITE_NAME} gift code`,
+      html: emailHtml,
+    });
+
+    console.log(`�o" Gift code email sent to ${data.customerEmail}`);
+    return { success: true };
+  } catch (error: any) {
+    console.error('Error sending gift code email:', error);
     return { success: false, error: error.message };
   }
 }

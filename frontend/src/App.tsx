@@ -19,10 +19,13 @@ import CheckoutPage from './pages/CheckoutPage';
 import DesignPage from './pages/DesignPage';
 import AccountPage from './pages/AccountPage';
 import OrderDetailPage from './pages/OrderDetailPage';
+import GiftPage from './pages/GiftPage';
+import GiftSuccessPage from './pages/GiftSuccessPage';
 import PrivacyPage from './pages/PrivacyPage';
 import TermsPage from './pages/TermsPage';
 import RefundsPage from './pages/RefundsPage';
 import AdminPage from './pages/AdminPage';
+import AdminPromoPage from './pages/AdminPromoPage';
 import NotFoundPage from './pages/NotFoundPage';
 import ProtectedRoute from './components/ProtectedRoute';
 import './App.css';
@@ -128,7 +131,17 @@ export default function App(): JSX.Element {
             <Route path="/privacy" element={<PrivacyPage />} />
             <Route path="/terms" element={<TermsPage />} />
             <Route path="/refunds" element={<RefundsPage />} />
+            <Route path="/gift" element={<GiftPage />} />
+            <Route path="/gift/success" element={<GiftSuccessPage />} />
             {import.meta.env.DEV && <Route path="/admin" element={<AdminPage />} />}
+            <Route
+              path="/admin/promo"
+              element={
+                <ProtectedRoute>
+                  <AdminPromoPage />
+                </ProtectedRoute>
+              }
+            />
             <Route path="/auth/*" element={<AuthPage />} />
             <Route path="/sign-in/*" element={<AuthPage />} />
             <Route path="/sign-up/*" element={<AuthPage />} />

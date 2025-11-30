@@ -112,6 +112,13 @@ interface Order {
 
   trackingNumber?: string | null;
 
+  promoCode?: {
+    code: string;
+    type: string;
+    percentOff?: number | null;
+    productTier?: string | null;
+  } | null;
+
 }
 
 
@@ -448,6 +455,30 @@ function OrderDetailContent(): JSX.Element {
 
             </div>
 
+            {order.promoCode && (
+
+              <div className="flex justify-between text-sm text-gray-700 dark:text-gray-300 mb-1">
+
+                <span>Code</span>
+
+                <span>
+
+                  {order.promoCode.code} (
+
+                  {order.promoCode.type === 'FREE_PRODUCT'
+
+                    ? `Free ${order.promoCode.productTier || 'tee'}`
+
+                    : `${order.promoCode.percentOff || 0}% off`}
+
+                  )
+
+                </span>
+
+              </div>
+
+            )}
+
             <div className="flex justify-between text-lg font-bold text-gray-900 dark:text-white border-t border-gray-200 dark:border-gray-700 pt-3 mt-3">
 
               <span>Total</span>
@@ -555,6 +586,7 @@ export default function OrderDetailPage(): JSX.Element {
   return <OrderDetailContent />;
 
 }
+
 
 
 

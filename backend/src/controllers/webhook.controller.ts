@@ -7,7 +7,7 @@
 import { Request, Response } from 'express';
 import { catchAsync } from '../middleware/error.middleware.js';
 import { verifyClerkWebhook, syncUserToDatabase } from '../services/clerk.service.js';
-import { constructWebhookEvent, handleSuccessfulPayment } from '../services/stripe.service.js';
+import { constructWebhookEvent, handleSuccessfulPayment, handleGiftCodePurchase } from '../services/stripe.service.js';
 import { handlePrintfulWebhook as processPrintfulWebhook } from '../services/printful.service.js';
 
 /**
@@ -33,7 +33,7 @@ export const handleClerkWebhook = catchAsync(async (req: Request, res: Response)
       case 'user.created':
       case 'user.updated':
         await syncUserToDatabase(evt.data);
-        console.log(`✓ User ${evt.type === 'user.created' ? 'created' : 'updated'}:`, evt.data.id);
+        console.log(`�o" User ${evt.type === 'user.created' ? 'created' : 'updated'}:`, evt.data.id);
         break;
 
       default:
@@ -42,7 +42,7 @@ export const handleClerkWebhook = catchAsync(async (req: Request, res: Response)
 
     res.json({ success: true, message: 'Webhook processed' });
   } catch (error: any) {
-    console.error('❌ Clerk webhook error:', error);
+    console.error('�?O Clerk webhook error:', error);
     res.status(400).json({
       success: false,
       message: 'Webhook verification failed',
@@ -80,20 +80,25 @@ export const handleStripeWebhook = catchAsync(async (req: Request, res: Response
     switch (event.type) {
       case 'checkout.session.completed': {
         const session = event.data.object;
-        await handleSuccessfulPayment(session.id);
-        console.log(`✓ Checkout session completed: ${session.id}`);
+        if (session.metadata && session.metadata.giftCodeType) {
+          await handleGiftCodePurchase(session);
+          console.log(`�o" Gift code purchase completed: ${session.id}`);
+        } else {
+          await handleSuccessfulPayment(session.id);
+          console.log(`�o" Checkout session completed: ${session.id}`);
+        }
         break;
       }
 
       case 'payment_intent.succeeded': {
         const paymentIntent = event.data.object;
-        console.log(`✓ Payment succeeded: ${paymentIntent.id}`);
+        console.log(`�o" Payment succeeded: ${paymentIntent.id}`);
         break;
       }
 
       case 'payment_intent.payment_failed': {
         const paymentIntent = event.data.object;
-        console.log(`✗ Payment failed: ${paymentIntent.id}`);
+        console.log(`�?O Payment failed: ${paymentIntent.id}`);
         break;
       }
 
@@ -103,7 +108,7 @@ export const handleStripeWebhook = catchAsync(async (req: Request, res: Response
 
     res.json({ success: true, received: true });
   } catch (error: any) {
-    console.error('❌ Stripe webhook error:', error);
+    console.error('�?O Stripe webhook error:', error);
     res.status(400).json({
       success: false,
       message: error.message || 'Webhook processing failed',
@@ -128,7 +133,7 @@ export const handlePrintfulWebhook = catchAsync(async (req: Request, res: Respon
 
     res.json({ success: true, received: true });
   } catch (error: any) {
-    console.error('❌ Printful webhook error:', error);
+    console.error('�?O Printful webhook error:', error);
     res.status(400).json({
       success: false,
       message: error.message || 'Webhook processing failed',
