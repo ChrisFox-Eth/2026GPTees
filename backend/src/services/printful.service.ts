@@ -339,7 +339,8 @@ export async function createPrintfulOrder(
         source: 'catalog',
         catalog_variant_id: variantId,
         quantity: item.quantity,
-        retail_price: item.unitPrice.toString(),
+        // Printful rejects zero retail_price values; ensure we always send a positive amount.
+        retail_price: Math.max(Number(item.unitPrice) || 0, 0.01).toFixed(2),
         name: `${item.product.name} - ${item.color} - ${item.size}`,
         placements,
       };
@@ -364,7 +365,14 @@ export async function createPrintfulOrder(
       retail_costs: {
         currency: 'USD',
         subtotal: order.totalAmount.toString(),
-        shipping: (order.totalAmount - order.items.reduce((acc: number, item: any) => acc + Number(item.unitPrice) * item.quantity, 0)).toFixed(2),
+        shipping: Math.max(
+          0,
+          order.totalAmount -
+            order.items.reduce(
+              (acc: number, item: any) => acc + Number(item.unitPrice) * item.quantity,
+              0
+            )
+        ).toFixed(2),
         tax: '0.00',
         total: order.totalAmount.toString(),
       },
@@ -490,6 +498,21 @@ export async function createPrintfulOrder(
       status: 'failed',
       payload: error.response?.data || { message },
     });
+
+    // Surface failure on the order so it can be retried or shown in UI.
+    if (orderId) {
+      try {
+        await prisma.order.update({
+          where: { id: orderId },
+          data: {
+            fulfillmentStatus: `ERROR: ${message}`,
+            status: order?.status || 'DESIGN_APPROVED',
+          },
+        });
+      } catch (updateErr) {
+        console.error('Failed to persist Printful error to order', updateErr);
+      }
+    }
 
     return {
       success: false,
