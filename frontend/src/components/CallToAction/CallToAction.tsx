@@ -35,6 +35,16 @@ export default function CallToAction(): JSX.Element {
               Browse Products
             </Button>
           </Link>
+          <Link to="/gift">
+            <Button
+              variant="secondary"
+              size="lg"
+              className="bg-white/10 border-2 border-white text-white hover:bg-white/15 px-8 py-3 text-lg"
+              onClick={() => trackEvent('home.cta.click', { cta: 'gift_codes', surface: 'call_to_action' })}
+            >
+              Give a Gift Code
+            </Button>
+          </Link>
           <Link to="/account">
             <Button
               variant="secondary"

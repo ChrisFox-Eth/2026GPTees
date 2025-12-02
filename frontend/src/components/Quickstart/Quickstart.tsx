@@ -11,8 +11,7 @@ import { apiGet } from '@utils/api';
 import { useCart } from '../../hooks/useCart';
 import { trackEvent } from '@utils/analytics';
 import { Product } from '../../types/product';
-
-const QUICKSTART_PROMPT_KEY = 'gptees_quickstart_prompt';
+import { QUICKSTART_PROMPT_KEY } from '@utils/quickstart';
 // const STYLE_PRESETS = ['Retro surf', 'Minimal line art', 'Neon cyberpunk', 'Vintage anime', 'Bold typographic'];
 // const PROMPT_SUGGESTIONS = ['Birthday gift', 'Band tee', 'Inside joke', 'Sports drop', 'Team merch'];
 
@@ -54,7 +53,7 @@ export default function Quickstart(): JSX.Element {
 
   const defaultColor = product?.colors?.[0]?.name || 'Black';
   const defaultSize = product?.sizes?.[2] || product?.sizes?.[0] || 'M';
-  const tier = 'PREMIUM';
+  const tier = 'BASIC';
   const basePrice = Number(product?.basePrice || 0);
   const tierPrice = product?.tierPricing?.[tier]?.price || 0;
   const quickstartTotal = basePrice + tierPrice;
@@ -264,7 +263,8 @@ export default function Quickstart(): JSX.Element {
             <div>
               <p className="text-sm font-semibold text-gray-900 dark:text-white">{product.name}</p>
               <p className="text-xs text-gray-600 dark:text-gray-400">
-                {color || defaultColor} - {size || defaultSize} - Limitless redraws - ${quickstartTotal.toFixed(2)} all-in
+                {color || defaultColor} - {size || defaultSize} - Classic one-shot - $
+                {quickstartTotal.toFixed(2)} all-in
               </p>
             </div>
           </div>
@@ -279,7 +279,7 @@ export default function Quickstart(): JSX.Element {
           Create in 60s
         </Button>
           <p className="text-xs text-gray-500 dark:text-gray-400 text-center">
-            Pay, generate, and approve. Classic is one-shot; Limitless lets you redraw as much as you like before we print.
+            Pay, generate, and approve. Classic is one-shot; choose Limitless later if you want unlimited redraws.
           </p>
       </div>
     </div>

@@ -31,6 +31,11 @@ export default function Footer(): JSX.Element {
                 </Link>
               </li>
               <li>
+                <Link to="/gift" className="hover:text-white transition-colors">
+                  Gift Codes
+                </Link>
+              </li>
+              <li>
                 <Link to="/cart" className="hover:text-white transition-colors">
                   Shopping Cart
                 </Link>

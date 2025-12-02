@@ -11,6 +11,7 @@ import { apiGet, apiPost } from '../utils/api';
 import { Button } from '@components/Button';
 import ProtectedRoute from '../components/ProtectedRoute';
 import { trackEvent } from '@utils/analytics';
+import { QUICKSTART_PROMPT_KEY } from '@utils/quickstart';
 
 interface Order {
   id: string;
@@ -95,6 +96,14 @@ function DesignContent(): JSX.Element {
       });
     }
   }, [order]);
+
+  useEffect(() => {
+    if (prompt) return;
+    const saved = localStorage.getItem(QUICKSTART_PROMPT_KEY);
+    if (saved) {
+      setPrompt(saved);
+    }
+  }, [prompt]);
 
   // Auto-refresh while any design is still uploading/generating so the image swaps to the
   // permanent Supabase URL without a manual page refresh.

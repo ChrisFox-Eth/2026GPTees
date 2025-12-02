@@ -3,15 +3,9 @@
  * @description Hero section with trust signals and CTAs.
  */
 
-// import { Button } from '@components/Button';
-// import { trackEvent } from '@utils/analytics';
-
-// const handleHeroCta = (cta: 'start_creating' | 'how_it_works') => {
-//   trackEvent('home.hero.cta_click', {
-//     cta,
-//     surface: 'hero',
-//   });
-// };
+import { Button } from '@components/Button';
+import { trackEvent } from '@utils/analytics';
+import { Link } from 'react-router-dom';
 
 export default function Hero(): JSX.Element {
   return (
@@ -54,27 +48,27 @@ export default function Hero(): JSX.Element {
       </div> */}
 
       {/* CTA Buttons */}
-      {/* <div className="flex flex-col sm:flex-row gap-3 justify-center mb-8">
-        <a href="#quickstart">
+      <div className="flex flex-col sm:flex-row gap-3 justify-center mb-8">
+        <Link to="/shop">
           <Button
             size="md"
             className="px-6 py-3 text-base"
-            onClick={() => handleHeroCta('start_creating')}
+            onClick={() => trackEvent('home.hero.cta_click', { cta: 'start_creating', surface: 'hero' })}
           >
-            Start in 60 seconds (Limitless)
+            Start a tee
           </Button>
-        </a>
-         <a href="#how-it-works">
+        </Link>
+        <Link to="/gift">
           <Button
             variant="secondary"
             size="md"
             className="px-6 py-3 text-base"
-            onClick={() => handleHeroCta('how_it_works')}
+            onClick={() => trackEvent('home.hero.cta_click', { cta: 'gift_codes', surface: 'hero' })}
           >
-            How It Works
+            Give a gift code
           </Button>
-        </a> 
-      </div> */}
+        </Link>
+      </div>
 
       {/* Trust + Delivery */}
       {/* <div className="flex flex-wrap justify-center gap-4 mb-10 text-sm text-gray-600 dark:text-gray-300">

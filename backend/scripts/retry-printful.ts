@@ -3,6 +3,7 @@ import { createPrintfulOrder } from '../src/services/printful.service.js';
 
 async function run() {
   const target = process.argv[2]; // optional: orderId or orderNumber
+  const designOverride = process.argv[3]; // optional: designId to force
   const where: any = {
     printfulOrderId: null,
     status: { in: ['PAID', 'DESIGN_APPROVED'] },
@@ -33,7 +34,9 @@ async function run() {
   }
 
   for (const order of orders) {
-    const approvedDesign = order.designs.find((d) => d.approvalStatus);
+    const approvedDesign =
+      (designOverride && order.designs.find((d) => d.id === designOverride)) ||
+      order.designs.find((d) => d.approvalStatus);
     if (!approvedDesign) {
       console.log(`Skipping ${order.orderNumber} (no approved design)`);
       continue;

@@ -103,6 +103,38 @@ export default function AdminPage(): JSX.Element {
           </div>
         )}
       </div>
+
+      <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6 space-y-3">
+        <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Manual Recovery Tips</h2>
+        <p className="text-sm text-gray-700 dark:text-gray-300">
+          Common CLI helpers for rescuing stuck orders (run from <code>backend/</code>):
+        </p>
+        <ul className="list-disc list-inside space-y-1 text-sm text-gray-700 dark:text-gray-300">
+          <li>
+            Inspect order + events: <code>npx tsx scripts/inspect-order.ts {'<orderId-or-number>'}</code>
+          </li>
+          <li>
+            Attach an existing design and approve it:{' '}
+            <code>
+              npx tsx scripts/attach-design.ts {'<orderId-or-number>'} {'<designId>'}
+            </code>
+          </li>
+          <li>
+            Retry Printful submission (optional design override):{' '}
+            <code>
+              npx tsx scripts/retry-printful.ts {'<orderId-or-number>'} {'[designId]'}
+            </code>
+          </li>
+          <li>
+            Full status resync from Printful: <code>npx tsx scripts/sync-fulfillment.ts</code>{' '}
+            (or use the button above).
+          </li>
+        </ul>
+        <p className="text-xs text-gray-600 dark:text-gray-400">
+          Tip: if Printful ever rejects a $0 item, ensure the order has an approved design and re-run
+          retry-printful with the design id so the artwork carries over.
+        </p>
+      </div>
     </div>
   );
 }

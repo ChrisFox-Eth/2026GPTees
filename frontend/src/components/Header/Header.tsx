@@ -58,6 +58,12 @@ export default function Header({ isDark, onToggleTheme }: HeaderProps): JSX.Elem
               >
                 Shop
               </Link>
+              <Link
+                to="/gift"
+                className="text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 transition-colors"
+              >
+                Gift Codes
+              </Link>
             </nav>
 
             <SignedOut>
@@ -154,6 +160,13 @@ export default function Header({ isDark, onToggleTheme }: HeaderProps): JSX.Elem
                 className="text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 transition-colors py-2 px-3 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700"
               >
                 Shop
+              </Link>
+              <Link
+                to="/gift"
+                onClick={closeMobileMenu}
+                className="text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 transition-colors py-2 px-3 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700"
+              >
+                Gift Codes
               </Link>
 
               <div className="border-t border-gray-200 dark:border-gray-700 my-2" />
