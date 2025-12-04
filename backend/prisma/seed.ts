@@ -78,7 +78,7 @@ async function main() {
   console.log('⚙️  Seeding settings...');
   const settings = [
     { key: 'site_name', value: '2026GPTees', type: 'string' },
-    { key: 'site_email', value: 'support@gptees.app', type: 'string' },
+    { key: 'site_email', value: 'team@gptees.app', type: 'string' },
     { key: 'basic_tier_price', value: '34.99', type: 'number' },
     { key: 'premium_tier_price', value: '54.99', type: 'number' },
     { key: 'basic_tier_max_designs', value: '1', type: 'number' },

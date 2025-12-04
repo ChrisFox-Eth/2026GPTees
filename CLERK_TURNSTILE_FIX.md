@@ -19,7 +19,7 @@ You need to **disable Turnstile** in your Clerk Dashboard (or configure it prope
 ### Option 1: Disable Turnstile (Recommended for Development)
 
 1. Go to https://dashboard.clerk.com
-2. Select your 2026GPTees application
+2. Select your GPTees application
 3. Navigate to **User & Authentication** → **Attack Protection**
 4. Find **Bot Protection** or **Turnstile** settings
 5. **Disable** or set to **Invisible mode**

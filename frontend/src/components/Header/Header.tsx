@@ -53,12 +53,6 @@ export default function Header({ isDark, onToggleTheme }: HeaderProps): JSX.Elem
           <div className="hidden md:flex items-center gap-3 lg:gap-4">
             <nav className="flex items-center gap-4">
               <Link
-                to="/"
-                className="text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 transition-colors"
-              >
-                Home
-              </Link>
-              <Link
                 to="/shop"
                 className="text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 transition-colors"
               >
@@ -109,6 +103,7 @@ export default function Header({ isDark, onToggleTheme }: HeaderProps): JSX.Elem
             </Link>
 
             <Button
+              style={{ display: 'none' }}
               variant="secondary"
               size="sm"
               onClick={onToggleTheme}

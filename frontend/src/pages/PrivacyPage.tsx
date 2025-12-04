@@ -84,7 +84,7 @@ export default function PrivacyPage(): JSX.Element {
         <h2>10. Contact Us</h2>
         <p>
           If you have questions about this Privacy Policy, please contact us at:{' '}
-          <a href="mailto:privacy@2026gptees.app">privacy@2026gptees.app</a>
+          <a href="mailto:team@gptees.app">team@gptees.app</a>
         </p>
       </div>
     </div>

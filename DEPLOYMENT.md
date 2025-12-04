@@ -1,6 +1,6 @@
 # Deployment Guide
 
-This guide covers deploying 2026GPTees to production.
+This guide covers deploying GPTees to production.
 
 ## Backend Deployment (Heroku)
 

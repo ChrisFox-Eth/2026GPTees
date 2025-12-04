@@ -121,7 +121,7 @@ export default function TermsPage(): JSX.Element {
         <h2>14. Contact Information</h2>
         <p>
           For questions about these Terms, contact us at:{' '}
-          <a href="mailto:legal@2026gptees.app">legal@2026gptees.app</a>
+          <a href="mailto:team@gptees.app">team@gptees.app</a>
         </p>
       </div>
     </div>

@@ -1,4 +1,4 @@
-# Contributing to 2026GPTees
+# Contributing to GPTees
 
 Thank you for your interest in contributing! This document provides guidelines for contributing to the project.
 
@@ -33,8 +33,8 @@ Thank you for your interest in contributing! This document provides guidelines f
 #### Setup Development Environment
 ```bash
 # Fork and clone the repository
-git clone https://github.com/YOUR_USERNAME/2026gptees.git
-cd 2026gptees
+git clone https://github.com/YOUR_USERNAME/GPTees.git
+cd GPTees
 
 # Install dependencies
 cd backend && npm install

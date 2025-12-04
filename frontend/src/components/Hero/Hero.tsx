@@ -48,7 +48,7 @@ export default function Hero(): JSX.Element {
       </div> */}
 
       {/* CTA Buttons */}
-      <div className="flex flex-col sm:flex-row gap-3 justify-center mb-8">
+      <div className="flex flex-row sm:flex-row gap-3 justify-center mb-8">
         <Link to="/shop">
           <Button
             size="md"
