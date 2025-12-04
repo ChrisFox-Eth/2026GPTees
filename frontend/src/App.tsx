@@ -26,6 +26,7 @@ import TermsPage from './pages/TermsPage';
 import RefundsPage from './pages/RefundsPage';
 import AdminPage from './pages/AdminPage';
 import AdminPromoPage from './pages/AdminPromoPage';
+import AdminHelpPage from './pages/AdminHelpPage';
 import NotFoundPage from './pages/NotFoundPage';
 import ProtectedRoute from './components/ProtectedRoute';
 import './App.css';
@@ -54,21 +55,25 @@ function ScrollToTop(): JSX.Element | null {
 }
 
 export default function App(): JSX.Element {
-  const [isDark, setIsDark] = useState(false);
+  const getInitialTheme = () => {
+    if (typeof window === 'undefined') {
+      return true;
+    }
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme === 'light') return false;
+    if (savedTheme === 'dark') return true;
+    return true; // default to dark for first load
+  };
+
+  const [isDark, setIsDark] = useState<boolean>(getInitialTheme);
   const [, setIsInitialized] = useState(false);
 
   /**
-   * Initialize theme from localStorage or system preference on mount
+   * Initialize theme from localStorage with dark as the default for first load
    */
   useEffect(() => {
     const savedTheme = localStorage.getItem('theme');
-    let isDarkTheme = false;
-
-    if (savedTheme) {
-      isDarkTheme = savedTheme === 'dark';
-    } else {
-      isDarkTheme = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    }
+    const isDarkTheme = savedTheme ? savedTheme === 'dark' : true;
 
     setIsDark(isDarkTheme);
     applyTheme(isDarkTheme);
@@ -133,15 +138,27 @@ export default function App(): JSX.Element {
             <Route path="/refunds" element={<RefundsPage />} />
             <Route path="/gift" element={<GiftPage />} />
             <Route path="/gift/success" element={<GiftSuccessPage />} />
-            {import.meta.env.DEV && <Route path="/admin" element={<AdminPage />} />}
-            <Route
-              path="/admin/promo"
-              element={
-                <ProtectedRoute>
-                  <AdminPromoPage />
-                </ProtectedRoute>
-              }
-            />
+            {import.meta.env.DEV && (
+              <>
+                <Route path="/admin" element={<AdminPage />} />
+                <Route
+                  path="/admin/promo"
+                  element={
+                    <ProtectedRoute>
+                      <AdminPromoPage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/admin/help"
+                  element={
+                    <ProtectedRoute>
+                      <AdminHelpPage />
+                    </ProtectedRoute>
+                  }
+                />
+              </>
+            )}
             <Route path="/auth/*" element={<AuthPage />} />
             <Route path="/sign-in/*" element={<AuthPage />} />
             <Route path="/sign-up/*" element={<AuthPage />} />

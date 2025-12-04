@@ -60,11 +60,11 @@ export default function GiftPage(): JSX.Element {
       <div className="max-w-3xl mx-auto bg-white dark:bg-gray-800 rounded-lg shadow p-6 space-y-6">
         <div className="space-y-2">
           <p className="text-sm text-primary-700 dark:text-primary-200 font-semibold uppercase tracking-wide">
-            Gift a GPTee
+            Gifting
           </p>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Send a gift code</h1>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Gift a one-of-one GPTee</h1>
           <p className="text-gray-600 dark:text-gray-400">
-            Buy a code for a friend. They redeem it for a free tee. Shipping is paid at redemption.
+            Send someone a redeemable code so they can design their own tee. Classic is one-shot; Limitless lets them redraw until they love it.
           </p>
         </div>
 
@@ -79,7 +79,7 @@ export default function GiftPage(): JSX.Element {
             }`}
           >
             <p className="font-semibold text-gray-900 dark:text-white">Classic Tee</p>
-            <p className="text-sm text-gray-600 dark:text-gray-400">1 artwork included</p>
+            <p className="text-sm text-gray-600 dark:text-gray-400">One-and-done artwork for decisive giftees</p>
           </button>
           <button
             type="button"
@@ -91,7 +91,7 @@ export default function GiftPage(): JSX.Element {
             }`}
           >
             <p className="font-semibold text-gray-900 dark:text-white">Limitless Tee</p>
-            <p className="text-sm text-gray-600 dark:text-gray-400">Unlimited redraws</p>
+            <p className="text-sm text-gray-600 dark:text-gray-400">Unlimited redraws until they say &ldquo;perfect&rdquo;</p>
           </button>
         </div>
 
@@ -119,19 +119,19 @@ export default function GiftPage(): JSX.Element {
 
         <div className="flex flex-col sm:flex-row gap-3">
           <Button variant="primary" onClick={handlePurchase} disabled={isSubmitting}>
-            {isSubmitting ? 'Starting checkout...' : 'Buy gift code'}
+            {isSubmitting ? 'Starting checkout...' : 'Gift this GPTee'}
           </Button>
           <Button variant="secondary" onClick={() => navigate('/shop')}>
-            Back to shop
+            Browse tees
           </Button>
         </div>
 
         <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-4 text-sm text-gray-700 dark:text-gray-300">
-          <p className="font-semibold mb-1">How it works</p>
+          <p className="font-semibold mb-1">How gifting works</p>
           <ol className="list-decimal list-inside space-y-1">
-            <li>You pay for the code now via Stripe.</li>
-            <li>We email you the code.</li>
-            <li>Recipient redeems at checkout for the chosen tier (Classic or Limitless).</li>
+            <li>You check out now via Stripe.</li>
+            <li>We email you the gift code instantly.</li>
+            <li>Your friend redeems it at checkout for Classic or Limitless and designs their tee.</li>
           </ol>
         </div>
       </div>

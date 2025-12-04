@@ -42,7 +42,7 @@ export default function CallToAction(): JSX.Element {
               className="bg-white/10 border-2 border-white text-white hover:bg-white/15 px-8 py-3 text-lg"
               onClick={() => trackEvent('home.cta.click', { cta: 'gift_codes', surface: 'call_to_action' })}
             >
-              Give a Gift Code
+              Gift a GPTee
             </Button>
           </Link>
           <Link to="/account">

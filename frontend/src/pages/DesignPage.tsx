@@ -68,6 +68,7 @@ function DesignContent(): JSX.Element {
   const [isGenerating, setIsGenerating] = useState(false);
   const [isLoadingSurprise, setIsLoadingSurprise] = useState(false);
   const [isApproving, setIsApproving] = useState<string | null>(null);
+  const [shareFeedback, setShareFeedback] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const hasTrackedOrderView = useRef(false);
@@ -305,6 +306,59 @@ function DesignContent(): JSX.Element {
       setError(err.message || 'Failed to approve design');
     } finally {
       setIsApproving(null);
+    }
+  };
+
+  const handleShareDesign = async (design: Design) => {
+    const landingUrl = 'https://gptees.app/?utm_source=customer_share&utm_medium=design&utm_campaign=ugc';
+    const shareTarget = design.imageUrl || landingUrl;
+    const shareText = `I just designed this one-of-one tee on GPTees. What do you think? Start yours here: ${landingUrl}`;
+
+    try {
+      setShareFeedback(null);
+      const supportsNativeShare = typeof navigator !== 'undefined' && typeof navigator.share === 'function';
+
+      if (supportsNativeShare) {
+        await navigator.share({
+          title: 'My GPTee design',
+          text: shareText,
+          url: shareTarget,
+        });
+        setShareFeedback('Shared! Thanks for spreading the word. Post it anywhere else by copying the link below.');
+        trackEvent('design.share.success', {
+          order_id: order?.id ?? orderId,
+          design_id: design.id,
+          method: 'web-share',
+        });
+        return;
+      }
+
+      if (navigator?.clipboard?.writeText) {
+        await navigator.clipboard.writeText(`${shareText}\nPreview: ${shareTarget}`);
+        setShareFeedback('Link copied. Paste it to get votes and invite friends to make theirs.');
+        trackEvent('design.share.success', {
+          order_id: order?.id ?? orderId,
+          design_id: design.id,
+          method: 'clipboard',
+        });
+        return;
+      }
+
+      window.prompt('Copy this link to share your GPTee:', `${shareText} Preview: ${shareTarget}`);
+      setShareFeedback('Copy the link above to share your GPTee design anywhere.');
+      trackEvent('design.share.success', {
+        order_id: order?.id ?? orderId,
+        design_id: design.id,
+        method: 'prompt',
+      });
+    } catch (err: any) {
+      console.error('Error sharing design:', err);
+      setShareFeedback('Could not share right now. Copy the preview link manually and keep creating.');
+      trackEvent('design.share.error', {
+        order_id: order?.id ?? orderId,
+        design_id: design.id,
+        message: err?.message || 'unknown',
+      });
     }
   };
 
@@ -569,6 +623,14 @@ function DesignContent(): JSX.Element {
           <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
             Your Designs ({designs.length})
           </h2>
+          <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
+            Share a design to get opinions and invite friends to make their own GPTee.
+          </p>
+          {shareFeedback && (
+            <div className="bg-primary-50 dark:bg-primary-900/20 border border-primary-100 dark:border-primary-800 rounded-lg p-3 text-sm text-primary-800 dark:text-primary-200 mb-4">
+              {shareFeedback}
+            </div>
+          )}
 
           {designs.length === 0 && (
             <div className="text-center py-12">
@@ -621,33 +683,48 @@ function DesignContent(): JSX.Element {
                     {new Date(design.createdAt).toLocaleString()}
                   </p>
 
-                  {/* Approve Button */}
-                  {!design.approvalStatus && design.status === 'COMPLETED' && (
+                  <div className="mt-3 flex flex-col sm:flex-row gap-2">
+                    {!design.approvalStatus && design.status === 'COMPLETED' && (
+                      <Button
+                        variant="primary"
+                        size="sm"
+                        onClick={() => handleApproveDesign(design.id)}
+                        disabled={isApproving === design.id}
+                        className="w-full sm:w-auto"
+                      >
+                        {isApproving === design.id ? (
+                          <span className="flex items-center justify-center gap-2">
+                            <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white"></div>
+                            Approving...
+                          </span>
+                        ) : (
+                          'Approve This Design'
+                        )}
+                      </Button>
+                    )}
+
                     <Button
-                      variant="primary"
+                      variant="secondary"
                       size="sm"
-                      onClick={() => handleApproveDesign(design.id)}
-                      disabled={isApproving === design.id}
-                      className="w-full"
+                      onClick={() => handleShareDesign(design)}
+                      isDisabled={design.status !== 'COMPLETED'}
+                      className="w-full sm:w-auto"
                     >
-                      {isApproving === design.id ? (
-                        <span className="flex items-center justify-center gap-2">
-                          <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white"></div>
-                          Approving...
-                        </span>
-                      ) : (
-                        'Approve This Design'
-                      )}
+                      Share this design
                     </Button>
-                  )}
+                  </div>
 
                   {design.approvalStatus && (
-                    <div className="bg-green-50 dark:bg-green-900/20 rounded-lg p-3 text-center">
+                    <div className="bg-green-50 dark:bg-green-900/20 rounded-lg p-3 text-center mt-3">
                       <p className="text-sm text-green-800 dark:text-green-400 font-semibold">
                         Design Approved! Order submitted for printing.
                       </p>
                     </div>
                   )}
+
+                  <p className="text-xs text-gray-500 dark:text-gray-500 mt-2">
+                    Sharing uses your device share sheet when available. Otherwise we copy a link you can paste.
+                  </p>
                 </div>
               </div>
             ))}

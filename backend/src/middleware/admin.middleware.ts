@@ -11,6 +11,11 @@ import { AppError } from './error.middleware.js';
  * Uses ADMIN_EMAIL_ALLOWLIST (comma-separated, case-insensitive) or ALLOW_ADMIN_SYNC=true (dev backdoor).
  */
 export const requireAdmin = (req: Request, _res: Response, next: NextFunction): void => {
+  // Hard-disable admin APIs outside local development.
+  if (process.env.NODE_ENV !== 'development') {
+    return next(new AppError('Admin endpoints are disabled in production.', 403));
+  }
+
   // Local/dev bypass if SKIP_AUTH is enabled
   if ((process.env.SKIP_AUTH || '').toLowerCase() === 'true') {
     return next();
@@ -20,17 +25,15 @@ export const requireAdmin = (req: Request, _res: Response, next: NextFunction): 
     return next(new AppError('Authentication required', 401));
   }
 
-  const allowFlag = (process.env.ALLOW_ADMIN_SYNC || '').trim().toLowerCase() === 'true';
   const allowlist = (process.env.ADMIN_EMAIL_ALLOWLIST || '')
     .split(',')
     .map((e) => e.trim().toLowerCase())
     .filter(Boolean);
 
-  const isDev = process.env.NODE_ENV === 'development';
   const email = (req.user.email || '').toLowerCase();
-  const isAllowed = allowlist.includes(email);
+  const isAllowed = allowlist.length === 0 || allowlist.includes(email);
 
-  if (isAllowed || allowFlag || isDev) {
+  if (isAllowed) {
     return next();
   }
 

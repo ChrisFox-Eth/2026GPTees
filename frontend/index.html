@@ -2,7 +2,6 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>GPTees | One-of-one AI tees</title>
     <meta
@@ -10,24 +9,40 @@
       content="Describe the tee you have always wanted and GPTees makes it one-of-one. Fast US shipping, secure checkout, and unlimited redraws."
     />
     <meta name="robots" content="index,follow" />
+    <link rel="icon" type="image/png" href="/GPTeesIconLightMode.png" />
+    <link rel="apple-touch-icon" href="/GPTeesIconLightMode.png" />
+
+    <meta name="theme-color" content="#0b1120" />
+
     <meta property="og:type" content="website" />
     <meta property="og:title" content="GPTees | One-of-one AI tees" />
     <meta
       property="og:description"
       content="Describe it once and we print your one-of-one GPTee. Classic is one-shot; Limitless lets you redraw until you approve."
     />
-    <meta property="og:url" content="https://gptees.com" />
+    <meta property="og:url" content="https://gptees.app" />
     <meta property="og:site_name" content="GPTees" />
-    <meta property="og:image" content="/og-gptees.png" />
+    <meta property="og:image" content="/GPTeesBW.png" />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="GPTees | One-of-one AI tees" />
     <meta
       name="twitter:description"
       content="Describe your dream tee and we will print it. Classic is one-shot; Limitless lets you redraw until you approve."
     />
-    <meta name="twitter:image" content="/og-gptees.png" />
-    <meta name="theme-color" content="#0ea5e9" />
-    <link rel="preload" as="image" href="/og-gptees.png" />
+    <meta name="twitter:image" content="/GPTeesBW.png" />
+    <link rel="preload" as="image" href="/GPTeesIconLightMode.png" />
+
+    <script>
+      (() => {
+        const savedTheme = localStorage.getItem('theme');
+        const shouldUseDark = savedTheme ? savedTheme === 'dark' : true;
+        if (shouldUseDark || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+          document.documentElement.classList.add('dark');
+        } else {
+          document.documentElement.classList.remove('dark');
+        }
+      })();
+    </script>
     <script type="application/ld+json">
       {
         "@context": "https://schema.org",
@@ -35,7 +50,7 @@
           {
             "@type": "Organization",
             "name": "GPTees",
-            "url": "https://gptees.com",
+            "url": "https://gptees.app",
             "description": "One-of-one custom tees made from your words with fast shipping and secure checkout."
           },
           {
@@ -48,7 +63,7 @@
               "priceCurrency": "USD",
               "availability": "https://schema.org/InStock",
               "price": "34.99",
-              "url": "https://gptees.com/shop"
+              "url": "https://gptees.app/shop"
             },
             "aggregateRating": {
               "@type": "AggregateRating",

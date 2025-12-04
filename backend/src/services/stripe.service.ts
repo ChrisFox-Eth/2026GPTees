@@ -211,10 +211,7 @@ export async function createCheckoutSession(
     });
 
     if (promoCode?.id) {
-      await prisma.promoCode.update({
-        where: { id: promoCode.id },
-        data: { usageCount: { increment: 1 } },
-      });
+      await incrementPromoUsage(promoCode.id);
     }
 
     const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
@@ -465,15 +462,38 @@ export async function handleSuccessfulPayment(sessionId: string): Promise<void> 
     throw new Error('Order ID not found in session metadata');
   }
 
-  // Idempotency: if already marked paid, exit
-  const existing = await prisma.order.findUnique({ where: { id: orderId } });
-  if (existing?.status === 'PAID') {
+  const order = await prisma.order.findUnique({
+    where: { id: orderId },
+    include: { user: true, items: true, address: true, promoCode: true },
+  });
+
+  if (!order) {
+    throw new Error('Order not found');
+  }
+
+  if (order.status === 'PAID') {
     console.log(`Order ${orderId} already marked as PAID; skipping duplicate webhook.`);
     return;
   }
 
-  // Update order status and get full order details
-  const order = await prisma.order.update({
+  if (session.client_reference_id && session.client_reference_id !== order.id) {
+    throw new Error('Stripe session client_reference_id does not match order');
+  }
+  if (session.metadata?.userId && session.metadata.userId !== order.userId) {
+    throw new Error('Stripe session user does not match order owner');
+  }
+
+  const sessionTotal = (session.amount_total || 0) / 100;
+  const orderTotal = Number(order.totalAmount);
+  const currency = (session.currency || '').toLowerCase();
+  if (currency && currency !== 'usd') {
+    throw new Error(`Unexpected currency: ${currency}`);
+  }
+  if (Math.abs(sessionTotal - orderTotal) > 0.01) {
+    throw new Error(`Payment amount mismatch. Expected ${orderTotal}, got ${sessionTotal}`);
+  }
+
+  const updatedOrder = await prisma.order.update({
     where: { id: orderId },
     data: {
       status: 'PAID',
@@ -481,7 +501,7 @@ export async function handleSuccessfulPayment(sessionId: string): Promise<void> 
       payment: {
         create: {
           stripePaymentId: session.payment_intent as string,
-          amount: (session.amount_total || 0) / 100,
+          amount: sessionTotal,
           currency: session.currency || 'usd',
           status: 'COMPLETED',
           paymentMethod: session.payment_method_types?.[0] || 'card',
@@ -495,62 +515,76 @@ export async function handleSuccessfulPayment(sessionId: string): Promise<void> 
     },
   });
 
-  console.log(`✓ Order ${orderId} marked as PAID`);
+  console.log(`Order ${orderId} marked as PAID`);
 
-  if (order.promoCodeId) {
-    await prisma.promoCode.update({
-      where: { id: order.promoCodeId },
-      data: { usageCount: { increment: 1 } },
-    });
+  if (updatedOrder.promoCodeId) {
+    await incrementPromoUsage(updatedOrder.promoCodeId);
   }
 
-  // Send order confirmation email (non-blocking)
   const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
   sendOrderConfirmation({
-    customerName: order.user.firstName || order.user.email,
-    customerEmail: order.user.email,
-    orderNumber: order.orderNumber,
-    orderTotal: order.totalAmount.toString(),
-    tier: order.designTier,
-    itemCount: order.items.length,
-    orderUrl: `${frontendUrl}/design?orderId=${order.id}`,
+    customerName: updatedOrder.user.firstName || updatedOrder.user.email,
+    customerEmail: updatedOrder.user.email,
+    orderNumber: updatedOrder.orderNumber,
+    orderTotal: updatedOrder.totalAmount.toString(),
+    tier: updatedOrder.designTier,
+    itemCount: updatedOrder.items.length,
+    orderUrl: `${frontendUrl}/design?orderId=${updatedOrder.id}`,
   }).catch((error) => {
     console.error('Failed to send order confirmation email:', error);
-    // Don't throw - email failure shouldn't break the payment flow
   });
 
-  // Send prompt guidance to encourage design completion (non-blocking)
   sendPromptGuide({
-    customerName: order.user.firstName || order.user.email,
-    customerEmail: order.user.email,
-    orderNumber: order.orderNumber,
-    orderUrl: `${frontendUrl}/design?orderId=${order.id}`,
+    customerName: updatedOrder.user.firstName || updatedOrder.user.email,
+    customerEmail: updatedOrder.user.email,
+    orderNumber: updatedOrder.orderNumber,
+    orderUrl: `${frontendUrl}/design?orderId=${updatedOrder.id}`,
   }).catch((error) => {
     console.error('Failed to send prompt guide email:', error);
   });
 
-  // Emit revenue event to optional analytics webhook
   sendAnalyticsEvent({
     event: 'order.paid',
     properties: {
-      order_id: order.id,
-      order_number: order.orderNumber,
-      amount: order.totalAmount,
-      tier: order.designTier,
-      item_count: order.items.length,
-      country: order.address?.country || 'US',
+      order_id: updatedOrder.id,
+      order_number: updatedOrder.orderNumber,
+      amount: updatedOrder.totalAmount,
+      tier: updatedOrder.designTier,
+      item_count: updatedOrder.items.length,
+      country: updatedOrder.address?.country || 'US',
     },
   });
 }
+
 
 /**
  * Manually confirm a checkout session and mark the order as paid
  * Useful when the Stripe webhook didn't fire
  */
-export async function confirmCheckoutSession(sessionId: string, orderId: string): Promise<void> {
+export async function confirmCheckoutSession(
+  sessionId: string,
+  orderId: string,
+  requesterId?: string
+): Promise<void> {
   const order = await prisma.order.findUnique({ where: { id: orderId } });
   if (!order) {
     throw new Error('Order not found');
+  }
+
+  if (requesterId && order.userId !== requesterId) {
+    throw new Error('Unauthorized to confirm this order');
+  }
+
+  // Ensure the session belongs to this order/user
+  const session = await stripe.checkout.sessions.retrieve(sessionId);
+  if (session.client_reference_id && session.client_reference_id !== orderId) {
+    throw new Error('Session does not belong to this order');
+  }
+  if (session.metadata?.orderId && session.metadata.orderId !== orderId) {
+    throw new Error('Session metadata does not match this order');
+  }
+  if (session.metadata?.userId && session.metadata.userId !== order.userId) {
+    throw new Error('Session user does not match order owner');
   }
 
   // If already paid, no-op
@@ -577,6 +611,29 @@ export function constructWebhookEvent(
   }
 
   return stripe.webhooks.constructEvent(payload, signature, webhookSecret);
+}
+
+/**
+ * Atomically increment promo usage, enforcing usageLimit when present.
+ */
+async function incrementPromoUsage(promoCodeId: string): Promise<void> {
+  await prisma.$transaction(async (tx) => {
+    const promo = await tx.promoCode.findUnique({ where: { id: promoCodeId } });
+    if (!promo) {
+      throw new Error('Promo code not found');
+    }
+    if (
+      promo.usageLimit !== null &&
+      promo.usageLimit !== undefined &&
+      promo.usageCount >= promo.usageLimit
+    ) {
+      throw new Error('Promo code usage limit exceeded');
+    }
+    await tx.promoCode.update({
+      where: { id: promoCodeId },
+      data: { usageCount: { increment: 1 } },
+    });
+  });
 }
 
 export default stripe;

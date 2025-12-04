@@ -82,7 +82,12 @@ export const confirmSession = catchAsync(async (req: Request, res: Response) => 
     return;
   }
 
-  await confirmCheckoutSession(sessionId, orderId);
+  if (!req.user) {
+    res.status(401).json({ success: false, message: 'Authentication required' });
+    return;
+  }
+
+  await confirmCheckoutSession(sessionId, orderId, req.user.id);
 
   res.json({ success: true, message: 'Session confirmed, order marked as paid' });
 });

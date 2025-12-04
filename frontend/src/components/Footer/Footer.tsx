@@ -32,7 +32,7 @@ export default function Footer(): JSX.Element {
               </li>
               <li>
                 <Link to="/gift" className="hover:text-white transition-colors">
-                  Gift Codes
+                  Gift a GPTee
                 </Link>
               </li>
               <li>
@@ -75,7 +75,7 @@ export default function Footer(): JSX.Element {
             <h4 className="text-white font-semibold mb-4">Support</h4>
             <ul className="space-y-2 text-sm">
               <li>
-                <a href="mailto:support@gptees.com" className="hover:text-white transition-colors">
+                <a href="mailto:support@gptees.app" className="hover:text-white transition-colors">
                   Contact Us
                 </a>
               </li>

@@ -10,6 +10,8 @@ import { useUser, useClerk, SignedIn, SignedOut } from '@clerk/clerk-react';
 import { HeaderProps } from './Header.types';
 import { Button } from '@components/Button';
 import { useCart } from '../../hooks/useCart';
+import GPTeesIconDarkMode from '../../assets/GPTeesIconDarkMode.png';
+import GPTeesIconLightMode from '../../assets/GPTeesIconLightMode.png';
 
 export default function Header({ isDark, onToggleTheme }: HeaderProps): JSX.Element {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -37,8 +39,12 @@ export default function Header({ isDark, onToggleTheme }: HeaderProps): JSX.Elem
         <div className="container-max px-4 py-2 flex items-center justify-between gap-2">
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity shrink-0">
-            <div className="h-7 w-7 bg-primary-600 rounded-md flex items-center justify-center text-white font-bold">
-              G
+            <div className="h-7 w-7 rounded-md flex items-center justify-center">
+              {isDark ? (
+                <img src={GPTeesIconDarkMode} alt="GPTees Logo" />
+              ) : (
+                <img src={GPTeesIconLightMode} alt="GPTees Logo" />
+              )}
             </div>
             <h1 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white">GPTees</h1>
           </Link>
@@ -62,7 +68,7 @@ export default function Header({ isDark, onToggleTheme }: HeaderProps): JSX.Elem
                 to="/gift"
                 className="text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 transition-colors"
               >
-                Gift Codes
+                Gift a GPTee
               </Link>
             </nav>
 
@@ -166,7 +172,7 @@ export default function Header({ isDark, onToggleTheme }: HeaderProps): JSX.Elem
                 onClick={closeMobileMenu}
                 className="text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 transition-colors py-2 px-3 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700"
               >
-                Gift Codes
+                Gift a GPTee
               </Link>
 
               <div className="border-t border-gray-200 dark:border-gray-700 my-2" />

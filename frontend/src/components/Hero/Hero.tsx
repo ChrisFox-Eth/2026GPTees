@@ -65,7 +65,7 @@ export default function Hero(): JSX.Element {
             className="px-6 py-3 text-base"
             onClick={() => trackEvent('home.hero.cta_click', { cta: 'gift_codes', surface: 'hero' })}
           >
-            Give a gift code
+            Gift a GPTee
           </Button>
         </Link>
       </div>

@@ -78,7 +78,7 @@ MIT License - See LICENSE file for details.
 
 ## 📞 Support
 
-- Email: support@2026gptees.com
+- Email: support@2026gptees.app
 - Issues: [GitHub Issues](https://github.com/yourusername/2026gptees/issues)
 
 ---

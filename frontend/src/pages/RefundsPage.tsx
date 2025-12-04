@@ -20,7 +20,7 @@ export default function RefundsPage(): JSX.Element {
         <h3>2.1 Before Design Approval</h3>
         <p>
           You may request a full refund any time before approving your final design. Contact us at{' '}
-          <a href="mailto:support@2026gptees.com">support@2026gptees.com</a> with your order number.
+          <a href="mailto:support@2026gptees.app">support@2026gptees.app</a> with your order number.
         </p>
 
         <h3>2.2 After Design Approval</h3>
@@ -63,7 +63,7 @@ export default function RefundsPage(): JSX.Element {
         <h2>4. Return Process</h2>
         <p>To initiate a return:</p>
         <ol>
-          <li>Email <a href="mailto:support@2026gptees.com">support@2026gptees.com</a> with your order number</li>
+          <li>Email <a href="mailto:support@2026gptees.app">support@2026gptees.app</a> with your order number</li>
           <li>Provide photos and description of the issue</li>
           <li>Wait for return authorization and instructions</li>
           <li>Ship item back using provided address (if required)</li>
@@ -116,7 +116,7 @@ export default function RefundsPage(): JSX.Element {
         <h2>12. Contact for Questions</h2>
         <p>
           If you have questions about our refund policy or need assistance with a return, please contact:{' '}
-          <a href="mailto:support@2026gptees.com">support@2026gptees.com</a>
+          <a href="mailto:support@2026gptees.app">support@2026gptees.app</a>
         </p>
         <p>
           <strong>Phone:</strong> 1-800-GPT-TEES (1-800-478-8337)<br />

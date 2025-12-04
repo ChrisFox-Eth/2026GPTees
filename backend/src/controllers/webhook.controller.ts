@@ -9,6 +9,7 @@ import { catchAsync } from '../middleware/error.middleware.js';
 import { verifyClerkWebhook, syncUserToDatabase } from '../services/clerk.service.js';
 import { constructWebhookEvent, handleSuccessfulPayment, handleGiftCodePurchase } from '../services/stripe.service.js';
 import { handlePrintfulWebhook as processPrintfulWebhook } from '../services/printful.service.js';
+import crypto from 'crypto';
 
 /**
  * Handle Clerk webhooks
@@ -124,6 +125,19 @@ export const handleStripeWebhook = catchAsync(async (req: Request, res: Response
  */
 export const handlePrintfulWebhook = catchAsync(async (req: Request, res: Response) => {
   try {
+    // Optional shared-secret verification to protect webhook endpoint
+    const sharedSecret = process.env.PRINTFUL_WEBHOOK_SECRET;
+    if (sharedSecret) {
+      const signature = req.headers['x-printful-signature'];
+      const payload = typeof req.body === 'string' || Buffer.isBuffer(req.body)
+        ? req.body
+        : JSON.stringify(req.body);
+      const computed = crypto.createHmac('sha256', sharedSecret).update(payload).digest('hex');
+      if (typeof signature !== 'string' || signature !== computed) {
+        throw new Error('Invalid Printful webhook signature');
+      }
+    }
+
     const webhookData = req.body;
 
     console.log('Received Printful webhook:', webhookData.type);
