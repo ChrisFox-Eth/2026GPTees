@@ -49,8 +49,9 @@ export const createDesign = catchAsync(async (req: Request, res: Response) => {
     throw new AppError('Unauthorized access to this order', 403);
   }
 
-  if (order.status !== 'PAID') {
-    throw new AppError('Order must be paid before generating designs', 400);
+  const isPaidAndActive = order.status === 'PAID' || order.status === 'DESIGN_PENDING';
+  if (!isPaidAndActive) {
+    throw new AppError('Order must be paid and active before generating designs', 400);
   }
 
   // Check tier limits

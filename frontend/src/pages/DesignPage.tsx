@@ -72,6 +72,7 @@ function DesignContent(): JSX.Element {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const hasTrackedOrderView = useRef(false);
+  const hasLoadedQuickstartPrompt = useRef(false);
   const hasGeneratingDesign = designs.some((d) => d.status === 'GENERATING');
 
   useEffect(() => {
@@ -99,11 +100,17 @@ function DesignContent(): JSX.Element {
   }, [order]);
 
   useEffect(() => {
-    if (prompt) return;
+    // Only hydrate from Quickstart once to avoid re-inserting after the user clears the field.
+    if (hasLoadedQuickstartPrompt.current) return;
+    if (prompt) {
+      hasLoadedQuickstartPrompt.current = true;
+      return;
+    }
     const saved = localStorage.getItem(QUICKSTART_PROMPT_KEY);
     if (saved) {
       setPrompt(saved);
     }
+    hasLoadedQuickstartPrompt.current = true;
   }, [prompt]);
 
   // Auto-refresh while any design is still uploading/generating so the image swaps to the
