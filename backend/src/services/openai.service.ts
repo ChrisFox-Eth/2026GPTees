@@ -42,14 +42,26 @@ const STYLE_PROMPTS = {
  */
 function enhancePrompt(basePrompt: string, style?: string): string {
   let enhanced = basePrompt;
+  const wantsPattern = /\bpattern\b|\brepeating\b|\ball over\b|\btiled\b/i.test(basePrompt);
 
   // Add style enhancement
   if (style && STYLE_PROMPTS[style as keyof typeof STYLE_PROMPTS]) {
     enhanced += ` ${STYLE_PROMPTS[style as keyof typeof STYLE_PROMPTS]}`;
   }
 
-  // Add t-shirt specific guidance
-  enhanced += '. Designed for a t-shirt print, high contrast, centered composition, no background.';
+  // Add t-shirt specific guidance (stronger to avoid mockups/cropped art)
+  if (wantsPattern) {
+    enhanced +=
+      '. Create a seamless repeating pattern that fills the canvas for all-over fabric print. High contrast. ' +
+      'No photo mockups, no people wearing shirts, no printed shirt shown, no product photography. ' +
+      'Use a transparent or plain background behind the pattern only.';
+  } else {
+    enhanced +=
+      '. Create a single, centered illustration for a t-shirt print. High contrast. ' +
+      'No photo mockups, no people wearing shirts, no printed shirt shown, no product photography. ' +
+      'Keep the full subject inside the frame with clean margins; nothing should be cut off. ' +
+      'Use a transparent or plain white background only—treat it like a sticker/print-ready asset.';
+  }
 
   return enhanced;
 }
