@@ -51,17 +51,33 @@ export default function Quickstart(): JSX.Element {
     [products]
   );
 
-  const defaultColor = product?.colors?.[0]?.name || 'Black';
-  const defaultSize = product?.sizes?.[2] || product?.sizes?.[0] || 'M';
-  const tier = 'BASIC';
+  const defaultColor =
+    product?.colors?.find((c) => c.name.toLowerCase() === 'black')?.name ||
+    product?.colors?.[0]?.name ||
+    'Black';
+  const defaultSize =
+    product?.sizes?.find((s) => s === 'XL') ||
+    product?.sizes?.[2] ||
+    product?.sizes?.[0] ||
+    'XL';
+  const tier = 'PREMIUM';
   const basePrice = Number(product?.basePrice || 0);
   const tierPrice = product?.tierPricing?.[tier]?.price || 0;
   const quickstartTotal = basePrice + tierPrice;
 
   useEffect(() => {
     if (!product) return;
-    setSize(product.sizes?.[2] || product.sizes?.[0] || 'M');
-    setColor(product.colors?.[0]?.name || 'Black');
+    setSize(
+      product.sizes?.find((s) => s === 'XL') ||
+        product.sizes?.[2] ||
+        product.sizes?.[0] ||
+        'XL'
+    );
+    setColor(
+      product.colors?.find((c) => c.name.toLowerCase() === 'black')?.name ||
+        product.colors?.[0]?.name ||
+        'Black'
+    );
   }, [product]);
 
   useEffect(() => {
@@ -263,7 +279,7 @@ export default function Quickstart(): JSX.Element {
             <div>
               <p className="text-sm font-semibold text-gray-900 dark:text-white">{product.name}</p>
               <p className="text-xs text-gray-600 dark:text-gray-400">
-                {color || defaultColor} - {size || defaultSize} - Classic one-shot - $
+                {color || defaultColor} - {size || defaultSize} - Limitless redraws - $
                 {quickstartTotal.toFixed(2)} all-in
               </p>
             </div>

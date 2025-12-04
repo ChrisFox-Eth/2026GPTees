@@ -20,8 +20,11 @@ interface ProductModalProps {
 }
 
 export default function ProductModal({ product, isOpen, onClose }: ProductModalProps): JSX.Element | null {
-  const [selectedSize, setSelectedSize] = useState(product.sizes[0]);
-  const [selectedColor, setSelectedColor] = useState(product.colors[0]);
+  const preferredSize = product.sizes.find((s) => s === 'XL') || product.sizes[0];
+  const preferredColor = product.colors.find((c) => c.name.toLowerCase() === 'black') || product.colors[0];
+
+  const [selectedSize, setSelectedSize] = useState(preferredSize);
+  const [selectedColor, setSelectedColor] = useState(preferredColor);
   const [selectedTier, setSelectedTier] = useState<'BASIC' | 'PREMIUM'>('PREMIUM');
   const [bundleDeal, setBundleDeal] = useState(false);
   const [showToast, setShowToast] = useState(false);

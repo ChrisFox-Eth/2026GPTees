@@ -248,18 +248,31 @@ export function getPrintfulVariantId(
     return null;
   }
 
-  const colorMap = productMap[color];
-  if (!colorMap) {
+  const normalizeKey = (value: string) => value?.trim().toLowerCase();
+
+  const resolvedColorKey =
+    Object.keys(productMap).find((key) => normalizeKey(key) === normalizeKey(color)) ||
+    Object.keys(productMap).find((key) => normalizeKey(key) === 'black') ||
+    undefined;
+
+  if (!resolvedColorKey) {
     console.error(`No color map found for ${color} in product ${printfulId}`);
     return null;
   }
 
-  const variantId = colorMap[size];
-  if (!variantId) {
-    console.error(`No variant ID found for size ${size} in ${color} for product ${printfulId}`);
+  const colorMap = productMap[resolvedColorKey];
+
+  const resolvedSizeKey =
+    Object.keys(colorMap).find((key) => normalizeKey(key) === normalizeKey(size)) ||
+    Object.keys(colorMap).find((key) => normalizeKey(key) === 'xl') ||
+    undefined;
+
+  if (!resolvedSizeKey) {
+    console.error(`No variant ID found for size ${size} in ${resolvedColorKey} for product ${printfulId}`);
     return null;
   }
 
+  const variantId = colorMap[resolvedSizeKey];
   return variantId;
 }
 
