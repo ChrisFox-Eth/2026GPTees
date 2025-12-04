@@ -250,7 +250,7 @@ function OrderDetailContent(): JSX.Element {
   };
 
   const handleShareDesign = async (design: Design) => {
-    const landingUrl = 'https://gptees.com/?utm_source=customer_share&utm_medium=design&utm_campaign=ugc';
+    const landingUrl = 'https://gptees.app/?utm_source=customer_share&utm_medium=design&utm_campaign=ugc';
     const shareTarget = design.imageUrl || landingUrl;
     const shareText = `I just designed this one-of-one tee on GPTees. What do you think? Start yours here: ${landingUrl}`;
 
