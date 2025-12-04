@@ -196,6 +196,13 @@ function AccountContent(): JSX.Element {
                 </div>
 
                 <div className="mt-4 flex gap-3">
+                  {order.status === 'DESIGN_PENDING' && (
+                    <Link to={`/design?orderId=${order.id}`}>
+                      <Button variant="primary" size="sm">
+                        Review & Approve
+                      </Button>
+                    </Link>
+                  )}
                   {order.status === 'PAID' && order.designsGenerated < order.maxDesigns && (
                     <Link to={`/design?orderId=${order.id}`}>
                       <Button variant="primary" size="sm">

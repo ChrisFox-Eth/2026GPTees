@@ -16,7 +16,7 @@ import { Link, useParams } from 'react-router-dom';
 
 import { useAuth } from '@clerk/clerk-react';
 
-import { apiGet } from '../utils/api';
+import { apiGet, apiPost } from '../utils/api';
 
 import { Button } from '@components/Button';
 
@@ -132,10 +132,10 @@ function OrderDetailContent(): JSX.Element {
 
 
   const [order, setOrder] = useState<Order | null>(null);
-
   const [loading, setLoading] = useState(true);
-
   const [error, setError] = useState<string | null>(null);
+  const [isApproving, setIsApproving] = useState<string | null>(null);
+  const [shareFeedback, setShareFeedback] = useState<string | null>(null);
 
 
 
@@ -211,6 +211,100 @@ function OrderDetailContent(): JSX.Element {
 
   };
 
+
+  const handleApproveDesign = async (designId: string) => {
+    if (!order) return;
+    try {
+      setIsApproving(designId);
+      const token = await getToken();
+      if (!token) {
+        setError('Authentication required. Please sign in again.');
+        setIsApproving(null);
+        return;
+      }
+      await apiPost(`/api/designs/${designId}/approve`, {}, token);
+      setOrder({
+        ...order,
+        status: 'DESIGN_APPROVED',
+        designs: order.designs.map((d) =>
+          d.id === designId ? { ...d, approvalStatus: true } : d
+        ),
+      });
+      trackEvent('design.approval.submit', {
+        order_id: order.id,
+        design_id: designId,
+        surface: 'order_detail',
+      });
+    } catch (err: any) {
+      console.error('Error approving design:', err);
+      setError(err?.message || 'Failed to approve design.');
+      trackEvent('design.approval.error', {
+        order_id: order?.id,
+        design_id: designId,
+        message: err?.message || 'unknown',
+        surface: 'order_detail',
+      });
+    } finally {
+      setIsApproving(null);
+    }
+  };
+
+  const handleShareDesign = async (design: Design) => {
+    const landingUrl = 'https://gptees.com/?utm_source=customer_share&utm_medium=design&utm_campaign=ugc';
+    const shareTarget = design.imageUrl || landingUrl;
+    const shareText = `I just designed this one-of-one tee on GPTees. What do you think? Start yours here: ${landingUrl}`;
+
+    try {
+      setShareFeedback(null);
+      const supportsNativeShare = typeof navigator !== 'undefined' && typeof navigator.share === 'function';
+
+      if (supportsNativeShare) {
+        await navigator.share({
+          title: 'My GPTee design',
+          text: shareText,
+          url: shareTarget,
+        });
+        setShareFeedback('Shared! Copy the link below to post anywhere else.');
+        trackEvent('design.share.success', {
+          order_id: order?.id ?? id,
+          design_id: design.id,
+          method: 'web-share',
+          surface: 'order_detail',
+        });
+        return;
+      }
+
+      if (navigator?.clipboard?.writeText) {
+        await navigator.clipboard.writeText(`${shareText}\nPreview: ${shareTarget}`);
+        setShareFeedback('Link copied—paste it to get opinions and invite friends.');
+        trackEvent('design.share.success', {
+          order_id: order?.id ?? id,
+          design_id: design.id,
+          method: 'clipboard',
+          surface: 'order_detail',
+        });
+        return;
+      }
+
+      window.prompt('Copy this link to share your GPTee:', `${shareText} Preview: ${shareTarget}`);
+      setShareFeedback('Copy the link above to share your GPTee design anywhere.');
+      trackEvent('design.share.success', {
+        order_id: order?.id ?? id,
+        design_id: design.id,
+        method: 'prompt',
+        surface: 'order_detail',
+      });
+    } catch (err: any) {
+      console.error('Error sharing design:', err);
+      setShareFeedback('Could not share right now. Copy the preview link manually and keep creating.');
+      trackEvent('design.share.error', {
+        order_id: order?.id ?? id,
+        design_id: design.id,
+        message: err?.message || 'unknown',
+        surface: 'order_detail',
+      });
+    }
+  };
 
 
   if (!id) {
@@ -387,6 +481,12 @@ function OrderDetailContent(): JSX.Element {
 
             </div>
 
+            {shareFeedback && (
+              <div className="bg-primary-50 dark:bg-primary-900/20 border border-primary-100 dark:border-primary-800 rounded-lg p-3 text-sm text-primary-800 dark:text-primary-200 mb-3">
+                {shareFeedback}
+              </div>
+            )}
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
 
               {order.designs.map((design) => (
@@ -414,6 +514,32 @@ function OrderDetailContent(): JSX.Element {
                       {design.approvalStatus ? 'Approved' : design.status}
 
                     </p>
+
+                    <div className="mt-3 flex flex-col gap-2">
+                      {!design.approvalStatus && design.status === 'COMPLETED' && (
+                        <Button
+                          variant="primary"
+                          size="sm"
+                          onClick={() => handleApproveDesign(design.id)}
+                          isDisabled={isApproving === design.id}
+                        >
+                          {isApproving === design.id ? 'Approving...' : 'Approve This Design'}
+                        </Button>
+                      )}
+
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        onClick={() => handleShareDesign(design)}
+                        isDisabled={design.status !== 'COMPLETED'}
+                      >
+                        Share this design
+                      </Button>
+
+                      <p className="text-[11px] text-gray-500 dark:text-gray-500">
+                        Sharing uses your device share sheet when available; otherwise we copy a link.
+                      </p>
+                    </div>
 
                   </div>
 
