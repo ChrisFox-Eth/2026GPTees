@@ -292,7 +292,7 @@ export default function Quickstart(): JSX.Element {
               </div>
             </div>
       </div>
-      <div className="w-full sm:w-150 flex-shrink-0 space-y-3">
+      <div className="w-full flex-shrink-0 space-y-3">
         <div className="hidden! bg-gray-50 dark:bg-gray-900 rounded-lg p-3 border border-gray-200 dark:border-gray-700">
           <div className="flex items-center gap-3">
             {product.imageUrl ? (
