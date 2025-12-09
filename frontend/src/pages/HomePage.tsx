@@ -23,7 +23,7 @@ export default function HomePage(): JSX.Element {
         <div className="mt-3">
           <SocialProofStrip />
         </div>
-        <div className="mt-8">
+        <div className="mt-8" id="quickstart">
           <Quickstart />
         </div>
       </div>

@@ -17,6 +17,7 @@ export default function SignInPage(): JSX.Element {
         appearance={{
           elements: {
             rootBox: "w-full max-w-md",
+            headerTitle: 'Sign in or create your free account',
           },
         }}
       />

@@ -8,6 +8,13 @@ import { trackEvent } from '@utils/analytics';
 import { Link } from 'react-router-dom';
 
 export default function Hero(): JSX.Element {
+  const scrollToQuickstart = () => {
+    const el = document.getElementById('quickstart');
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
+
   return (
     <section className="pt-10 md:py-16 text-center container-max px-4">
       {/* Main Headline */}
@@ -49,15 +56,16 @@ export default function Hero(): JSX.Element {
 
       {/* CTA Buttons */}
       <div className="flex flex-row sm:flex-row gap-3 justify-center mb-8">
-        <Link to="/shop">
-          <Button
-            size="md"
-            className="px-6 py-3 text-base"
-            onClick={() => trackEvent('home.hero.cta_click', { cta: 'start_creating', surface: 'hero' })}
-          >
-            Start a tee
-          </Button>
-        </Link>
+        <Button
+          size="md"
+          className="px-6 py-3 text-base"
+          onClick={() => {
+            trackEvent('home.hero.cta_click', { cta: 'start_creating', surface: 'hero' });
+            scrollToQuickstart();
+          }}
+        >
+          Start a tee
+        </Button>
         <Link to="/gift">
           <Button
             variant="secondary"

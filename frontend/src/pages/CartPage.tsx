@@ -54,6 +54,9 @@ export default function CartPage(): JSX.Element {
   return (
     <div className="container-max py-6 sm:py-8 pb-24 lg:pb-8">
       <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-6 sm:mb-8">Shopping Cart</h1>
+      <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+        Submit your size, color, and tier to unlock your design preview after checkout. Clicking a product CTA again will add another of the same design to your cart.
+      </p>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
         {/* Cart Items */}

@@ -36,6 +36,7 @@ export default function AuthPage(): JSX.Element {
             elements: {
               rootBox: "w-full max-w-md",
               card: "shadow-xl",
+              headerTitle: 'Sign in or create your free account',
             },
           }}
         />
