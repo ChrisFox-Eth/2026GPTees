@@ -74,7 +74,7 @@ export default function ProductCard({ product, onClick }: ProductCardProps): JSX
           </div>
 
           <button className="px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-md transition-colors duration-200">
-            Make this yours
+            Check out your design
           </button>
         </div>
 

@@ -113,23 +113,32 @@ export default function ShopPage(): JSX.Element {
   return (
     <div className="container-max py-8 pb-24 md:pb-12">
       {/* Header */}
-      <div className="mb-8">
+      <div className="mb-8 space-y-3">
         <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-2">
-          Shop Custom Apparel
+          Create your fit or custom apparel
         </h1>
-        <p className="text-lg text-gray-600 dark:text-gray-400">
-          Describe the tee you want and we will make a one-of-one GPTee you approve before we print.
+        <p className="text-lg text-gray-600 dark:text-gray-400 max-w-3xl">
+          Your design is ready to go—pick your tier and fit and we will show the artwork right after checkout.
         </p>
-        <div className="flex flex-wrap gap-2 mt-3 text-sm text-gray-600 dark:text-gray-300">
-          {['Super-soft GPTee', 'Flexible pay options'].map((badge) => (
-            <span
-              key={badge}
-              className="px-3 py-1 rounded-full bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700"
-            >
-              {badge}
-            </span>
-          ))}
+        <div className="grid gap-2 sm:grid-cols-2 max-w-xl">
+          <div className="flex items-center gap-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 px-3 py-2">
+            <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-primary-600 text-white text-sm font-semibold">1</span>
+            <div>
+              <p className="text-sm font-semibold text-gray-900 dark:text-white">Super-soft GPTee</p>
+              <p className="text-xs text-gray-600 dark:text-gray-400">Bella+Canvas quality with vibrant prints.</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 px-3 py-2">
+            <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-primary-600 text-white text-sm font-semibold">2</span>
+            <div>
+              <p className="text-sm font-semibold text-gray-900 dark:text-white">Flexible pay options</p>
+              <p className="text-xs text-gray-600 dark:text-gray-400">Choose Classic or Limitless redraws when you check out.</p>
+            </div>
+          </div>
         </div>
+        <p className="text-sm text-gray-500 dark:text-gray-400">
+          Submit your selections and your design preview will appear for approval.
+        </p>
         <div className="-mx-4 sm:mx-0">
           <div className="flex gap-2 mt-4 overflow-x-auto pb-2 px-4 sm:px-0">
             {['ALL', 'T_SHIRT', 'HOODIE'].map((category) => (

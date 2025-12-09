@@ -28,6 +28,7 @@ export default function ProductModal({ product, isOpen, onClose }: ProductModalP
   const [selectedTier, setSelectedTier] = useState<'BASIC' | 'PREMIUM'>('PREMIUM');
   const [bundleDeal, setBundleDeal] = useState(false);
   const [showToast, setShowToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState('Added to cart!');
 
   const { addToCart, getTotalItems, getSubtotal } = useCart();
   const cartItems = getTotalItems();
@@ -96,6 +97,8 @@ export default function ProductModal({ product, isOpen, onClose }: ProductModalP
   };
 
   const handleAddToCart = () => {
+    const existingItems = getTotalItems();
+
     addToCart({
       productId: product.id,
       productName: product.name,
@@ -117,6 +120,12 @@ export default function ProductModal({ product, isOpen, onClose }: ProductModalP
       price: totalPrice,
     });
 
+    const message = existingItems
+      ? `Added another tee of this design. Cart now has ${existingItems + quantity} item${
+          existingItems + quantity !== 1 ? 's' : ''
+        }.`
+      : 'Added your design setup. Submit your size, color, and tier to see the artwork after checkout.';
+    setToastMessage(message);
     setShowToast(true);
     onClose();
   };
@@ -130,6 +139,8 @@ export default function ProductModal({ product, isOpen, onClose }: ProductModalP
   };
 
   const handleBuyNow = () => {
+    const existingItems = getTotalItems();
+
     addToCart({
       productId: product.id,
       productName: product.name,
@@ -152,6 +163,12 @@ export default function ProductModal({ product, isOpen, onClose }: ProductModalP
       is_signed_in: isSignedIn,
     });
 
+    const message = existingItems
+      ? `Added another tee of this design. Cart now has ${existingItems + quantity} item${
+          existingItems + quantity !== 1 ? 's' : ''
+        }.`
+      : 'Added your design setup. Submit your size, color, and tier to see the artwork after checkout.';
+    setToastMessage(message);
     onClose();
     goToCheckout();
   };
@@ -349,6 +366,9 @@ export default function ProductModal({ product, isOpen, onClose }: ProductModalP
                       Includes 2 items with 10% tier discount.
                     </p>
                   )}
+                  <p className="text-xs text-gray-600 dark:text-gray-400 mt-2">
+                    After you lock size, color, and tier, we will reveal your design preview for approval.
+                  </p>
                 </div>
                 <div className="flex flex-col sm:flex-row gap-3">
                   <Button
@@ -397,7 +417,7 @@ export default function ProductModal({ product, isOpen, onClose }: ProductModalP
       {/* Toast Notification */}
       {showToast && (
         <Toast
-          message="Added to cart!"
+          message={toastMessage}
           type="success"
           onClose={() => setShowToast(false)}
           action={{

@@ -45,7 +45,7 @@ export default function ExamplesGallery(): JSX.Element {
           <p className="text-xs text-gray-600 dark:text-gray-400">Real styles you can create.</p>
         </div>
       </div>
-      <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
+      <div className="grid grid-cols-3 sm:grid-cols-6 gap-3">
         {EXAMPLES.map((ex) => (
           <div key={ex.alt} className="relative group">
             <img
@@ -54,7 +54,7 @@ export default function ExamplesGallery(): JSX.Element {
               loading="lazy"
               decoding="async"
               sizes="(max-width: 640px) 30vw, 16vw"
-              className="w-full h-20 sm:h-24 object-cover rounded-lg border border-gray-200 dark:border-gray-700"
+              className="w-full aspect-square object-cover rounded-lg border border-gray-200 dark:border-gray-700"
             />
             <span className="absolute bottom-1 left-1 bg-black/60 text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity">
               {ex.label}
