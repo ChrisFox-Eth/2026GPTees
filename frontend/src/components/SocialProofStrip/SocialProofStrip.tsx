@@ -60,7 +60,7 @@ export default function SocialProofStrip(): JSX.Element {
   };
 
   return (
-    <div className="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+    <div className="hidden! bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
       <div className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-200">
         <button
           type="button"

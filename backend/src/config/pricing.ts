@@ -22,13 +22,13 @@ export const TIERS: Record<TierType, TierConfig> = {
     name: 'Basic',
     price: 34.99,
     maxDesigns: 1,
-    description: 'Generate 1 AI design',
+    description: 'Generate 1 GPTee design',
   },
   [TierType.PREMIUM]: {
     name: 'Premium',
     price: 54.99,
     maxDesigns: 9999,
-    description: 'Unlimited AI design regeneration',
+    description: 'Unlimited GPTee design regeneration',
   },
   [TierType.TEST]: {
     name: 'Test',

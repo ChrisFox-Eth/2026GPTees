@@ -58,7 +58,7 @@ export default function Hero(): JSX.Element {
       <div className="flex flex-row sm:flex-row gap-3 justify-center mb-8">
         <Button
           size="md"
-          className="px-6 py-3 text-base"
+          className="hidden! px-6 py-3 text-base"
           onClick={() => {
             trackEvent('home.hero.cta_click', { cta: 'start_creating', surface: 'hero' });
             scrollToQuickstart();

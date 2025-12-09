@@ -666,7 +666,7 @@ function OrderDetailContent(): JSX.Element {
                 <p>
                   Tracking #:{' '}
                   <a
-                    href={`https://parcelsapp.com/en/tracking/${encodeURIComponent(order.trackingNumber)}`}
+                    href={`https://myorders.co/tracking/${encodeURIComponent(order.trackingNumber)}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-primary-600 dark:text-primary-400 hover:underline"

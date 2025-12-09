@@ -29,7 +29,7 @@ export default function CallToAction(): JSX.Element {
           <Link to="/shop">
             <Button
               size="lg"
-              className="bg-white text-primary-600 hover:bg-gray-100 px-8 py-3 text-lg"
+              className="bg-primary-600 text-white border-2 border-white hover:bg-gray-100 px-8 py-3 text-lg"
               onClick={() => handleCtaClick('browse_products')}
             >
               Browse Products

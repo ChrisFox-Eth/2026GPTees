@@ -107,7 +107,7 @@ export default function App(): JSX.Element {
     <ErrorBoundary>
       <PageViewTracker />
       <ScrollToTop />
-      <div className="min-h-screen bg-white dark:bg-gray-900 transition-colors duration-200 flex flex-col overflow-x-hidden">
+      <div className="min-h-screen bg-white dark:bg-gray-900 transition-colors duration-200 flex flex-col overflow-x-hidden pt-8 ">
         <Header isDark={isDark} onToggleTheme={toggleTheme} />
         <div className="flex-1">
           <Routes>

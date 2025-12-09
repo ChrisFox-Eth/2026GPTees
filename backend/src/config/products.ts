@@ -25,7 +25,7 @@ export const PRODUCTS: ProductConfig[] = [
   {
     name: 'Limitless Tee',
     slug: 'basic-tee',
-    description: 'Custom AI-designed t-shirt with premium quality printing',
+    description: 'Custom GPTee with premium quality printing',
     basePrice: 0,  // Tier pricing includes everything (shirt + printing + design)
     printfulId: '71', // Bella + Canvas 3001
     category: 'T_SHIRT',

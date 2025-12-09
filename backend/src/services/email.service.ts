@@ -107,7 +107,7 @@ export async function sendOrderConfirmation(
     </div>
     <div class="content">
       <h2>Thank you, ${data.customerName}!</h2>
-      <p>Your order has been confirmed and payment received. You're one step closer to getting your custom AI-designed t-shirt!</p>
+      <p>Your order has been confirmed and payment received. You're one step closer to getting your custom GPTee with premium quality printing!</p>
 
       <div class="info-box">
         <strong>Order Number:</strong> ${data.orderNumber}<br>
@@ -118,7 +118,7 @@ export async function sendOrderConfirmation(
 
       <h3>What's Next?</h3>
       <ol>
-        <li><strong>Generate Your Design:</strong> Use our AI to create your custom t-shirt design</li>
+        <li><strong>Generate Your Design:</strong> Use GPTees to create your custom t-shirt design</li>
         <li><strong>Review & Approve:</strong> Once you're happy with the design, approve it</li>
         <li><strong>We Print & Ship:</strong> Your order will be printed and shipped to you</li>
       </ol>
@@ -283,7 +283,7 @@ export async function sendOrderShipped(
 
       ${trackingInfo}
 
-      <p>Your custom AI-designed t-shirt should arrive within 5-10 business days depending on your location.</p>
+      <p>Your custom GPTee should arrive within 5-10 business days depending on your location.</p>
 
       <div style="text-align: center;">
         <a href="${data.orderUrl}" class="button">View Order Details</a>

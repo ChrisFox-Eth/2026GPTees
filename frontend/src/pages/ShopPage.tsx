@@ -115,12 +115,12 @@ export default function ShopPage(): JSX.Element {
       {/* Header */}
       <div className="mb-8 space-y-3">
         <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-2">
-          Create your fit or custom apparel
+          Create your fit
         </h1>
         <p className="text-lg text-gray-600 dark:text-gray-400 max-w-3xl">
           Your design is ready to go—pick your tier and fit and we will show the artwork right after checkout.
         </p>
-        <div className="grid gap-2 sm:grid-cols-2 max-w-xl">
+        {/* <div className="grid gap-2 sm:grid-cols-2 max-w-xl">
           <div className="flex items-center gap-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 px-3 py-2">
             <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-primary-600 text-white text-sm font-semibold">1</span>
             <div>
@@ -135,7 +135,7 @@ export default function ShopPage(): JSX.Element {
               <p className="text-xs text-gray-600 dark:text-gray-400">Choose Classic or Limitless redraws when you check out.</p>
             </div>
           </div>
-        </div>
+        </div> */}
         <p className="text-sm text-gray-500 dark:text-gray-400">
           Submit your selections and your design preview will appear for approval.
         </p>
@@ -255,8 +255,8 @@ export default function ShopPage(): JSX.Element {
       </div> */}
 
       <div className="my-10">
-        <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-3">Answers at a glance</h2>
-        <div className="space-y-3">
+        <h2 className="hidden! text-2xl font-bold text-gray-900 dark:text-white mb-3">Answers at a glance</h2>
+        <div className="space-y-3 hidden!">
           {FAQ_ITEMS.map((faq) => (
             <details
               key={faq.question}
