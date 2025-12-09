@@ -139,9 +139,12 @@ function AccountContent(): JSX.Element {
       PAID: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300',
       DESIGN_PENDING: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300',
       DESIGN_APPROVED: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300',
-      SUBMITTED: 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300',
-      SHIPPED: 'bg-teal-100 text-teal-800 dark:bg-teal-900 dark:text-teal-300',
-      DELIVERED: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-300',
+            {orders.map((order) => (
+              <div
+                key={order.id}
+                className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 hover:border-primary-400 transition-colors"
+              >
+
     };
 
     return (
