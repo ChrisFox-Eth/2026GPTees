@@ -235,6 +235,19 @@ function DesignContent(): JSX.Element {
 
       const latestDesign = designs[0];
       const tierForCart = order.designTier === 'BASIC' ? 'BASIC' : 'PREMIUM';
+      const priceFromOrder = Number(firstItem.unitPrice) || Number(product.basePrice || 0);
+
+      updateItemVariant(
+        firstItem.productId,
+        firstItem.size,
+        firstItem.color,
+        {
+          color: nextColor,
+          size: nextSize,
+          imageUrl: latestDesign?.imageUrl || null,
+        }
+      );
+
       const matchInCart = cart.some(
         (c) =>
           c.productId === firstItem.productId &&
@@ -251,21 +264,10 @@ function DesignContent(): JSX.Element {
           color: nextColor,
           tier: tierForCart,
           quantity: 1,
-          basePrice: Number(product.basePrice || 0),
-          tierPrice: Number(product.tierPricing?.[order.designTier]?.price || 0),
+          basePrice: priceFromOrder,
+          tierPrice: 0,
           imageUrl: latestDesign?.imageUrl || product.imageUrl || null,
         });
-      } else {
-        updateItemVariant(
-          firstItem.productId,
-          firstItem.size,
-          firstItem.color,
-          {
-            color: nextColor,
-            size: nextSize,
-            imageUrl: latestDesign?.imageUrl || null,
-          }
-        );
       }
 
       setVariantMessage('Fit updated for this preview order.');
@@ -432,6 +434,7 @@ function DesignContent(): JSX.Element {
       const targetColor = selectedColor || firstItem.color;
       const targetSize = selectedSize || firstItem.size;
       const tierForCart = order.designTier === 'BASIC' ? 'BASIC' : 'PREMIUM';
+      const priceFromOrder = Number(firstItem.unitPrice) || Number(product.basePrice || 0);
       const matchInCart = cart.some(
         (c) =>
           c.productId === firstItem.productId &&
@@ -447,8 +450,8 @@ function DesignContent(): JSX.Element {
           color: targetColor,
           tier: tierForCart,
           quantity: 1,
-          basePrice: Number(product.basePrice || 0),
-          tierPrice: Number(product.tierPricing?.[order.designTier]?.price || 0),
+          basePrice: priceFromOrder,
+          tierPrice: 0,
           imageUrl: designs[0]?.imageUrl || product.imageUrl || null,
         });
       }
