@@ -12,29 +12,8 @@ import { Button } from '@components/Button';
 import ProtectedRoute from '../components/ProtectedRoute';
 import { trackEvent } from '@utils/analytics';
 import { QUICKSTART_PROMPT_KEY } from '@utils/quickstart';
-
-interface Order {
-  id: string;
-  orderNumber: string;
-  status: string;
-  totalAmount: number;
-  designTier: string;
-  designsGenerated: number;
-  maxDesigns: number;
-}
-
-interface Design {
-  id: string;
-  prompt: string;
-  revisedPrompt: string;
-  imageUrl: string;
-  thumbnailUrl: string;
-  status: string;
-  style: string | null;
-  approvalStatus: boolean;
-  createdAt: string;
-  remainingDesigns?: number | 'unlimited';
-}
+import type { Order } from '../types/order';
+import type { Design } from '../types/design';
 
 const STYLE_OPTIONS = [
   { value: 'modern', label: 'Modern', description: 'Clean, minimalist with bold colors' },
@@ -316,6 +295,18 @@ function DesignContent(): JSX.Element {
     }
   };
 
+  const handleCheckoutRedirect = () => {
+    if (!orderId || !order) {
+      return;
+    }
+    trackEvent('design.checkout.preview', {
+      order_id: orderId,
+      design_tier: order.designTier,
+      designs_generated: order.designsGenerated,
+    });
+    navigate(`/checkout?orderId=${orderId}`);
+  };
+
   const handleShareDesign = async (design: Design) => {
     const landingUrl = 'https://gptees.app/?utm_source=customer_share&utm_medium=design&utm_campaign=ugc';
     const shareTarget = design.imageUrl || landingUrl;
@@ -423,10 +414,26 @@ function DesignContent(): JSX.Element {
     order.maxDesigns === 9999
       ? 'unlimited'
       : order.maxDesigns - order.designsGenerated;
+  const isPreviewOrder =
+    order.status === 'PENDING_PAYMENT' || order.status === 'DESIGN_PENDING';
+  const isPaidOrFulfillment =
+    order.status === 'PAID' ||
+    order.status === 'DESIGN_APPROVED' ||
+    order.status === 'SUBMITTED' ||
+    order.status === 'SHIPPED' ||
+    order.status === 'DELIVERED';
   const canGenerate =
-    order.status === 'PAID' || order.status === 'DESIGN_PENDING';
+    order.status === 'PAID' ||
+    order.status === 'DESIGN_PENDING' ||
+    order.status === 'PENDING_PAYMENT';
   const hasReachedLimit =
     order.maxDesigns !== 9999 && order.designsGenerated >= order.maxDesigns;
+  const generationBlockedMessage =
+    order.status === 'SUBMITTED' ||
+    order.status === 'SHIPPED' ||
+    order.status === 'DELIVERED'
+      ? 'Fulfillment has started for this order. Create a new preview to keep designing.'
+      : 'This order is not eligible for new designs. Start a new preview order to continue.';
 
   // You can manually refresh designs via the button, keeping hook order stable to avoid React hook invariant issues.
 
@@ -464,6 +471,22 @@ function DesignContent(): JSX.Element {
         </div>
       </div>
 
+      {isPreviewOrder && (
+        <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 mb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+          <div>
+            <p className="text-sm font-semibold text-blue-900 dark:text-blue-100">
+              Preview mode: generate before you pay.
+            </p>
+            <p className="text-xs text-blue-800 dark:text-blue-200 mt-1">
+              We will reuse this preview order at checkout so your designs and prompt stay attached.
+            </p>
+          </div>
+          <Button variant="primary" onClick={handleCheckoutRedirect} className="w-full md:w-auto">
+            Checkout to print
+          </Button>
+        </div>
+      )}
+
       {typeof remainingDesigns === 'number' && remainingDesigns <= 1 && (
         <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-3 mb-6">
             <p className="text-yellow-800 dark:text-yellow-300 text-sm">
@@ -495,7 +518,7 @@ function DesignContent(): JSX.Element {
           {!canGenerate && (
             <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4 mb-4">
               <p className="text-yellow-800 dark:text-yellow-400 text-sm">
-                Order must be paid to generate designs
+                {generationBlockedMessage}
               </p>
             </div>
           )}
@@ -692,22 +715,33 @@ function DesignContent(): JSX.Element {
 
                   <div className="mt-3 flex flex-col sm:flex-row gap-2">
                     {!design.approvalStatus && design.status === 'COMPLETED' && (
-                      <Button
-                        variant="primary"
-                        size="sm"
-                        onClick={() => handleApproveDesign(design.id)}
-                        disabled={isApproving === design.id}
-                        className="w-full sm:w-auto"
-                      >
-                        {isApproving === design.id ? (
-                          <span className="flex items-center justify-center gap-2">
-                            <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white"></div>
-                            Approving...
-                          </span>
-                        ) : (
-                          'Approve This Design'
-                        )}
-                      </Button>
+                      isPaidOrFulfillment ? (
+                        <Button
+                          variant="primary"
+                          size="sm"
+                          onClick={() => handleApproveDesign(design.id)}
+                          disabled={isApproving === design.id}
+                          className="w-full sm:w-auto"
+                        >
+                          {isApproving === design.id ? (
+                            <span className="flex items-center justify-center gap-2">
+                              <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white"></div>
+                              Approving...
+                            </span>
+                          ) : (
+                            'Approve This Design'
+                          )}
+                        </Button>
+                      ) : (
+                        <Button
+                          variant="primary"
+                          size="sm"
+                          onClick={handleCheckoutRedirect}
+                          className="w-full sm:w-auto"
+                        >
+                          Checkout to print
+                        </Button>
+                      )
                     )}
 
                     <Button

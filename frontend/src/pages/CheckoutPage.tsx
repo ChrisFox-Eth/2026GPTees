@@ -5,7 +5,7 @@
  */
 
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@clerk/clerk-react';
 import { apiPost, apiGet } from '@utils/api';
 import { useCart } from '../hooks/useCart';
@@ -13,24 +13,20 @@ import { Button } from '@components/Button';
 import { trackEvent } from '@utils/analytics';
 import { calculateShipping } from '@utils/shipping';
 import { ExamplesGallery } from '@components/ExamplesGallery';
-
-interface ShippingAddress {
-  name: string;
-  address1: string;
-  address2?: string;
-  city: string;
-  state?: string;
-  zip: string;
-  country: string;
-  phone?: string;
-}
+import type { Order, OrderItem, ShippingAddress } from '../types/order';
+import type { AppliedCodeInfo } from '../types/promo';
 
 const SHIPPING_STORAGE_KEY = 'gptees_shipping_address';
 
 export default function CheckoutPage(): JSX.Element {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { cart, getSubtotal, isLoaded } = useCart();
   const { getToken } = useAuth();
+  const orderIdParam = searchParams.get('orderId');
+  const isPreviewCheckout = Boolean(orderIdParam);
+  const [previewOrder, setPreviewOrder] = useState<Order | null>(null);
+  const [isLoadingPreview, setIsLoadingPreview] = useState(false);
 
   const [shipping, setShipping] = useState<ShippingAddress>({
     name: '',
@@ -47,17 +43,19 @@ export default function CheckoutPage(): JSX.Element {
   const [showPhone, setShowPhone] = useState(false);
   const [codeInput, setCodeInput] = useState('');
   const [appliedCode, setAppliedCode] = useState<string | null>(null);
-  const [appliedCodeInfo, setAppliedCodeInfo] = useState<{
-    code: string;
-    type: 'FREE_PRODUCT' | 'PERCENT_OFF';
-    percentOff?: number | null;
-    productTier?: string | null;
-  } | null>(null);
+  const [appliedCodeInfo, setAppliedCodeInfo] = useState<AppliedCodeInfo | null>(null);
   const [codeMessage, setCodeMessage] = useState<string | null>(null);
   const [codeError, setCodeError] = useState<string | null>(null);
   const [isApplyingCode, setIsApplyingCode] = useState(false);
 
-  const subtotal = getSubtotal();
+  const activeItems: Array<OrderItem | (typeof cart)[number]> =
+    isPreviewCheckout ? previewOrder?.items || [] : cart;
+  const subtotal = isPreviewCheckout
+    ? previewOrder?.items.reduce(
+        (total, item) => total + Number(item.unitPrice) * item.quantity,
+        0
+      ) || 0
+    : getSubtotal();
   const shippingCost = calculateShipping({ country: shipping.country });
   const { discountedItemsTotal, discountAmount } = (() => {
     if (!appliedCodeInfo) {
@@ -65,12 +63,13 @@ export default function CheckoutPage(): JSX.Element {
     }
 
     if (appliedCodeInfo.type === 'FREE_PRODUCT') {
-      const firstItem = cart[0];
-      const itemTotal =
-        firstItem && typeof firstItem.basePrice === 'number' && typeof firstItem.tierPrice === 'number'
-          ? (firstItem.basePrice + firstItem.tierPrice) * firstItem.quantity
-          : subtotal;
-      const discount = cart.length === 1 ? itemTotal : 0;
+      const firstItem = activeItems[0];
+      const itemTotal = firstItem
+        ? isPreviewCheckout
+          ? Number((firstItem as OrderItem).unitPrice) * (firstItem as OrderItem).quantity
+          : ((firstItem as any).basePrice + (firstItem as any).tierPrice) * (firstItem as any).quantity
+        : subtotal;
+      const discount = activeItems.length === 1 ? itemTotal : 0;
       return {
         discountedItemsTotal: Math.max(0, subtotal - discount),
         discountAmount: Math.min(discount, subtotal),
@@ -85,14 +84,15 @@ export default function CheckoutPage(): JSX.Element {
     };
   })();
   const totalWithShipping = discountedItemsTotal + shippingCost;
+  const activeTier = isPreviewCheckout ? previewOrder?.designTier : cart[0]?.tier;
 
   useEffect(() => {
-    if (!isLoaded) return;
+    if (!isLoaded || isPreviewCheckout) return;
     if (cart.length === 0) {
       trackEvent('checkout.redirect.cart_empty', {});
       navigate('/cart');
     }
-  }, [cart.length, isLoaded, navigate]);
+  }, [cart.length, isLoaded, isPreviewCheckout, navigate]);
 
   useEffect(() => {
     const saved = localStorage.getItem(SHIPPING_STORAGE_KEY);
@@ -105,6 +105,28 @@ export default function CheckoutPage(): JSX.Element {
       }
     }
   }, []);
+
+  useEffect(() => {
+    if (!orderIdParam) return;
+    const loadPreviewOrder = async () => {
+      try {
+        setIsLoadingPreview(true);
+        const token = await getToken();
+        if (!token) {
+          setError('Authentication required. Please sign in again.');
+          return;
+        }
+        const response = await apiGet(`/api/orders/${orderIdParam}`, token);
+        setPreviewOrder(response.data as Order);
+      } catch (err: any) {
+        console.error('Error fetching preview order:', err);
+        setError(err?.message || 'Failed to load preview order. Please try again.');
+      } finally {
+        setIsLoadingPreview(false);
+      }
+    };
+    loadPreviewOrder();
+  }, [orderIdParam, getToken]);
 
   const handleInputChange = (field: keyof ShippingAddress, value: string) => {
     setShipping((prev) => {
@@ -123,9 +145,14 @@ export default function CheckoutPage(): JSX.Element {
         setError('Authentication required. Please sign in again.');
         return;
       }
+      if (isPreviewCheckout && !previewOrder) {
+        setError('Preview order is still loading. Please try again.');
+        return;
+      }
 
       trackEvent('checkout.payment.start', {
-        item_count: cart.length,
+        item_count: activeItems.length,
+        order_id: orderIdParam || undefined,
         subtotal: Number(subtotal.toFixed(2)),
         country: shipping.country,
         has_state: Boolean(shipping.state),
@@ -133,22 +160,25 @@ export default function CheckoutPage(): JSX.Element {
         shipping: Number(shippingCost.toFixed(2)),
       });
 
-      const response = await apiPost(
-        '/api/payments/create-checkout-session',
-        {
-          items: cart,
-          shippingAddress: {
-            ...shipping,
-            address2: shipping.address2 || undefined,
-            phone: shipping.phone || undefined,
-          },
-          code: appliedCode || undefined,
+      const payload: Record<string, unknown> = {
+        shippingAddress: {
+          ...shipping,
+          address2: shipping.address2 || undefined,
+          phone: shipping.phone || undefined,
         },
-        token
-      );
+        code: appliedCode || undefined,
+      };
+
+      if (isPreviewCheckout && orderIdParam) {
+        payload.orderId = orderIdParam;
+      } else {
+        payload.items = cart;
+      }
+
+      const response = await apiPost('/api/payments/create-checkout-session', payload, token);
 
       trackEvent('checkout.session_created', {
-        order_id: response.data.orderId,
+        order_id: response.data.orderId || orderIdParam,
         session_id: response.data.sessionId,
         shipping: Number(shippingCost.toFixed(2)),
         subtotal: Number(subtotal.toFixed(2)),
@@ -233,14 +263,50 @@ export default function CheckoutPage(): JSX.Element {
       trackEvent('checkout.code.removed', {});
     };
 
+  if (isPreviewCheckout && isLoadingPreview) {
+    return (
+      <div className="container-max py-12">
+        <div className="flex items-center justify-center py-12">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
+        </div>
+      </div>
+    );
+  }
+
+  if (isPreviewCheckout && !previewOrder) {
+    return (
+      <div className="container-max py-12">
+        <div className="max-w-xl mx-auto bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-3">Preview order not found</h1>
+          <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+            We could not load your preview order. Return to your designs and try again.
+          </p>
+          <Button variant="primary" onClick={() => navigate('/design')}>
+            Back to designs
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="container-max py-6 sm:py-8 pb-24 lg:pb-8">
       <div className="mb-6 sm:mb-8">
         <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-2">Checkout</h1>
         <p className="text-sm text-gray-600 dark:text-gray-400">Complete your order in just a few steps</p>
         <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">
-          Printed & fulfilled by Printful • Secure payments via Stripe • Ships in 5-8 business days
+          Printed & fulfilled by Printful - Secure payments via Stripe - Ships in 5-8 business days
         </p>
+        {isPreviewCheckout && previewOrder && (
+          <div className="mt-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
+            <p className="text-sm text-blue-900 dark:text-blue-100 font-semibold">
+              Reusing preview order {previewOrder.orderNumber}
+            </p>
+            <p className="text-xs text-blue-800 dark:text-blue-200">
+              Your prompt and designs stay attached. Add shipping below and we will reuse this order for checkout.
+            </p>
+          </div>
+        )}
       </div>
 
       <div className="mb-6">
@@ -454,13 +520,17 @@ export default function CheckoutPage(): JSX.Element {
               <Button
                 variant="primary"
                 onClick={handleCheckout}
-                disabled={isSubmitting || cart.length === 0}
+                disabled={
+                  isSubmitting ||
+                  (!isPreviewCheckout && cart.length === 0) ||
+                  (isPreviewCheckout && !previewOrder)
+                }
                 className="w-full md:w-auto px-8"
               >
                 {isSubmitting ? 'Processing...' : 'Proceed to Payment'}
               </Button>
               <p className="text-xs text-gray-600 dark:text-gray-400">
-                Ships in 5-8 business days • {cart[0]?.tier === 'PREMIUM' ? 'Unlimited redraws' : '1 artwork included'}
+                Ships in 5-8 business days • {activeTier === 'PREMIUM' ? 'Unlimited redraws' : '1 artwork included'}
               </p>
             </div>
           </div>
@@ -482,27 +552,39 @@ export default function CheckoutPage(): JSX.Element {
           </div>
 
           <div className="space-y-4 mb-6">
-            {cart.map((item, idx) => (
-              <div key={`${item.productId}-${idx}`} className="flex justify-between">
-                <div>
-                  <p className="font-semibold text-gray-900 dark:text-white">{item.productName}</p>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">
-                    {item.size} / {item.color} / {item.tier === 'PREMIUM' ? 'Limitless redraws' : 'Classic (1 artwork)'}
-                  </p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">
-                    {item.tier === 'PREMIUM' ? 'Unlimited redraws until approval.' : 'Includes 1 artwork.'}
-                  </p>
-                  {item.bundle && (
-                    <p className="text-xs text-primary-700 dark:text-primary-300">
-                      Bundle: 2 tees • 10% off tier price (savings ${((item.bundleDiscount ?? 0) * item.quantity).toFixed(2)})
+            {activeItems.map((item, idx) => {
+              const productName = isPreviewCheckout
+                ? ((item as OrderItem).product?.name || 'Custom GPTee')
+                : (item as any).productName;
+              const itemTier = isPreviewCheckout ? previewOrder?.designTier : (item as any).tier;
+              const unitPrice = isPreviewCheckout
+                ? Number((item as OrderItem).unitPrice)
+                : (item as any).basePrice + (item as any).tierPrice;
+
+              return (
+                <div key={`${item.productId}-${idx}`} className="flex justify-between">
+                  <div>
+                    <p className="font-semibold text-gray-900 dark:text-white">{productName}</p>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                      {item.size} / {item.color} / {itemTier === 'PREMIUM' ? 'Limitless redraws' : 'Classic (1 artwork)'}
                     </p>
-                  )}
+                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                      {itemTier === 'PREMIUM' ? 'Unlimited redraws until approval.' : 'Includes 1 artwork.'}
+                    </p>
+                    {!isPreviewCheckout && (item as any).bundle && (
+                      <p className="text-xs text-primary-700 dark:text-primary-300">
+                        Bundle: 2 tees • 10% off tier price (savings ${
+                          (((item as any).bundleDiscount ?? 0) * (item as any).quantity).toFixed(2)
+                        })
+                      </p>
+                    )}
+                  </div>
+                  <div className="text-right text-gray-900 dark:text-white">
+                    ${unitPrice.toFixed(2)} x {item.quantity}
+                  </div>
                 </div>
-                <div className="text-right text-gray-900 dark:text-white">
-                  ${(item.basePrice + item.tierPrice).toFixed(2)} x {item.quantity}
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
 
           <div className="border-t border-gray-200 dark:border-gray-700 pt-4 space-y-2 text-sm">
@@ -536,12 +618,16 @@ export default function CheckoutPage(): JSX.Element {
         <div className="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 p-4 lg:hidden z-30 shadow-lg">
           <div className="container-max">
             <p className="text-xs text-gray-600 dark:text-gray-400 mb-2 text-center">
-              Ships in 5-8 business days • {cart[0]?.tier === 'PREMIUM' ? 'Unlimited redraws' : '1 artwork included'}
+              Ships in 5-8 business days • {activeTier === 'PREMIUM' ? 'Unlimited redraws' : '1 artwork included'}
             </p>
             <Button
               variant="primary"
               onClick={handleCheckout}
-              disabled={isSubmitting || cart.length === 0}
+              disabled={
+                isSubmitting ||
+                (!isPreviewCheckout && cart.length === 0) ||
+                (isPreviewCheckout && !previewOrder)
+              }
               className="w-full"
             >
               {isSubmitting ? 'Processing...' : `Pay $${totalWithShipping.toFixed(2)}`}

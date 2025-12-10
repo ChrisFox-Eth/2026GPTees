@@ -308,6 +308,10 @@ export async function createPrintfulOrder(
       throw new Error('Order not found');
     }
 
+    if (order.status !== OrderStatus.PAID && order.status !== OrderStatus.DESIGN_APPROVED) {
+      throw new Error('Order must be paid before submitting to Printful');
+    }
+
     if (!order.address) {
       throw new Error('Order has no shipping address');
     }

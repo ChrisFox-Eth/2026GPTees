@@ -78,6 +78,7 @@ model Order {
   stripeCheckoutId  String?
   trackingNumber    String?
   fulfillmentStatus String?
+  previewGuestToken String?
   paidAt            DateTime?
   shippedAt         DateTime?
   deliveredAt       DateTime?

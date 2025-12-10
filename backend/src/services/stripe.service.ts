@@ -5,7 +5,7 @@
  */
 
 import Stripe from 'stripe';
-import type { PromoCode } from '@prisma/client';
+import { OrderStatus, type PromoCode } from '@prisma/client';
 import crypto from 'crypto';
 import prisma from '../config/database.js';
 import { TierType } from '../config/pricing.js';
@@ -26,7 +26,7 @@ interface CheckoutItem {
   productId: string;
   size: string;
   color: string;
-  tier: 'BASIC' | 'PREMIUM';
+  tier: 'BASIC' | 'PREMIUM' | 'TEST';
   quantity: number;
 }
 
@@ -43,7 +43,7 @@ interface ShippingAddress {
 
 interface CheckoutSessionData {
   userId: string;
-  items: CheckoutItem[];
+  items?: CheckoutItem[];
   shippingAddress: ShippingAddress;
   successUrl: string;
   cancelUrl: string;
@@ -60,38 +60,128 @@ interface GiftCodeSessionData {
 
 /**
  * Create Stripe checkout session
- * @param {CheckoutSessionData} data - Checkout data
+ * @param {CheckoutSessionData & { orderId?: string }} data - Checkout data
  * @returns {Promise<{sessionId: string, url: string, orderId: string}>} Checkout session + order id
  */
 export async function createCheckoutSession(
-  data: CheckoutSessionData
+  data: CheckoutSessionData & { orderId?: string }
 ): Promise<{ sessionId: string; url: string; orderId: string; freeOrder?: boolean }> {
-  const { userId, items, shippingAddress, successUrl, cancelUrl, code } = data;
+  const { userId, items, shippingAddress, successUrl, cancelUrl, code, orderId } = data;
 
   const tierPricingMap = await getTierPricingMap();
   const shippingAmount = calculateShipping(shippingAddress);
 
-  // Load products from DB to prevent client-side price tampering
-  const productIds = Array.from(new Set(items.map((item) => item.productId)));
+  let existingOrder: any = null;
+
+  if (orderId) {
+    existingOrder = await prisma.order.findUnique({
+      where: { id: orderId },
+      include: { items: true, promoCode: true },
+    });
+
+    if (!existingOrder) {
+      throw new AppError('Order not found', 404);
+    }
+
+    if (existingOrder.userId !== userId) {
+      throw new AppError('Unauthorized access to this order', 403);
+    }
+
+    if (
+      existingOrder.status === OrderStatus.PAID ||
+      existingOrder.status === OrderStatus.REFUNDED ||
+      existingOrder.status === OrderStatus.CANCELLED ||
+      existingOrder.status === OrderStatus.SUBMITTED ||
+      existingOrder.status === OrderStatus.SHIPPED ||
+      existingOrder.status === OrderStatus.DELIVERED
+    ) {
+      throw new AppError('This order has already been processed.', 400);
+    }
+
+    if (!existingOrder.items.length) {
+      throw new AppError('Order has no items to checkout.', 400);
+    }
+  }
+
+  let normalizedItems: Array<CheckoutItem & { orderItemId?: string }> = [];
+
+  if (existingOrder) {
+    normalizedItems = existingOrder.items.map((item: any) => ({
+      productId: item.productId,
+      size: item.size,
+      color: item.color,
+      quantity: item.quantity,
+      tier: (existingOrder.designTier as TierType) || TierType.BASIC,
+      orderItemId: item.id,
+    }));
+  } else {
+    if (!items || !Array.isArray(items) || items.length === 0) {
+      throw new AppError('Cart items are required', 400);
+    }
+
+    normalizedItems = items.map((item) => ({
+      productId: item.productId,
+      size: item.size,
+      color: item.color,
+      quantity: item.quantity,
+      tier: (item.tier as TierType) || TierType.BASIC,
+    }));
+  }
+
+  const uniqueTiers = Array.from(new Set(normalizedItems.map((item) => item.tier)));
+  if (uniqueTiers.length !== 1) {
+    throw new AppError('All items must use the same tier for checkout.', 400);
+  }
+
+  const orderTier = uniqueTiers[0] as TierType;
+  if (!Object.values(TierType).includes(orderTier)) {
+    throw new AppError('Invalid tier selection.', 400);
+  }
+
+  const productIds = Array.from(new Set(normalizedItems.map((item) => item.productId)));
   const products = await prisma.product.findMany({
     where: { id: { in: productIds } },
   });
   const productMap = new Map(products.map((p) => [p.id, p]));
 
-  // Validate items and prepare payload
-  let validatedItems = items.map((item) => {
+  const validatedItems = normalizedItems.map((item) => {
     const product = productMap.get(item.productId);
     if (!product) {
-      throw new Error(`Invalid product: ${item.productId}`);
+      throw new AppError(`Invalid product: ${item.productId}`, 400);
+    }
+
+    const colorOptions = Array.isArray(product.colors)
+      ? (product.colors as Array<{ name: string }>)
+      : [];
+    const matchedColor =
+      colorOptions.find((c) => c?.name?.toLowerCase() === item.color.toLowerCase()) || colorOptions[0];
+
+    if (!matchedColor) {
+      throw new AppError(`Selected color unavailable for ${product.name}`, 400);
+    }
+
+    const matchedSize =
+      product.sizes.find((s) => s.toLowerCase() === item.size.toLowerCase()) || product.sizes[0];
+
+    if (!matchedSize) {
+      throw new AppError(`Selected size unavailable for ${product.name}`, 400);
+    }
+
+    if (!item.quantity || item.quantity <= 0) {
+      throw new AppError('Quantity must be at least 1', 400);
     }
 
     const tierConfig = tierPricingMap[item.tier as TierType];
+    if (!tierConfig) {
+      throw new AppError('Tier configuration missing', 500);
+    }
+
     const unitPrice = Number(product.basePrice) + tierConfig.price;
 
-    const variantId = getPrintfulVariantId(product.printfulId, item.color, item.size);
+    const variantId = getPrintfulVariantId(product.printfulId, matchedColor.name, matchedSize);
     if (!variantId) {
       throw new AppError(
-        `Selected variant unavailable: ${product.name} (${item.color} / ${item.size}). Please choose a supported color/size.`,
+        `Selected variant unavailable: ${product.name} (${matchedColor.name} / ${matchedSize}). Please choose a supported color/size.`,
         400
       );
     }
@@ -100,36 +190,55 @@ export async function createCheckoutSession(
       product,
       unitPrice,
       tierConfig,
-      payload: item,
       variantId,
+      payload: {
+        ...item,
+        color: matchedColor.name,
+        size: matchedSize,
+      },
     };
   });
 
   // Optional promo/gift code validation
   let promoCode: PromoCode | null = null;
-  if (code) {
+  const trimmedCode = code ? code.trim() : '';
+
+  if (trimmedCode) {
     const lookup = await prisma.promoCode.findFirst({
-      where: { code: code.trim(), disabled: false },
+      where: { code: trimmedCode, disabled: false },
     });
     if (!lookup) {
       throw new AppError('Invalid or unknown promo code.', 400);
     }
-    if (lookup.usageLimit !== null && lookup.usageLimit !== undefined && lookup.usageCount >= lookup.usageLimit) {
+    if (
+      lookup.usageLimit !== null &&
+      lookup.usageLimit !== undefined &&
+      lookup.usageCount >= lookup.usageLimit
+    ) {
       throw new AppError('This promo code has already been redeemed the maximum number of times.', 400);
     }
 
     promoCode = lookup;
+  } else if (existingOrder?.promoCode) {
+    if (existingOrder.promoCode.disabled) {
+      throw new AppError('This promo code is no longer active.', 400);
+    }
+    promoCode = existingOrder.promoCode;
+  }
 
+  let adjustedItems = validatedItems;
+
+  if (promoCode) {
     if (promoCode.type === 'FREE_PRODUCT') {
-      if (validatedItems.length !== 1) {
+      if (adjustedItems.length !== 1) {
         throw new AppError('This gift code is valid for a single tee. Please leave only one item in your cart.', 400);
       }
-      const item = validatedItems[0];
+      const item = adjustedItems[0];
       if (promoCode.productTier && promoCode.productTier !== item.payload.tier) {
         throw new AppError(`This gift code is only valid for a ${promoCode.productTier} tee.`, 400);
       }
       // Make the product free; shipping still applies.
-      validatedItems = [
+      adjustedItems = [
         {
           ...item,
           unitPrice: 0,
@@ -141,21 +250,23 @@ export async function createCheckoutSession(
       }
       const percent = Math.min(promoCode.percentOff, 100);
       const factor = (100 - percent) / 100;
-      validatedItems = validatedItems.map((item) => ({
+      adjustedItems = adjustedItems.map((item) => ({
         ...item,
         unitPrice: item.unitPrice * factor,
       }));
     }
   }
 
-  const itemsTotal = validatedItems.reduce(
+  const itemsTotal = adjustedItems.reduce(
     (total, item) => total + item.unitPrice * item.payload.quantity,
     0
   );
   const totalAmount = itemsTotal + shippingAmount;
 
   // Generate unique order number
-  const orderNumber = `ORDER-${Date.now()}-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
+  const orderNumber =
+    existingOrder?.orderNumber ||
+    `ORDER-${Date.now()}-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
 
   // Create / upsert shipping address
   const address = await prisma.address.create({
@@ -173,28 +284,106 @@ export async function createCheckoutSession(
     },
   });
 
+  // Helper to sync item pricing/variants when reusing an order
+  const persistExistingItems = async () => {
+    if (!existingOrder) return;
+    if (adjustedItems.some((item) => !item.payload.orderItemId)) {
+      throw new AppError('Unable to reuse this order because item IDs are missing.', 400);
+    }
+    await Promise.all(
+      adjustedItems.map((item) =>
+        prisma.orderItem.update({
+          where: { id: item.payload.orderItemId! },
+          data: {
+            productId: item.payload.productId,
+            size: item.payload.size,
+            color: item.payload.color,
+            quantity: item.payload.quantity,
+            unitPrice: item.unitPrice,
+            printfulVariantId: item.variantId?.toString(),
+          },
+        })
+      )
+    );
+  };
+
   // $0 orders: skip Stripe and mark paid immediately
   if (totalAmount <= 0) {
+    if (existingOrder) {
+      await persistExistingItems();
+      const paidOrder = await prisma.order.update({
+        where: { id: existingOrder.id },
+        data: {
+          status: OrderStatus.PAID,
+          paidAt: new Date(),
+          totalAmount: 0,
+          designTier: orderTier,
+          maxDesigns: tierPricingMap[orderTier].maxDesigns,
+          addressId: address.id,
+          promoCodeId: promoCode?.id || null,
+          payment: {
+            create: {
+              stripePaymentId: `free_${orderNumber}`,
+              amount: 0,
+              currency: 'usd',
+              status: 'COMPLETED',
+              paymentMethod: 'free',
+            },
+          },
+        },
+        include: { user: true, items: true, address: true },
+      });
+
+      if (promoCode?.id) {
+        await incrementPromoUsage(promoCode.id);
+      }
+
+      const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+      sendOrderConfirmation({
+        customerName: paidOrder.user.firstName || paidOrder.user.email,
+        customerEmail: paidOrder.user.email,
+        orderNumber: paidOrder.orderNumber,
+        orderTotal: paidOrder.totalAmount.toString(),
+        tier: paidOrder.designTier,
+        itemCount: paidOrder.items.length,
+        orderUrl: `${frontendUrl}/design?orderId=${paidOrder.id}`,
+      }).catch((error) => console.error('Failed to send order confirmation email:', error));
+
+      sendPromptGuide({
+        customerName: paidOrder.user.firstName || paidOrder.user.email,
+        customerEmail: paidOrder.user.email,
+        orderNumber: paidOrder.orderNumber,
+        orderUrl: `${frontendUrl}/design?orderId=${paidOrder.id}`,
+      }).catch((error) => console.error('Failed to send prompt guide email:', error));
+
+      return {
+        sessionId: '',
+        url: '',
+        orderId: paidOrder.id,
+        freeOrder: true,
+      };
+    }
+
     const order = await prisma.order.create({
       data: {
         orderNumber,
         userId,
-        status: 'PAID',
+        status: OrderStatus.PAID,
         paidAt: new Date(),
         totalAmount: 0,
-        designTier: items[0].tier,
-        maxDesigns: validatedItems[0].tierConfig.maxDesigns,
+        designTier: orderTier,
+        maxDesigns: adjustedItems[0].tierConfig.maxDesigns,
         designsGenerated: 0,
         addressId: address.id,
         promoCodeId: promoCode?.id || null,
         items: {
-          create: validatedItems.map(({ payload, unitPrice }) => ({
+          create: adjustedItems.map(({ payload, unitPrice, variantId }) => ({
             productId: payload.productId,
             size: payload.size,
             color: payload.color,
             quantity: payload.quantity,
             unitPrice,
-            printfulVariantId: validatedItems.find((v) => v.payload === payload)?.variantId?.toString(),
+            printfulVariantId: variantId?.toString(),
           })),
         },
         payment: {
@@ -240,36 +429,53 @@ export async function createCheckoutSession(
     };
   }
 
-  // Create order in database with PENDING_PAYMENT status
-  const order = await prisma.order.create({
-    data: {
-      orderNumber,
-      userId,
-      status: 'PENDING_PAYMENT',
-      totalAmount,
-      designTier: items[0].tier,
-      maxDesigns: validatedItems[0].tierConfig.maxDesigns,
-      designsGenerated: 0,
-      addressId: address.id,
-      promoCodeId: promoCode?.id || null,
-      items: {
-        create: validatedItems.map(({ payload, unitPrice }) => ({
-          productId: payload.productId,
-          size: payload.size,
-          color: payload.color,
-          quantity: payload.quantity,
-          unitPrice,
-          printfulVariantId: validatedItems.find((v) => v.payload === payload)?.variantId?.toString(),
-        })),
+  // Create or reuse order in database with PENDING_PAYMENT status
+  let order =
+    existingOrder ||
+    (await prisma.order.create({
+      data: {
+        orderNumber,
+        userId,
+        status: OrderStatus.PENDING_PAYMENT,
+        totalAmount,
+        designTier: orderTier,
+        maxDesigns: adjustedItems[0].tierConfig.maxDesigns,
+        designsGenerated: 0,
+        addressId: address.id,
+        promoCodeId: promoCode?.id || null,
+        items: {
+          create: adjustedItems.map(({ payload, unitPrice, variantId }) => ({
+            productId: payload.productId,
+            size: payload.size,
+            color: payload.color,
+            quantity: payload.quantity,
+            unitPrice,
+            printfulVariantId: variantId?.toString(),
+          })),
+        },
       },
-    },
-    include: {
-      items: true,
-    },
-  });
+      include: {
+        items: true,
+      },
+    }));
+
+  if (existingOrder) {
+    await persistExistingItems();
+    order = await prisma.order.update({
+      where: { id: existingOrder.id },
+      data: {
+        totalAmount,
+        addressId: address.id,
+        designTier: orderTier,
+        maxDesigns: adjustedItems[0].tierConfig.maxDesigns,
+        promoCodeId: promoCode?.id || null,
+      },
+      include: { items: true },
+    });
+  }
 
   // Create Stripe line items
-  const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = validatedItems.map(
+  const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = adjustedItems.map(
     ({ payload, product, unitPrice }) => ({
       price_data: {
         currency: 'usd',
@@ -314,7 +520,7 @@ export async function createCheckoutSession(
       orderNumber: order.orderNumber,
       userId,
       addressId: address.id,
-      tier: items[0].tier,
+      tier: orderTier,
       shippingAmount: shippingAmount.toString(),
       ...(promoCode?.id ? { promoCodeId: promoCode.id, promoCodeCode: promoCode.code } : {}),
     },
@@ -323,7 +529,7 @@ export async function createCheckoutSession(
   // Store checkout session ID in order
   await prisma.order.update({
     where: { id: order.id },
-    data: { stripeCheckoutId: session.id },
+    data: { stripeCheckoutId: session.id, totalAmount },
   });
 
   return {

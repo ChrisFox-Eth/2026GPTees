@@ -107,4 +107,23 @@ export async function uploadImage(
   };
 }
 
+/**
+ * Upload a raw buffer directly to Supabase Storage at a generated key.
+ * @param {string} keyPrefix - Folder/prefix (e.g., designId or video id)
+ * @param {Buffer} buffer - File contents
+ * @param {string} extension - File extension without dot (e.g., png, mp4)
+ * @param {string} contentType - MIME type
+ * @returns {Promise<string>} Public URL of the uploaded asset
+ */
+export async function uploadBufferDirect(
+  keyPrefix: string,
+  buffer: Buffer,
+  extension: string,
+  contentType: string
+): Promise<string> {
+  const filename = `${Date.now()}.${extension}`;
+  const path = `${keyPrefix}/${filename}`;
+  return uploadBuffer(path, buffer, contentType);
+}
+
 export default supabase;

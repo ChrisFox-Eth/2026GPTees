@@ -21,15 +21,7 @@ export const createCheckout = catchAsync(async (req: Request, res: Response) => 
     return;
   }
 
-  const { items, shippingAddress, code } = req.body;
-
-  if (!items || !Array.isArray(items) || items.length === 0) {
-    res.status(400).json({
-      success: false,
-      message: 'Cart items are required',
-    });
-    return;
-  }
+  const { items, shippingAddress, code, orderId } = req.body;
 
   if (
     !shippingAddress ||
@@ -46,6 +38,14 @@ export const createCheckout = catchAsync(async (req: Request, res: Response) => 
     return;
   }
 
+  if (!orderId && (!items || !Array.isArray(items) || items.length === 0)) {
+    res.status(400).json({
+      success: false,
+      message: 'Cart items are required',
+    });
+    return;
+  }
+
   const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
 
   const checkoutData = {
@@ -55,6 +55,7 @@ export const createCheckout = catchAsync(async (req: Request, res: Response) => 
     successUrl: `${frontendUrl}/checkout/success`,
     cancelUrl: `${frontendUrl}/cart`,
     code: code ? String(code).trim() : undefined,
+    orderId: orderId ? String(orderId) : undefined,
   };
 
   const session = await createCheckoutSession(checkoutData);

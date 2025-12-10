@@ -11,6 +11,8 @@ import { uploadImage } from '../services/supabase-storage.service.js';
 import { createPrintfulOrder } from '../services/printful.service.js';
 import { sendDesignApproved } from '../services/email.service.js';
 import prisma from '../config/database.js';
+import { sendAnalyticsEvent } from '../services/analytics.service.js';
+import { OrderStatus } from '@prisma/client';
 
 /**
  * Generate AI design
@@ -49,18 +51,53 @@ export const createDesign = catchAsync(async (req: Request, res: Response) => {
     throw new AppError('Unauthorized access to this order', 403);
   }
 
-  const isPaidAndActive = order.status === 'PAID' || order.status === 'DESIGN_PENDING';
-  if (!isPaidAndActive) {
-    throw new AppError('Order must be paid and active before generating designs', 400);
+  const allowedStatuses: OrderStatus[] = [
+    OrderStatus.PAID,
+    OrderStatus.DESIGN_PENDING,
+    OrderStatus.PENDING_PAYMENT,
+  ];
+  if (!allowedStatuses.includes(order.status as OrderStatus)) {
+    throw new AppError(
+      'Order must be active or pending payment before generating designs',
+      400
+    );
   }
 
   // Check tier limits
   if (order.designsGenerated >= order.maxDesigns) {
+    sendAnalyticsEvent({
+      event: 'design.generate.limit_hit',
+      properties: {
+        order_id: order.id,
+        order_number: order.orderNumber,
+        user_id: req.user.id,
+        tier: order.designTier,
+        max_designs: order.maxDesigns,
+        designs_generated: order.designsGenerated,
+        is_preview: order.status === OrderStatus.PENDING_PAYMENT,
+      },
+    }).catch((err) => console.error('Failed to send design.generate.limit_hit analytics', err));
     throw new AppError(
       `Design limit reached for ${order.designTier} tier. Upgrade to Premium for unlimited designs.`,
       400
     );
   }
+
+  sendAnalyticsEvent({
+    event: 'design.generate.request',
+    properties: {
+      order_id: order.id,
+      order_number: order.orderNumber,
+      user_id: req.user.id,
+      tier: order.designTier,
+      status: order.status,
+      designs_generated: order.designsGenerated,
+      max_designs: order.maxDesigns,
+      prompt_length: prompt.length,
+      style: style || 'unspecified',
+      is_preview: order.status === OrderStatus.PENDING_PAYMENT,
+    },
+  }).catch((err) => console.error('Failed to send design.generate.request analytics', err));
 
   // Generate design with DALL-E 3
   console.log(`Generating design for order ${order.orderNumber}...`);
@@ -111,7 +148,7 @@ export const createDesign = catchAsync(async (req: Request, res: Response) => {
   });
 
   // Increment design counter
-  await prisma.order.update({
+  const updatedOrder = await prisma.order.update({
     where: { id: orderId },
     data: {
       designsGenerated: order.designsGenerated + 1,
@@ -124,9 +161,26 @@ export const createDesign = catchAsync(async (req: Request, res: Response) => {
     data: {
       ...completedDesign,
       remainingDesigns:
-        order.maxDesigns === 9999 ? 'unlimited' : order.maxDesigns - (order.designsGenerated + 1),
+        order.maxDesigns === 9999
+          ? 'unlimited'
+          : Math.max(updatedOrder.maxDesigns - updatedOrder.designsGenerated, 0),
     },
   });
+
+  sendAnalyticsEvent({
+    event: 'design.generate.success',
+    properties: {
+      order_id: order.id,
+      order_number: order.orderNumber,
+      design_id: completedDesign.id,
+      user_id: req.user.id,
+      tier: order.designTier,
+      status: updatedOrder.status,
+      designs_generated: updatedOrder.designsGenerated,
+      max_designs: updatedOrder.maxDesigns,
+      is_preview: order.status === OrderStatus.PENDING_PAYMENT,
+    },
+  }).catch((err) => console.error('Failed to send design.generate.success analytics', err));
 });
 
 /**
@@ -248,6 +302,10 @@ export const approveDesign = catchAsync(async (req: Request, res: Response) => {
 
   if (design.userId !== req.user.id) {
     throw new AppError('Unauthorized access to this design', 403);
+  }
+
+  if (design.order.status !== OrderStatus.PAID && design.order.status !== OrderStatus.DESIGN_APPROVED) {
+    throw new AppError('Payment is required before approving a design. Please checkout first.', 400);
   }
 
   // Update design approval

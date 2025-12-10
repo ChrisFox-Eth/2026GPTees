@@ -1,19 +1,19 @@
 /**
  * @module components/Quickstart
- * @description Quickstart CTA to add a default tee to cart with minimal input.
+ * @description Quickstart CTA to start a preview order with minimal input.
  */
 
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@clerk/clerk-react';
 import { Button } from '@components/Button';
-import { Toast } from '@components/Toast';
-import { apiGet } from '@utils/api';
-import { useCart } from '../../hooks/useCart';
+import { apiGet, apiPost } from '@utils/api';
 import { trackEvent } from '@utils/analytics';
 import { Product } from '../../types/product';
 import { QUICKSTART_PROMPT_KEY } from '@utils/quickstart';
 import { AnimatePresence, motion } from 'framer-motion';
+import type { Design } from '../../types/design';
+import type { PendingGuestPreview } from '../../types/preview';
 // const STYLE_PRESETS = ['Retro surf', 'Minimal line art', 'Neon cyberpunk', 'Vintage anime', 'Bold typographic'];
 // const PROMPT_SUGGESTIONS = ['Birthday gift', 'Band tee', 'Inside joke', 'Sports drop', 'Team merch'];
 
@@ -32,6 +32,9 @@ const PROMPT_IDEAS: string[] = [
   'Thunderclouds forming the shape of a giant sleeping cat, with dramatic lighting and a whimsical atmosphere.',
 ];
 
+const GUEST_PREVIEW_KEY = 'gptees_preview_guest';
+const QUICKSTART_STYLE = 'trendy';
+
 export default function Quickstart(): JSX.Element {
   const [products, setProducts] = useState<Product[]>([]);
   const [prompt, setPrompt] = useState<string>(
@@ -42,12 +45,17 @@ export default function Quickstart(): JSX.Element {
   const [ideaIndex, setIdeaIndex] = useState<number>(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [isCreating, setIsCreating] = useState<boolean>(false);
+  const [isGenerating, setIsGenerating] = useState<boolean>(false);
+  const [progressMessage, setProgressMessage] = useState<string | null>(null);
+  const [generatedDesign, setGeneratedDesign] = useState<Design | null>(null);
+  const [currentOrderId, setCurrentOrderId] = useState<string | null>(null);
+  const [pendingGuest, setPendingGuest] = useState<PendingGuestPreview | null>(null);
   const textareaId = 'quickstart-prompt';
 
-  const { addToCart, getTotalItems } = useCart();
   const navigate = useNavigate();
-  const { isSignedIn } = useAuth();
+  const { isSignedIn, getToken } = useAuth();
 
   useEffect(() => {
     const loadProducts = async () => {
@@ -69,6 +77,19 @@ export default function Quickstart(): JSX.Element {
     () => products.find((p) => p.slug === 'basic-tee') || products[0],
     [products]
   );
+
+  useEffect(() => {
+    const stored = localStorage.getItem(GUEST_PREVIEW_KEY);
+    if (stored) {
+      try {
+        const parsed = JSON.parse(stored) as PendingGuestPreview;
+        setPendingGuest(parsed);
+      } catch (err) {
+        console.error('Failed to parse pending guest preview', err);
+        localStorage.removeItem(GUEST_PREVIEW_KEY);
+      }
+    }
+  }, []);
 
   const defaultColor =
     product?.colors?.find((c) => c.name.toLowerCase() === 'black')?.name ||
@@ -122,6 +143,110 @@ export default function Quickstart(): JSX.Element {
     return () => clearInterval(id);
   }, []);
 
+  const generateDesignWithToken = async (
+    orderId: string,
+    promptText: string,
+    styleValue: string,
+    token: string
+  ) => {
+    const response = await apiPost(
+      '/api/designs/generate',
+      {
+        orderId,
+        prompt: promptText,
+        style: styleValue,
+      },
+      token
+    );
+    setGeneratedDesign(response.data as Design);
+    setCurrentOrderId(orderId);
+    trackEvent('quickstart.preview.generated', {
+      order_id: orderId,
+      prompt_length: promptText.length,
+      style: styleValue,
+      source: 'quickstart_home',
+    });
+  };
+
+  const handleCheckoutRedirect = () => {
+    if (!currentOrderId) {
+      setSubmitError('Create a preview first to continue to checkout.');
+      return;
+    }
+    trackEvent('quickstart.preview.checkout_click', {
+      order_id: currentOrderId,
+      source: 'quickstart_home',
+    });
+    navigate(`/checkout?orderId=${currentOrderId}`);
+  };
+
+  const handleTryAgain = async () => {
+    const promptText = prompt.trim() || generatedDesign?.prompt || localStorage.getItem(QUICKSTART_PROMPT_KEY) || '';
+    if (!currentOrderId) {
+      setSubmitError('Start a preview first, then try again.');
+      return;
+    }
+    if (!promptText) {
+      setSubmitError('Add a new prompt to try again.');
+      return;
+    }
+    try {
+      const token = await getToken();
+      if (!token) {
+        setSubmitError('Please sign in to regenerate your preview.');
+        return;
+      }
+      await startGenerationFlow(currentOrderId, promptText, token);
+    } catch (err: any) {
+      console.error('Error regenerating preview:', err);
+      setSubmitError(err?.message || 'Failed to regenerate. Please try again.');
+    }
+  };
+
+  useEffect(() => {
+    if (!isSignedIn || !pendingGuest) return;
+
+    const claimAndGenerate = async () => {
+      try {
+        setIsGenerating(true);
+        setProgressMessage('Reattaching your preview...');
+        const token = await getToken();
+        if (!token) {
+          setSubmitError('Authentication required. Please sign in again.');
+          return;
+        }
+
+        await apiPost(
+          '/api/orders/preview/claim',
+          {
+            orderId: pendingGuest.orderId,
+            guestToken: pendingGuest.guestToken,
+          },
+          token
+        );
+
+        setProgressMessage('Generating your design...');
+        await generateDesignWithToken(
+          pendingGuest.orderId,
+          pendingGuest.prompt,
+          pendingGuest.style,
+          token
+        );
+        localStorage.removeItem(GUEST_PREVIEW_KEY);
+        setPendingGuest(null);
+        setPrompt('');
+      } catch (err: any) {
+        console.error('Error claiming preview order:', err);
+        setSubmitError(err?.message || 'Failed to claim your preview. Please try again.');
+      } finally {
+        setIsGenerating(false);
+        setProgressMessage(null);
+      }
+    };
+
+    claimAndGenerate();
+  }, [isSignedIn, pendingGuest, getToken]);
+
   const handleUseIdea = (idea: string) => {
     setPrompt(idea);
     trackEvent('quickstart.prompt_idea_select', { idea });
@@ -131,46 +256,125 @@ export default function Quickstart(): JSX.Element {
     }
   };
 
-  const handleSubmit = () => {
+  const startGenerationFlow = async (orderId: string, promptText: string, token: string) => {
+    try {
+      setGeneratedDesign(null);
+      setIsGenerating(true);
+      setProgressMessage('Generating your design...');
+      await generateDesignWithToken(orderId, promptText, QUICKSTART_STYLE, token);
+      setPrompt('');
+    } catch (err: any) {
+      console.error('Error generating design from quickstart:', err);
+      setSubmitError(err?.message || 'Failed to generate your design. Please try again.');
+    } finally {
+      setIsGenerating(false);
+      setProgressMessage(null);
+    }
+  };
+
+  const handleSubmit = async () => {
     if (!product) return;
-
-    const existingCount = getTotalItems();
-
-    const tierPrice = product.tierPricing?.[tier]?.price ?? 0;
-    const basePrice = Number(product.basePrice);
-
-    addToCart({
-      productId: product.id,
-      productName: product.name,
-      size: size || defaultSize,
-      color: color || defaultColor,
-      tier: tier as 'BASIC' | 'PREMIUM',
-      quantity: 1,
-      basePrice,
-      tierPrice,
-      imageUrl: product.imageUrl,
-    });
-
-    if (prompt.trim()) {
-      localStorage.setItem(QUICKSTART_PROMPT_KEY, prompt.trim());
+    const promptText = prompt.trim();
+    if (!promptText) {
+      setSubmitError('Please add a prompt to start your preview.');
+      return;
     }
 
-    trackEvent('quickstart.submit', {
-      product_id: product.id,
-      color: color || defaultColor,
-      size: size || defaultSize,
-      tier,
-      has_prompt: Boolean(prompt.trim()),
-    });
+    if (!isSignedIn) {
+      try {
+        setIsCreating(true);
+        setSubmitError(null);
+        const response = await apiPost('/api/orders/preview/guest', {
+          productId: product.id,
+          color: color || defaultColor,
+          size: size || defaultSize,
+          tier,
+          quantity: 1,
+        });
 
-    const message = existingCount
-      ? `Added another tee of this design. You now have ${existingCount + 1} item${
-          existingCount + 1 !== 1 ? 's' : ''
-        } in your cart.`
-      : 'Added your design setup to the cart. After you pick tier and fit, you will see your artwork for approval.';
-    setToastMessage(message);
+        const guestOrderId = response?.data?.orderId;
+        const guestToken = response?.data?.guestToken;
+        if (!guestOrderId || !guestToken) {
+          throw new Error('Missing preview order details');
+        }
 
-    navigate(isSignedIn ? '/checkout' : '/auth#');
+        const guestPreview: PendingGuestPreview = {
+          orderId: guestOrderId,
+          guestToken,
+          prompt: promptText,
+          style: QUICKSTART_STYLE,
+        };
+        localStorage.setItem(GUEST_PREVIEW_KEY, JSON.stringify(guestPreview));
+        setPendingGuest(guestPreview);
+
+        trackEvent('quickstart.preview_guest_created', {
+          product_id: product.id,
+          color: color || defaultColor,
+          size: size || defaultSize,
+          tier,
+          has_prompt: Boolean(promptText),
+          order_id: guestOrderId,
+        });
+
+        navigate('/auth#');
+      } catch (err: any) {
+        console.error('Error creating guest preview order:', err);
+        setSubmitError(err?.message || 'Failed to start your preview. Please try again.');
+      } finally {
+        setIsCreating(false);
+      }
+      return;
+    }
+
+    try {
+      setIsCreating(true);
+      setSubmitError(null);
+      setGeneratedDesign(null);
+      const token = await getToken();
+      if (!token) {
+        setSubmitError('Authentication required. Please sign in again.');
+        return;
+      }
+
+      const response = await apiPost(
+        '/api/orders/preview',
+        {
+          productId: product.id,
+          color: color || defaultColor,
+          size: size || defaultSize,
+          tier,
+          quantity: 1,
+        },
+        token
+      );
+
+      const createdOrder = response?.data;
+      const orderId = createdOrder?.id;
+      if (promptText) {
+        localStorage.setItem(QUICKSTART_PROMPT_KEY, promptText);
+      }
+
+      trackEvent('quickstart.preview_order_created', {
+        product_id: product.id,
+        color: color || defaultColor,
+        size: size || defaultSize,
+        tier,
+        has_prompt: Boolean(promptText),
+        order_id: orderId,
+      });
+
+      if (orderId) {
+        setCurrentOrderId(orderId);
+        await startGenerationFlow(orderId, promptText, token);
+      } else {
+        navigate('/design');
+      }
+    } catch (err: any) {
+      console.error('Error creating preview order:', err);
+      setSubmitError(err?.message || 'Failed to start your preview. Please try again.');
+    } finally {
+      setIsCreating(false);
+    }
   };
 
   if (loading || !product) {
@@ -316,19 +520,68 @@ export default function Quickstart(): JSX.Element {
             Submit your fit and tier to unlock the design preview right after checkout.
           </p>
         </div>
-        <Button variant="primary" className="w-full" onClick={handleSubmit}>
-          Create in 60s
+        <Button
+          variant="primary"
+          className="w-full"
+          onClick={handleSubmit}
+          disabled={isCreating || isGenerating}
+        >
+          {isCreating ? 'Starting preview...' : isGenerating ? 'Working on it...' : 'Create in 60s'}
         </Button>
+        {submitError && (
+          <p className="text-xs text-red-600 dark:text-red-400 text-center">{submitError}</p>
+        )}
+        {progressMessage && (
+          <div className="w-full rounded-lg border border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-900/20 p-3 text-sm text-blue-900 dark:text-blue-100">
+            {progressMessage}
+          </div>
+        )}
+        {pendingGuest && !isSignedIn && (
+          <div className="w-full rounded-lg border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-900/20 p-3 space-y-2">
+            <p className="text-sm text-amber-900 dark:text-amber-100 font-semibold">
+              Sign in to reveal your free preview
+            </p>
+            <p className="text-xs text-amber-800 dark:text-amber-200">
+              We saved your prompt and preview order. Log in to see the design and keep generating.
+            </p>
+            <Button variant="secondary" onClick={() => navigate('/auth#')} className="w-full sm:w-auto">
+              Sign in to reveal
+            </Button>
+          </div>
+        )}
+        {generatedDesign && (
+          <div className="w-full rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 p-4 space-y-3">
+            <p className="text-sm font-semibold text-gray-900 dark:text-white">Your preview</p>
+            <div className="bg-white dark:bg-gray-800 rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700">
+              <img
+                src={generatedDesign.imageUrl}
+                alt={generatedDesign.prompt}
+                className="w-full h-64 object-contain bg-gray-100 dark:bg-gray-900"
+              />
+            </div>
+            <p className="text-xs text-gray-600 dark:text-gray-400">
+              Prompt: {generatedDesign.prompt}
+            </p>
+            <div className="flex flex-col sm:flex-row gap-2">
+              <Button variant="primary" onClick={handleCheckoutRedirect} className="w-full sm:w-auto">
+                Continue with this
+              </Button>
+              <Button
+                variant="secondary"
+                onClick={handleTryAgain}
+                disabled={isGenerating}
+                className="w-full sm:w-auto"
+              >
+                {isGenerating ? 'Generating...' : 'Try again (Premium)'}
+              </Button>
+            </div>
+            <p className="text-[11px] text-gray-500 dark:text-gray-400">
+              We will reuse this preview order at checkout so your artwork stays attached.
+            </p>
+          </div>
+        )}
       </div>
 
-      {toastMessage && (
-        <Toast
-          message={toastMessage}
-          type="info"
-          onClose={() => setToastMessage(null)}
-          action={{ label: 'View cart', onClick: () => navigate('/cart') }}
-        />
-      )}
     </div>
   );
 }
