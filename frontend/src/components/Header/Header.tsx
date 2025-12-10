@@ -13,7 +13,7 @@ import { useCart } from '../../hooks/useCart';
 import GPTeesIconDarkMode from '../../assets/GPTeesIconDarkMode.png';
 import GPTeesIconLightMode from '../../assets/GPTeesIconLightMode.png';
 
-export default function Header({ isDark, onToggleTheme }: HeaderProps): JSX.Element {
+export default function Header({ isDark }: HeaderProps): JSX.Element {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { user } = useUser();
   const { signOut } = useClerk();
@@ -200,7 +200,7 @@ export default function Header({ isDark, onToggleTheme }: HeaderProps): JSX.Elem
 
               <div className="border-t border-gray-200 dark:border-gray-700 my-2" />
 
-              <Button
+              {/* <Button
                 variant="secondary"
                 size="sm"
                 onClick={() => {
@@ -210,7 +210,7 @@ export default function Header({ isDark, onToggleTheme }: HeaderProps): JSX.Elem
                 className="w-full"
               >
                 {isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
-              </Button>
+              </Button> */}
 
               <div className="mt-auto border-t border-gray-200 dark:border-gray-700 pt-3 text-xs text-gray-500 dark:text-gray-400">
                 <div className="flex items-center justify-between">

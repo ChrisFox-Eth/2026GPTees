@@ -544,7 +544,6 @@ export default function CheckoutPage(): JSX.Element {
             <ul className="text-xs text-gray-600 dark:text-gray-400 space-y-1">
               <li>• Super-soft GPTee</li>
               <li>• Artwork crafted from your words</li>
-              <li>• Free redraws until you approve</li>
               <li>• Printful fulfillment & shipping</li>
             </ul>
             <p className="text-xs text-gray-600 dark:text-gray-400 mt-2">Why go Limitless? We redraw until you love it.</p>
