@@ -12,7 +12,6 @@ import { trackEvent } from '@utils/analytics';
 import { Product } from '../../types/product';
 import { QUICKSTART_PROMPT_KEY } from '@utils/quickstart';
 import { AnimatePresence, motion } from 'framer-motion';
-import { useCart } from '@hooks/useCart';
 import type { Design } from '../../types/design';
 import type { PendingGuestPreview } from '../../types/preview';
 // const STYLE_PRESETS = ['Retro surf', 'Minimal line art', 'Neon cyberpunk', 'Vintage anime', 'Bold typographic'];
@@ -34,6 +33,7 @@ const PROMPT_IDEAS: string[] = [
 ];
 
 const GUEST_PREVIEW_KEY = 'gptees_preview_guest';
+const PREVIEW_CACHE_KEY = 'gptees_quickstart_preview_cache';
 const QUICKSTART_STYLE = 'trendy';
 const QUICKSTART_TIER = 'PREMIUM';
 
@@ -58,7 +58,6 @@ export default function Quickstart(): JSX.Element {
 
   const navigate = useNavigate();
   const { isSignedIn, getToken } = useAuth();
-  const { addToCart, cart } = useCart();
 
   useEffect(() => {
     const loadProducts = async () => {
@@ -92,6 +91,18 @@ export default function Quickstart(): JSX.Element {
         localStorage.removeItem(GUEST_PREVIEW_KEY);
       }
     }
+
+    const cached = localStorage.getItem(PREVIEW_CACHE_KEY);
+    if (cached) {
+      try {
+        const parsed = JSON.parse(cached) as { orderId: string; design: Design };
+        setCurrentOrderId(parsed.orderId);
+        setGeneratedDesign(parsed.design);
+      } catch (err) {
+        console.error('Failed to parse preview cache', err);
+        localStorage.removeItem(PREVIEW_CACHE_KEY);
+      }
+    }
   }, []);
 
   const defaultColor =
@@ -104,9 +115,6 @@ export default function Quickstart(): JSX.Element {
     product?.sizes?.[0] ||
     'XL';
   const tier = QUICKSTART_TIER;
-  const basePrice = Number(product?.basePrice || 0);
-  const tierPrice = product?.tierPricing?.[tier]?.price || 0;
-  const quickstartTotal = basePrice + tierPrice;
 
   useEffect(() => {
     if (!product) return;
@@ -146,35 +154,6 @@ export default function Quickstart(): JSX.Element {
     return () => clearInterval(id);
   }, []);
 
-  const addPreviewToCart = (designData?: Design | null) => {
-    if (!product) return;
-
-    const selectedSize = size || defaultSize;
-    const selectedColor = color || defaultColor;
-    const alreadyInCart = cart.some(
-      (item) =>
-        item.productId === product.id &&
-        item.size === selectedSize &&
-        item.color === selectedColor &&
-        item.tier === (tier as 'PREMIUM')
-    );
-
-    if (alreadyInCart) return;
-
-    addToCart({
-      productId: product.id,
-      productName: product.name,
-      size: selectedSize,
-      color: selectedColor,
-      tier: tier as 'PREMIUM',
-      quantity: 1,
-      basePrice: Number(product.basePrice || 0),
-      tierPrice: Number(product.tierPricing?.[tier]?.price || 0),
-      imageUrl: designData?.imageUrl || product.imageUrl || null,
-    });
-
-  };
-
   const generateDesignWithToken = async (
     orderId: string,
     promptText: string,
@@ -193,13 +172,17 @@ export default function Quickstart(): JSX.Element {
     const designData = response.data as Design;
     setGeneratedDesign(designData);
     setCurrentOrderId(orderId);
-    addPreviewToCart(designData);
+    localStorage.setItem(
+      PREVIEW_CACHE_KEY,
+      JSON.stringify({ orderId, design: designData })
+    );
     trackEvent('quickstart.preview.generated', {
       order_id: orderId,
       prompt_length: promptText.length,
       style: styleValue,
       source: 'quickstart_home',
     });
+    navigate(`/design?orderId=${orderId}`);
   };
 
   const handleCheckoutRedirect = () => {
@@ -211,30 +194,7 @@ export default function Quickstart(): JSX.Element {
       order_id: currentOrderId,
       source: 'quickstart_home',
     });
-    navigate(`/checkout?orderId=${currentOrderId}`);
-  };
-
-  const handleTryAgain = async () => {
-    const promptText = prompt.trim() || generatedDesign?.prompt || localStorage.getItem(QUICKSTART_PROMPT_KEY) || '';
-    if (!currentOrderId) {
-      setSubmitError('Start a preview first, then try again.');
-      return;
-    }
-    if (!promptText) {
-      setSubmitError('Add a new prompt to try again.');
-      return;
-    }
-    try {
-      const token = await getToken();
-      if (!token) {
-        setSubmitError('Please sign in to regenerate your preview.');
-        return;
-      }
-      await startGenerationFlow(currentOrderId, promptText, token);
-    } catch (err: any) {
-      console.error('Error regenerating preview:', err);
-      setSubmitError(err?.message || 'Failed to regenerate. Please try again.');
-    }
+    navigate(`/design?orderId=${currentOrderId}`);
   };
 
   useEffect(() => {
@@ -433,8 +393,7 @@ export default function Quickstart(): JSX.Element {
         <div className="space-y-2">
           <label className="text-xs font-semibold text-gray-700 dark:text-gray-300">Your vision</label>
           <p className="text-xs text-gray-600 dark:text-gray-400">
-            Try it right here - describe the tee you want and we will reveal the artwork after you pick your fit. 
-            We will carry these selections into checkout to keep your preview order attached.
+            Describe the tee you want—we&apos;ll generate the artwork and take you to the design page to choose size and color before checkout.
           </p>
           <textarea
             id={textareaId}
@@ -446,61 +405,6 @@ export default function Quickstart(): JSX.Element {
           />
         </div>
 
-        {product && (
-          <div className="hidden! space-y-4">
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div className="space-y-2">
-                <p className="text-xs font-semibold text-gray-700 dark:text-gray-300">Color</p>
-                <div className="flex gap-2 flex-wrap items-center">
-                  {product.colors.map((c) => (
-                    <button
-                      key={c.name}
-                      type="button"
-                      onClick={() => {
-                        setColor(c.name);
-                        trackEvent('quickstart.color_select', { color: c.name });
-                      }}
-                      className={`w-10 h-10 rounded-full border-2 transition-all ${
-                        color === c.name
-                          ? 'border-primary-600 scale-110'
-                          : 'border-gray-300 dark:border-gray-600'
-                      }`}
-                      style={{ backgroundColor: c.hex }}
-                      aria-label={`Select color ${c.name}`}
-                      aria-pressed={color === c.name}
-                      title={c.name}
-                    />
-                  ))}
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <p className="text-xs font-semibold text-gray-700 dark:text-gray-300">Size</p>
-                <div className="flex gap-2 flex-wrap text-xs">
-                  {product.sizes.map((s) => (
-                    <button
-                      key={s}
-                      type="button"
-                      onClick={() => {
-                        setSize(s);
-                        trackEvent('quickstart.size_select', { size: s });
-                      }}
-                      className={`px-3 py-2 rounded-full border transition-colors ${
-                        size === s
-                          ? 'border-primary-600 bg-primary-50 dark:bg-primary-900 text-primary-700 dark:text-primary-200'
-                          : 'border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200'
-                      }`}
-                      aria-pressed={size === s}
-                      aria-label={`Select size ${s}`}
-                    >
-                      {s}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
         <div className="rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 p-3 space-y-2">
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                 <div className="space-y-1">
@@ -532,29 +436,6 @@ export default function Quickstart(): JSX.Element {
             </div>
       </div>
       <div className="w-full flex-shrink-0 space-y-3">
-        <div className="hidden! bg-gray-50 dark:bg-gray-900 rounded-lg p-3 border border-gray-200 dark:border-gray-700">
-          <div className="flex items-center gap-3">
-            {product.imageUrl ? (
-              <img
-                src={product.imageUrl}
-                alt={product.name}
-                className="w-16 h-16 rounded-md object-cover"
-                loading="lazy"
-              />
-            ) : (
-              <div className="w-16 h-16 rounded-md bg-gray-200 dark:bg-gray-700" />
-            )}
-            <div>
-              <p className="text-sm font-semibold text-gray-900 dark:text-white">{product.name}</p>
-              <p className="text-xs text-gray-600 dark:text-gray-400">
-                {color || defaultColor} / {size || defaultSize} / Limitless redraws / ${quickstartTotal.toFixed(2)} all-in
-              </p>
-            </div>
-          </div>
-          <p className="text-[11px] text-gray-500 dark:text-gray-400 mt-2">
-            We will carry these selections into checkout to keep your preview order attached.
-          </p>
-        </div>
         <Button
           variant="primary"
           className="bg-gradient-to-r from-primary-600 to-purple-600 w-full"
@@ -587,9 +468,6 @@ export default function Quickstart(): JSX.Element {
         {generatedDesign && (
           <div className="w-full rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 p-4 space-y-3">
             <p className="text-sm font-semibold text-gray-900 dark:text-white">Your preview</p>
-            <p className="text-xs text-gray-600 dark:text-gray-400">
-              Selected: {color || defaultColor} / {size || defaultSize}. We added this preview to your cart and saved it to your account.
-            </p>
             <div className="bg-white dark:bg-gray-800 rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700">
               <img
                 src={generatedDesign.imageUrl}
@@ -602,22 +480,11 @@ export default function Quickstart(): JSX.Element {
             </p>
             <div className="flex flex-col sm:flex-row gap-2">
               <Button variant="primary" onClick={handleCheckoutRedirect} className="w-full sm:w-auto">
-                Continue with this
-              </Button>
-              <Button
-                variant="secondary"
-                onClick={handleTryAgain}
-                disabled={isGenerating}
-                className="w-full sm:w-auto"
-              >
-                {isGenerating ? 'Generating...' : 'Try again (Premium)'}
-              </Button>
-              <Button variant="secondary" onClick={() => navigate('/cart')} className="w-full sm:w-auto">
-                Open cart
+                Go to your design
               </Button>
             </div>
             <p className="text-[11px] text-gray-500 dark:text-gray-400">
-              We will reuse this preview order at checkout so your artwork stays attached. Removing it from the cart will not delete your saved preview; you can always find it under Account.
+              We saved this preview to your account. Choose fit and continue on the design page.
             </p>
           </div>
         )}

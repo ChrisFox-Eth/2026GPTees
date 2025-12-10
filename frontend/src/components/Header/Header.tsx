@@ -79,7 +79,7 @@ export default function Header({ isDark }: HeaderProps): JSX.Element {
                 to="/account"
                 className="text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 transition-colors hidden lg:block"
               >
-                Account
+                My Designs
               </Link>
               <div className="flex items-center gap-2">
                 <span className="text-sm text-gray-700 dark:text-gray-300 hidden lg:inline">
@@ -186,7 +186,7 @@ export default function Header({ isDark }: HeaderProps): JSX.Element {
                   onClick={closeMobileMenu}
                   className="text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 transition-colors py-2 px-3 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700"
                 >
-                  Account
+                  My Designs
                 </Link>
                 <div className="flex flex-col gap-2">
                   <span className="text-sm text-gray-700 dark:text-gray-300 py-2 px-3">

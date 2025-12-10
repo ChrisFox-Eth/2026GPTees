@@ -246,9 +246,11 @@ return (
                           </div>
                           <p className="text-xs text-gray-700 dark:text-gray-300 line-clamp-2 px-3 py-2">{design.prompt}</p>
                           <div className="px-3 pb-3">
-                            <Button variant="secondary" size="sm" onClick={() => handleReorder(order, design)}>
-                              Buy this design again
-                            </Button>
+                            <Link to={`/design?orderId=${order.id}`}>
+                              <Button variant="secondary" size="sm">
+                                Open design
+                              </Button>
+                            </Link>
                           </div>
                         </div>
                       ))}

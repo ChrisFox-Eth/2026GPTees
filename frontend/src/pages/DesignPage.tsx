@@ -16,6 +16,10 @@ import type { Order } from '../types/order';
 import type { Design } from '../types/design';
 import type { Product } from '../types/product';
 import { useCart } from '../hooks/useCart';
+import previewBlack from '../assets/previewBlack.png';
+import previewWhite from '../assets/previewWhite.png';
+import previewGray from '../assets/previewGray.png';
+import previewNavy from '../assets/previewNavy.png';
 
 const STYLE_OPTIONS = [
   { value: 'modern', label: 'Modern', description: 'Clean, minimalist with bold colors' },
@@ -60,7 +64,15 @@ function DesignContent(): JSX.Element {
   const hasTrackedOrderView = useRef(false);
   const hasLoadedQuickstartPrompt = useRef(false);
   const hasGeneratingDesign = designs.some((d) => d.status === 'GENERATING');
-  const { updateItemVariant } = useCart();
+  const { updateItemVariant, addToCart, cart } = useCart();
+
+  const previewMocks: Record<string, string> = {
+    black: previewBlack,
+    white: previewWhite,
+    gray: previewGray,
+    grey: previewGray,
+    navy: previewNavy,
+  };
 
   useEffect(() => {
     if (!orderId) {
@@ -194,7 +206,7 @@ function DesignContent(): JSX.Element {
   };
 
   const handleVariantUpdate = async (nextColor: string, nextSize: string) => {
-    if (!orderId || !order) return;
+    if (!orderId || !order || !product) return;
     if (isUpdatingVariant) return;
     const firstItem = order.items?.[0];
     if (!firstItem) return;
@@ -222,16 +234,39 @@ function DesignContent(): JSX.Element {
       setSelectedSize(nextSize);
 
       const latestDesign = designs[0];
-      updateItemVariant(
-        firstItem.productId,
-        firstItem.size,
-        firstItem.color,
-        {
-          color: nextColor,
-          size: nextSize,
-          imageUrl: latestDesign?.imageUrl || null,
-        }
+      const tierForCart = order.designTier === 'BASIC' ? 'BASIC' : 'PREMIUM';
+      const matchInCart = cart.some(
+        (c) =>
+          c.productId === firstItem.productId &&
+          c.size === nextSize &&
+          c.color === nextColor &&
+          c.tier === tierForCart
       );
+
+      if (!matchInCart) {
+        addToCart({
+          productId: firstItem.productId,
+          productName: product.name,
+          size: nextSize,
+          color: nextColor,
+          tier: tierForCart,
+          quantity: 1,
+          basePrice: Number(product.basePrice || 0),
+          tierPrice: Number(product.tierPricing?.[order.designTier]?.price || 0),
+          imageUrl: latestDesign?.imageUrl || product.imageUrl || null,
+        });
+      } else {
+        updateItemVariant(
+          firstItem.productId,
+          firstItem.size,
+          firstItem.color,
+          {
+            color: nextColor,
+            size: nextSize,
+            imageUrl: latestDesign?.imageUrl || null,
+          }
+        );
+      }
 
       setVariantMessage('Fit updated for this preview order.');
       trackEvent('design.variant.updated', {
@@ -391,6 +426,34 @@ function DesignContent(): JSX.Element {
     if (!orderId || !order) {
       return;
     }
+
+    const firstItem = order.items?.[0];
+    if (product && firstItem) {
+      const targetColor = selectedColor || firstItem.color;
+      const targetSize = selectedSize || firstItem.size;
+      const tierForCart = order.designTier === 'BASIC' ? 'BASIC' : 'PREMIUM';
+      const matchInCart = cart.some(
+        (c) =>
+          c.productId === firstItem.productId &&
+          c.size === targetSize &&
+          c.color === targetColor &&
+          c.tier === tierForCart
+      );
+      if (!matchInCart) {
+        addToCart({
+          productId: firstItem.productId,
+          productName: product.name,
+          size: targetSize,
+          color: targetColor,
+          tier: tierForCart,
+          quantity: 1,
+          basePrice: Number(product.basePrice || 0),
+          tierPrice: Number(product.tierPricing?.[order.designTier]?.price || 0),
+          imageUrl: designs[0]?.imageUrl || product.imageUrl || null,
+        });
+      }
+    }
+
     trackEvent('design.checkout.preview', {
       order_id: orderId,
       design_tier: order.designTier,
@@ -648,24 +711,30 @@ function DesignContent(): JSX.Element {
               <div className="space-y-2">
                 <p className="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-2">See it on all colors</p>
                 <div className="grid grid-cols-2 gap-3">
-                  {product.colors.slice(0, 4).map((c) => (
-                    <div
-                      key={c.name}
-                      className="rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden"
-                      style={{ backgroundColor: c.hex }}
-                    >
-                      <div className="h-32 flex items-center justify-center bg-white/40 dark:bg-black/20">
-                        <img
-                          src={designs[0].imageUrl}
-                          alt={designs[0].prompt}
-                          className="max-h-28 object-contain"
-                        />
+                  {product.colors.slice(0, 4).map((c) => {
+                    const mockKey = c.name.toLowerCase();
+                    const mockSrc = previewMocks[mockKey];
+                    return (
+                      <div
+                        key={c.name}
+                        className="rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden bg-gray-50 dark:bg-gray-900"
+                      >
+                        <div
+                          className="relative h-36 flex items-center justify-center"
+                          style={mockSrc ? { backgroundImage: `url(${mockSrc})`, backgroundSize: 'cover', backgroundPosition: 'center' } : { backgroundColor: c.hex }}
+                        >
+                          <img
+                            src={designs[0].imageUrl}
+                            alt={designs[0].prompt}
+                            className="max-h-24 max-w-[70%] object-contain absolute inset-0 m-auto"
+                          />
+                        </div>
+                        <p className="text-center text-[11px] text-gray-800 dark:text-gray-100 py-1">
+                          {c.name}
+                        </p>
                       </div>
-                      <p className="text-center text-[11px] text-gray-800 dark:text-gray-100 py-1">
-                        {c.name}
-                      </p>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             )}
