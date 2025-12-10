@@ -124,6 +124,15 @@ export default function CheckoutSuccessPage(): JSX.Element {
     }
   }, [orderSummary, orderId]);
 
+  useEffect(() => {
+    if (!orderId) return;
+    const timeout = setTimeout(() => {
+      trackEvent('checkout.success.redirect_to_design', { order_id: orderId });
+      navigate(`/design?orderId=${orderId}`, { replace: true });
+    }, 600);
+    return () => clearTimeout(timeout);
+  }, [orderId, navigate]);
+
   // confirmPayment and handleShare removed from UI (no-op stubs deleted)
 
   if (!orderId) {
@@ -156,8 +165,9 @@ export default function CheckoutSuccessPage(): JSX.Element {
             Payment Successful!
           </h1>
           <p className="text-lg text-gray-600 dark:text-gray-400">
-            Your order has been placed successfully
+            Your order has been placed successfully. We&apos;re sending you to the design page to finish your artwork.
           </p>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">If you&apos;re not redirected, use the button below.</p>
         </div>
 
         {/* Order Info */}
