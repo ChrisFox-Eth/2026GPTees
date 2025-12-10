@@ -31,9 +31,9 @@ export const PRODUCTS: ProductConfig[] = [
     category: 'T_SHIRT',
     sizes: ['S', 'M', 'L', 'XL', '2XL'],
     colors: [
-      { name: 'Black', hex: '#000000' },
-      { name: 'Gray', hex: '#808080' },
-      { name: 'Blue', hex: '#000080' },
+      { name: 'Black', hex: '#0b0b0b' },
+      { name: 'Gray', hex: '#3E3C3D' },
+      { name: 'Navy', hex: '#212642' },
       { name: 'White', hex: '#FFFFFF' },
     ],
   }

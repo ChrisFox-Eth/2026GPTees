@@ -117,13 +117,6 @@ const COLOR_VARIANT_MAP: Record<string, Record<string, Record<string, number>>> 
       XL: 4024,
       '2XL': 4025,
     },
-    Blue: {
-      S: 4021,
-      M: 4022,
-      L: 4023,
-      XL: 4024,
-      '2XL': 4025,
-    },
     Gray: {
       S: 4026,
       M: 4027,
