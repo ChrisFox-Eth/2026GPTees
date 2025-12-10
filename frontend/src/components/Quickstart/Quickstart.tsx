@@ -431,9 +431,10 @@ export default function Quickstart(): JSX.Element {
     <div className="bg-white dark:bg-gray-800 rounded-xl shadow border border-gray-200 dark:border-gray-700 p-5 sm:p-6 flex flex-col gap-6 items-start w-full max-w-full overflow-hidden">
       <div className="flex-1 space-y-4 w-full">
         <div className="space-y-2">
-          <label className="text-xs font-semibold text-gray-700 dark:text-gray-300">Your prompt</label>
+          <label className="text-xs font-semibold text-gray-700 dark:text-gray-300">Your vision</label>
           <p className="text-xs text-gray-600 dark:text-gray-400">
-            Try it right here - describe the tee you want and we will reveal the artwork after you pick your fit.
+            Try it right here - describe the tee you want and we will reveal the artwork after you pick your fit. 
+            We will carry these selections into checkout to keep your preview order attached.
           </p>
           <textarea
             id={textareaId}
@@ -531,7 +532,7 @@ export default function Quickstart(): JSX.Element {
             </div>
       </div>
       <div className="w-full flex-shrink-0 space-y-3">
-        <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-3 border border-gray-200 dark:border-gray-700">
+        <div className="hidden! bg-gray-50 dark:bg-gray-900 rounded-lg p-3 border border-gray-200 dark:border-gray-700">
           <div className="flex items-center gap-3">
             {product.imageUrl ? (
               <img

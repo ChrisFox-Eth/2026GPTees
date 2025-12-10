@@ -16,19 +16,19 @@ export default function Hero(): JSX.Element {
   };
 
   return (
-    <section className="pt-10 md:py-16 text-center container-max px-4">
+    <section className="md:py-16 text-center container-max px-4">
       {/* Main Headline */}
 
       <h1 className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-4">
         One-of-one tees. One shot or unlimited redraws.
       </h1>
 
-      <div className="mb-6">
+      <div className="mb-2">
         {/* <span className="inline-block bg-gradient-to-r from-primary-600 to-purple-600 text-white text-sm font-semibold px-4 py-2 rounded-full mb-4">
           Make a one-of-one tee in minutes
         </span> */}
       </div>
-      <p className="text-base md:text-lg text-gray-600 dark:text-gray-300 mb-8 max-w-2xl mx-auto leading-relaxed">
+      <p className="hidden! text-base md:text-lg text-gray-600 dark:text-gray-300 mb-8 max-w-2xl mx-auto leading-relaxed">
         Choose Classic for a one-and-done creation, or Limitless to keep redrawing with new prompts until you approve. Every tee is a 1/1 made from your words.
       </p>
 
@@ -70,7 +70,7 @@ export default function Hero(): JSX.Element {
           <Button
             variant="secondary"
             size="md"
-            className="px-6 py-3 text-base"
+            className="hidden! px-6 py-3 text-base"
             onClick={() => trackEvent('home.hero.cta_click', { cta: 'gift_codes', surface: 'hero' })}
           >
             Gift a GPTee
