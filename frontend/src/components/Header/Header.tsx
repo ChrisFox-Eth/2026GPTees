@@ -101,7 +101,7 @@ export default function Header({ isDark, onToggleTheme }: HeaderProps): JSX.Elem
                 )}
               </Button>
             </Link>
-
+{/* 
             <Button
               style={{ display: 'none' }}
               variant="secondary"
@@ -110,7 +110,7 @@ export default function Header({ isDark, onToggleTheme }: HeaderProps): JSX.Elem
               ariaLabel={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
             >
               {isDark ? 'Light' : 'Dark'}
-            </Button>
+            </Button> */}
           </div>
 
           {/* Mobile Controls */}
@@ -127,7 +127,7 @@ export default function Header({ isDark, onToggleTheme }: HeaderProps): JSX.Elem
             </Link>
 
             <Button
-              variant="secondary"
+              variant="primary"
               size="sm"
               className="px-3 py-1.5 text-sm"
               onClick={toggleMobileMenu}
@@ -214,12 +214,6 @@ export default function Header({ isDark, onToggleTheme }: HeaderProps): JSX.Elem
 
               <div className="mt-auto border-t border-gray-200 dark:border-gray-700 pt-3 text-xs text-gray-500 dark:text-gray-400">
                 <div className="flex items-center justify-between">
-                  <Link to="/size-guide" onClick={closeMobileMenu} className="hover:text-primary-600 dark:hover:text-primary-400">
-                    Size guide
-                  </Link>
-                  <Link to="/returns" onClick={closeMobileMenu} className="hover:text-primary-600 dark:hover:text-primary-400">
-                    Returns
-                  </Link>
                 </div>
               </div>
             </nav>
