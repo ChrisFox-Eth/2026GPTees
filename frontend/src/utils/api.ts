@@ -90,6 +90,20 @@ export function apiPut(endpoint: string, data: any, token?: string | null): Prom
 }
 
 /**
+ * PATCH request
+ */
+export function apiPatch(endpoint: string, data: any, token?: string | null): Promise<any> {
+  return apiRequest(
+    endpoint,
+    {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    },
+    token
+  );
+}
+
+/**
  * DELETE request
  */
 export function apiDelete(endpoint: string, token?: string | null): Promise<any> {

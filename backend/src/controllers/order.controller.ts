@@ -449,6 +449,125 @@ export const claimPreviewOrder = catchAsync(async (req: Request, res: Response) 
 });
 
 /**
+ * Update size/color for a preview order item (single-item preview orders)
+ * PATCH /api/orders/:id/item
+ */
+export const updatePreviewItemVariant = catchAsync(async (req: Request, res: Response) => {
+  if (!req.user) {
+    res.status(401).json({
+      success: false,
+      message: 'Authentication required',
+    });
+    return;
+  }
+
+  const { id } = req.params;
+  const { color, size } = req.body;
+
+  if (!color || !size) {
+    res.status(400).json({
+      success: false,
+      message: 'color and size are required',
+    });
+    return;
+  }
+
+  const order = await prisma.order.findUnique({
+    where: { id },
+    include: { items: true },
+  });
+
+  if (!order) {
+    throw new AppError('Order not found', 404);
+  }
+
+  if (order.userId !== req.user.id) {
+    throw new AppError('Unauthorized access to this order', 403);
+  }
+
+  if (
+    order.status !== OrderStatus.PENDING_PAYMENT &&
+    order.status !== OrderStatus.DESIGN_PENDING
+  ) {
+    throw new AppError('Size and color can only be changed before payment is completed', 400);
+  }
+
+  if (!order.items.length) {
+    throw new AppError('Order has no items to update', 400);
+  }
+
+  const item = order.items[0];
+  const product = await prisma.product.findUnique({ where: { id: item.productId } });
+
+  if (!product) {
+    throw new AppError('Product not found for this order item', 404);
+  }
+
+  const colorOptions = Array.isArray(product.colors) ? (product.colors as Array<{ name: string }>)
+    : [];
+  const colorMatch =
+    colorOptions.find((c) => c?.name?.toLowerCase() === color.toString().toLowerCase()) ||
+    colorOptions[0];
+
+  if (!colorMatch) {
+    throw new AppError('Selected color is not available for this product', 400);
+  }
+
+  const sizeMatch =
+    product.sizes.find((s) => s.toLowerCase() === size.toString().toLowerCase()) || product.sizes[0];
+
+  if (!sizeMatch) {
+    throw new AppError('Selected size is not available for this product', 400);
+  }
+
+  const variantId = getPrintfulVariantId(product.printfulId, colorMatch.name, sizeMatch);
+  if (!variantId) {
+    throw new AppError(
+      `Selected variant unavailable: ${product.name} (${colorMatch.name} / ${sizeMatch}). Please choose a supported color/size.`,
+      400
+    );
+  }
+
+  const updatedOrder = await prisma.order.update({
+    where: { id: order.id },
+    data: {
+      items: {
+        update: {
+          where: { id: item.id },
+          data: {
+            color: colorMatch.name,
+            size: sizeMatch,
+            printfulVariantId: variantId.toString(),
+          },
+        },
+      },
+    },
+    include: {
+      items: {
+        include: { product: true },
+      },
+      designs: true,
+    },
+  });
+
+  sendAnalyticsEvent({
+    event: 'order.preview.variant_updated',
+    properties: {
+      order_id: updatedOrder.id,
+      order_number: updatedOrder.orderNumber,
+      product_id: product.id,
+      color: colorMatch.name,
+      size: sizeMatch,
+    },
+  }).catch((err) => console.error('Failed to send order.preview.variant_updated analytics', err));
+
+  res.json({
+    success: true,
+    data: updatedOrder,
+  });
+});
+
+/**
  * Get single order by ID
  * GET /api/orders/:id
  */

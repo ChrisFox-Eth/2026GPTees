@@ -7,13 +7,15 @@
 import { useEffect, useRef, useState } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '@clerk/clerk-react';
-import { apiGet, apiPost } from '../utils/api';
+import { apiGet, apiPost, apiPatch } from '../utils/api';
 import { Button } from '@components/Button';
 import ProtectedRoute from '../components/ProtectedRoute';
 import { trackEvent } from '@utils/analytics';
 import { QUICKSTART_PROMPT_KEY } from '@utils/quickstart';
 import type { Order } from '../types/order';
 import type { Design } from '../types/design';
+import type { Product } from '../types/product';
+import { useCart } from '../hooks/useCart';
 
 const STYLE_OPTIONS = [
   { value: 'modern', label: 'Modern', description: 'Clean, minimalist with bold colors' },
@@ -44,15 +46,21 @@ function DesignContent(): JSX.Element {
   const [designs, setDesigns] = useState<Design[]>([]);
   const [prompt, setPrompt] = useState('');
   const [selectedStyle, setSelectedStyle] = useState('modern');
+  const [selectedColor, setSelectedColor] = useState<string | null>(null);
+  const [selectedSize, setSelectedSize] = useState<string | null>(null);
+  const [product, setProduct] = useState<Product | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [isLoadingSurprise, setIsLoadingSurprise] = useState(false);
   const [isApproving, setIsApproving] = useState<string | null>(null);
+  const [isUpdatingVariant, setIsUpdatingVariant] = useState(false);
+  const [variantMessage, setVariantMessage] = useState<string | null>(null);
   const [shareFeedback, setShareFeedback] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const hasTrackedOrderView = useRef(false);
   const hasLoadedQuickstartPrompt = useRef(false);
   const hasGeneratingDesign = designs.some((d) => d.status === 'GENERATING');
+  const { updateItemVariant } = useCart();
 
   useEffect(() => {
     if (!orderId) {
@@ -122,6 +130,16 @@ function DesignContent(): JSX.Element {
     };
   }, [hasGeneratingDesign, orderId, getToken]);
 
+  useEffect(() => {
+    if (!product) return;
+    if (!selectedColor && product.colors.length) {
+      setSelectedColor(product.colors[0].name);
+    }
+    if (!selectedSize && product.sizes.length) {
+      setSelectedSize(product.sizes[0]);
+    }
+  }, [product, selectedColor, selectedSize]);
+
   const fetchDesigns = async (token: string) => {
     const designsResponse = await apiGet(`/api/designs?orderId=${orderId}`, token);
     const data = designsResponse.data || [];
@@ -141,7 +159,17 @@ function DesignContent(): JSX.Element {
 
       // Fetch order details
       const orderResponse = await apiGet(`/api/orders/${orderId}`, token);
-      setOrder(orderResponse.data);
+      const loadedOrder = orderResponse.data as Order;
+      setOrder(loadedOrder);
+
+      const firstItem = loadedOrder?.items?.[0];
+      if (firstItem) {
+        setSelectedColor(firstItem.color || null);
+        setSelectedSize(firstItem.size || null);
+        if (firstItem.product) {
+          setProduct(firstItem.product as Product);
+        }
+      }
 
       // Fetch existing designs for this order
       const loadedDesigns = await fetchDesigns(token);
@@ -149,11 +177,75 @@ function DesignContent(): JSX.Element {
         order_id: orderId,
         design_count: loadedDesigns.length,
       });
+
+      if (!firstItem?.product) {
+        const productsResponse = await apiGet('/api/products');
+        const match = (productsResponse.data || []).find((p: Product) => p.id === firstItem?.productId);
+        if (match) {
+          setProduct(match);
+        }
+      }
     } catch (err: any) {
       console.error('Error fetching order/designs:', err);
       setError(err.message || 'Failed to load order details');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleVariantUpdate = async (nextColor: string, nextSize: string) => {
+    if (!orderId || !order) return;
+    if (isUpdatingVariant) return;
+    const firstItem = order.items?.[0];
+    if (!firstItem) return;
+    if (firstItem.color === nextColor && firstItem.size === nextSize) return;
+
+    setIsUpdatingVariant(true);
+    setVariantMessage(null);
+
+    try {
+      const token = await getToken();
+      if (!token) {
+        setError('Authentication required. Please sign in again.');
+        return;
+      }
+
+      const updated = await apiPatch(
+        `/api/orders/${orderId}/item`,
+        { color: nextColor, size: nextSize },
+        token
+      );
+
+      const updatedOrder = updated.data as Order;
+      setOrder(updatedOrder);
+      setSelectedColor(nextColor);
+      setSelectedSize(nextSize);
+
+      const latestDesign = designs[0];
+      updateItemVariant(
+        firstItem.productId,
+        firstItem.size,
+        firstItem.color,
+        {
+          color: nextColor,
+          size: nextSize,
+          imageUrl: latestDesign?.imageUrl || null,
+        }
+      );
+
+      setVariantMessage('Fit updated for this preview order.');
+      trackEvent('design.variant.updated', {
+        order_id: orderId,
+        from_color: firstItem.color,
+        from_size: firstItem.size,
+        to_color: nextColor,
+        to_size: nextSize,
+      });
+    } catch (err: any) {
+      console.error('Error updating size/color:', err);
+      setError(err?.message || 'Failed to update size/color');
+    } finally {
+      setIsUpdatingVariant(false);
     }
   };
 
@@ -484,6 +576,104 @@ function DesignContent(): JSX.Element {
           <Button variant="primary" onClick={handleCheckoutRedirect} className="w-full md:w-auto">
             Checkout to print
           </Button>
+        </div>
+      )}
+
+      {product && (
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4 mb-6 border border-gray-200 dark:border-gray-700">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-4">
+            <div>
+              <p className="text-sm font-semibold text-gray-900 dark:text-white">Pick your fit</p>
+              <p className="text-xs text-gray-600 dark:text-gray-400">
+                Choose size and color now that you see the artwork. We will save it to this preview order and your cart.
+              </p>
+            </div>
+            {variantMessage && (
+              <p className="text-xs text-green-700 dark:text-green-300">{variantMessage}</p>
+            )}
+          </div>
+
+          <div className="grid gap-4 md:grid-cols-2">
+            <div className="space-y-4">
+              <div>
+                <p className="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-2">Color</p>
+                <div className="flex gap-2 flex-wrap">
+                  {product.colors.map((c) => (
+                    <button
+                      key={c.name}
+                      type="button"
+                      onClick={() => handleVariantUpdate(c.name, selectedSize || product.sizes[0])}
+                      className={`w-10 h-10 rounded-full border-2 transition-all ${
+                        selectedColor === c.name
+                          ? 'border-primary-600 scale-110'
+                          : 'border-gray-300 dark:border-gray-600'
+                      }`}
+                      style={{ backgroundColor: c.hex }}
+                      aria-label={`Select color ${c.name}`}
+                    />
+                  ))}
+                </div>
+              </div>
+              <div>
+                <p className="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-2">Size</p>
+                <div className="flex gap-2 flex-wrap text-xs">
+                  {product.sizes.map((s) => (
+                    <button
+                      key={s}
+                      type="button"
+                      onClick={() =>
+                        handleVariantUpdate(
+                          selectedColor || product.colors[0]?.name || 'Black',
+                          s
+                        )
+                      }
+                      className={`px-3 py-2 rounded-full border transition-colors ${
+                        selectedSize === s
+                          ? 'border-primary-600 bg-primary-50 dark:bg-primary-900/20 text-primary-700 dark:text-primary-200'
+                          : 'border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200'
+                      }`}
+                      aria-label={`Select size ${s}`}
+                    >
+                      {s}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <p className="text-[11px] text-gray-500 dark:text-gray-400">
+                Changes are saved for this preview order. You can still adjust before checkout; once paid, fit is locked for printing.
+              </p>
+            </div>
+
+            {designs.length > 0 && (
+              <div className="space-y-2">
+                <p className="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-2">See it on all colors</p>
+                <div className="grid grid-cols-2 gap-3">
+                  {product.colors.slice(0, 4).map((c) => (
+                    <div
+                      key={c.name}
+                      className="rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden"
+                      style={{ backgroundColor: c.hex }}
+                    >
+                      <div className="h-32 flex items-center justify-center bg-white/40 dark:bg-black/20">
+                        <img
+                          src={designs[0].imageUrl}
+                          alt={designs[0].prompt}
+                          className="max-h-28 object-contain"
+                        />
+                      </div>
+                      <p className="text-center text-[11px] text-gray-800 dark:text-gray-100 py-1">
+                        {c.name}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {isUpdatingVariant && (
+            <p className="text-xs text-blue-700 dark:text-blue-300 mt-2">Saving fit...</p>
+          )}
         </div>
       )}
 

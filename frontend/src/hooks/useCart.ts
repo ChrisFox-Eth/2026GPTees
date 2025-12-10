@@ -194,6 +194,42 @@ export function useCart() {
   };
 
   /**
+   * Update size/color (and optional image) for the first matching product in cart
+   */
+  const updateItemVariant = (
+    productId: string,
+    oldSize: string,
+    oldColor: string,
+    updated: Partial<Pick<CartItem, 'size' | 'color' | 'imageUrl'>>
+  ) => {
+    const storedCart = localStorage.getItem(CART_STORAGE_KEY);
+    if (!storedCart) return;
+
+    const currentCart = JSON.parse(storedCart) as CartItem[];
+    const index = currentCart.findIndex(
+      (item) =>
+        item.productId === productId &&
+        item.size === oldSize &&
+        item.color === oldColor
+    );
+
+    if (index === -1) return;
+
+    const newCart = [...currentCart];
+    newCart[index] = { ...newCart[index], ...updated };
+    saveCart(newCart);
+
+    trackEvent('cart.item.variant_update', {
+      product_id: productId,
+      from_size: oldSize,
+      from_color: oldColor,
+      to_size: updated.size || oldSize,
+      to_color: updated.color || oldColor,
+      has_image: Boolean(updated.imageUrl || newCart[index].imageUrl),
+    });
+  };
+
+  /**
    * Get total items in cart
    */
   const getTotalItems = () => {
@@ -217,6 +253,7 @@ export function useCart() {
     removeFromCart,
     updateQuantity,
     clearCart,
+    updateItemVariant,
     getTotalItems,
     getSubtotal,
   };

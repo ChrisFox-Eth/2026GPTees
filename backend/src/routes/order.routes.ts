@@ -13,6 +13,7 @@ import {
   createPreviewOrder,
   createGuestPreviewOrder,
   claimPreviewOrder,
+  updatePreviewItemVariant,
 } from '../controllers/order.controller.js';
 import { requireAuth } from '../middleware/auth.middleware.js';
 
@@ -41,6 +42,12 @@ router.post('/preview/guest', createGuestPreviewOrder);
  * Claim a guest preview order after login
  */
 router.post('/preview/claim', requireAuth, claimPreviewOrder);
+
+/**
+ * PATCH /api/orders/:id/item
+ * Update size/color for a preview order item (requires authentication)
+ */
+router.patch('/:id/item', requireAuth, updatePreviewItemVariant);
 
 /**
  * GET /api/orders/:id
