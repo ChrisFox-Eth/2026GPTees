@@ -447,7 +447,7 @@ export default function Quickstart(): JSX.Element {
         </div>
 
         {product && (
-          <div className="space-y-4">
+          <div className="hidden! space-y-4">
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
                 <p className="text-xs font-semibold text-gray-700 dark:text-gray-300">Color</p>
@@ -507,14 +507,14 @@ export default function Quickstart(): JSX.Element {
                   <p className="text-xs font-semibold text-gray-800 dark:text-gray-100">Prompt ideas - Choose to Use</p>
                 </div>
               </div>
-              <div className="cursor-pointer relative overflow-hidden h-[64px] sm:h-[68px]">
+              <div className="relative overflow-hidden h-[64px] sm:h-[68px]">
                 <AnimatePresence mode="wait" initial={false}>
                   <motion.button
                     key={ideaIndex}
                     type="button"
                     onClick={() => handleUseIdea(PROMPT_IDEAS[ideaIndex])}
                     aria-label={`Try prompt: ${PROMPT_IDEAS[ideaIndex]}`}
-                    className="absolute inset-0 group inline-flex items-center gap-3 rounded-xl border border-primary-200 dark:border-primary-800 bg-transparent dark:bg-transparent px-3 py-2 text-left shadow-sm focus-visible:outline-2 focus-visible:outline-primary-500 focus-visible:outline-offset-2"
+                    className="cursor-pointer absolute inset-0 group inline-flex items-center gap-3 rounded-xl border border-primary-200 dark:border-primary-800 hover:bg-primary-50 dark:hover:bg-primary-900 transition-colors transform px-3 py-2 text-left shadow-sm focus-visible:outline-2 focus-visible:outline-primary-500 focus-visible:outline-offset-2"
                     initial={{ opacity: 0, y: 12, rotateX: -12 }}
                     animate={{ opacity: 1, y: 0, rotateX: 0 }}
                     exit={{ opacity: 0, y: -12, rotateX: 12 }}
@@ -557,11 +557,11 @@ export default function Quickstart(): JSX.Element {
         </div>
         <Button
           variant="primary"
-          className="w-full"
+          className="bg-gradient-to-r from-primary-600 to-purple-600 w-full"
           onClick={handleSubmit}
           disabled={isCreating || isGenerating}
         >
-          {isCreating ? 'Starting preview...' : isGenerating ? 'Working on it...' : 'Create in 60s'}
+          {isCreating ? 'Starting preview...' : isGenerating ? 'Working on it...' : 'Design my Tee!'}
         </Button>
         {submitError && (
           <p className="text-xs text-red-600 dark:text-red-400 text-center">{submitError}</p>
