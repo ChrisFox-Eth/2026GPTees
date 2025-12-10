@@ -37,6 +37,12 @@ const PREVIEW_CACHE_KEY = 'gptees_quickstart_preview_cache';
 const QUICKSTART_STYLE = 'trendy';
 const QUICKSTART_TIER = 'PREMIUM';
 
+const isTemporaryUrl = (url?: string | null) => {
+  if (!url) return true;
+  const lower = url.toLowerCase();
+  return lower.includes('oaidalle') || lower.includes('openai');
+};
+
 export default function Quickstart(): JSX.Element {
   const [products, setProducts] = useState<Product[]>([]);
   const [prompt, setPrompt] = useState<string>(
@@ -154,6 +160,23 @@ export default function Quickstart(): JSX.Element {
     return () => clearInterval(id);
   }, []);
 
+  const pollDesignForSupabaseUrl = async (designId: string, token: string) => {
+    for (let i = 0; i < 8; i += 1) {
+      const designResp = await apiGet(`/api/designs/${designId}`, token);
+      const design = designResp?.data as Design;
+      if (design && !isTemporaryUrl(design.imageUrl || design.thumbnailUrl)) {
+        setGeneratedDesign(design);
+        localStorage.setItem(
+          PREVIEW_CACHE_KEY,
+          JSON.stringify({ orderId: design.orderId, design })
+        );
+        return design;
+      }
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+    }
+    return null;
+  };
+
   const generateDesignWithToken = async (
     orderId: string,
     promptText: string,
@@ -172,16 +195,22 @@ export default function Quickstart(): JSX.Element {
     const designData = response.data as Design;
     setGeneratedDesign(designData);
     setCurrentOrderId(orderId);
-    localStorage.setItem(
-      PREVIEW_CACHE_KEY,
-      JSON.stringify({ orderId, design: designData })
-    );
     trackEvent('quickstart.preview.generated', {
       order_id: orderId,
       prompt_length: promptText.length,
       style: styleValue,
       source: 'quickstart_home',
     });
+
+    if (isTemporaryUrl(designData.imageUrl)) {
+      await pollDesignForSupabaseUrl(designData.id, token);
+    } else {
+      localStorage.setItem(
+        PREVIEW_CACHE_KEY,
+        JSON.stringify({ orderId, design: designData })
+      );
+    }
+
     navigate(`/design?orderId=${orderId}`);
   };
 
@@ -470,7 +499,7 @@ export default function Quickstart(): JSX.Element {
             <p className="text-sm font-semibold text-gray-900 dark:text-white">Your preview</p>
             <div className="bg-white dark:bg-gray-800 rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700">
               <img
-                src={generatedDesign.imageUrl}
+                src={generatedDesign.thumbnailUrl || generatedDesign.imageUrl}
                 alt={generatedDesign.prompt}
                 className="w-full h-64 object-contain bg-gray-100 dark:bg-gray-900"
               />

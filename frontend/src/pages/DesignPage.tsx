@@ -244,7 +244,7 @@ function DesignContent(): JSX.Element {
         {
           color: nextColor,
           size: nextSize,
-          imageUrl: latestDesign?.imageUrl || null,
+          imageUrl: latestDesign?.thumbnailUrl || latestDesign?.imageUrl || null,
         }
       );
 
@@ -266,7 +266,7 @@ function DesignContent(): JSX.Element {
           quantity: 1,
           basePrice: priceFromOrder,
           tierPrice: 0,
-          imageUrl: latestDesign?.imageUrl || product.imageUrl || null,
+          imageUrl: latestDesign?.thumbnailUrl || latestDesign?.imageUrl || product.imageUrl || null,
         });
       }
 
@@ -727,7 +727,7 @@ function DesignContent(): JSX.Element {
                           style={mockSrc ? { backgroundImage: `url(${mockSrc})`, backgroundSize: 'cover', backgroundPosition: 'center' } : { backgroundColor: c.hex }}
                         >
                           <img
-                            src={designs[0].imageUrl}
+                            src={designs[0].thumbnailUrl || designs[0].imageUrl}
                             alt={designs[0].prompt}
                             className="max-h-24 max-w-[70%] object-contain absolute inset-0 m-auto"
                           />
@@ -942,7 +942,7 @@ function DesignContent(): JSX.Element {
                 {/* Design Image */}
                 <div className="relative bg-gray-100 dark:bg-gray-900">
                   <img
-                    src={design.imageUrl}
+                    src={design.thumbnailUrl || design.imageUrl}
                     alt={design.prompt}
                     className="w-full h-64 object-contain"
                   />
