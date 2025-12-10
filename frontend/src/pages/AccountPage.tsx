@@ -78,6 +78,8 @@ const getStatusBadge = (status: string) => {
   );
 };
 
+const reorderEligibleStatuses = ['PAID', 'DESIGN_APPROVED', 'SUBMITTED', 'SHIPPED', 'DELIVERED'];
+
 function AccountContent(): JSX.Element {
   const { user } = useUser();
   const { getToken, isSignedIn, isLoaded } = useAuth();
@@ -114,6 +116,7 @@ const fetchOrders = async () => {
       setLoading(false);
     }
   };
+
   const handleReorder = (order: Order, design: DesignPreview) => {
     const firstItem = order.items?.[0];
     const productId = firstItem?.product?.id || `${order.id}-design`;
@@ -141,7 +144,6 @@ const fetchOrders = async () => {
       tier: order.designTier,
     });
   };
-
 return (
     <div className="container-max py-8">
       {/* User Info */}
@@ -236,24 +238,34 @@ return (
                         <div
                           key={design.id}
                           className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden bg-gray-50 dark:bg-gray-900"
-                        >
-                          <div className="bg-gray-100 dark:bg-gray-800 flex items-center justify-center h-32">
-                            {design.imageUrl ? (
-                              <img src={design.imageUrl} alt={design.prompt} className="w-full h-full object-contain" />
-                            ) : (
-                              <div className="text-xs text-gray-500 dark:text-gray-400">Design preview coming soon</div>
-                            )}
+                          >
+                            <div className="bg-gray-100 dark:bg-gray-800 flex items-center justify-center h-32">
+                              {design.imageUrl ? (
+                                <img src={design.imageUrl} alt={design.prompt} className="w-full h-full object-contain" />
+                              ) : (
+                                <div className="text-xs text-gray-500 dark:text-gray-400">Design preview coming soon</div>
+                              )}
+                            </div>
+                            <p className="text-xs text-gray-700 dark:text-gray-300 line-clamp-2 px-3 py-2">{design.prompt}</p>
+                            <div className="px-3 pb-3">
+                              <Link to={`/design?orderId=${order.id}`}>
+                                <Button variant="secondary" size="sm">
+                                  Open design
+                                </Button>
+                              </Link>
+                              {reorderEligibleStatuses.includes(order.status) && (
+                                <Button
+                                  variant="primary"
+                                  size="sm"
+                                  className="mt-2 w-full"
+                                  onClick={() => handleReorder(order, design)}
+                                >
+                                  Reorder this design
+                                </Button>
+                              )}
+                            </div>
                           </div>
-                          <p className="text-xs text-gray-700 dark:text-gray-300 line-clamp-2 px-3 py-2">{design.prompt}</p>
-                          <div className="px-3 pb-3">
-                            <Link to={`/design?orderId=${order.id}`}>
-                              <Button variant="secondary" size="sm">
-                                Open design
-                              </Button>
-                            </Link>
-                          </div>
-                        </div>
-                      ))}
+                        ))}
                     </div>
                   </div>
                 )}
