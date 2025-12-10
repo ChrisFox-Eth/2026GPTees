@@ -12,6 +12,7 @@ import { trackEvent } from '@utils/analytics';
 import { Product } from '../../types/product';
 import { QUICKSTART_PROMPT_KEY } from '@utils/quickstart';
 import { AnimatePresence, motion } from 'framer-motion';
+import { useCart } from '@hooks/useCart';
 import type { Design } from '../../types/design';
 import type { PendingGuestPreview } from '../../types/preview';
 // const STYLE_PRESETS = ['Retro surf', 'Minimal line art', 'Neon cyberpunk', 'Vintage anime', 'Bold typographic'];
@@ -21,7 +22,7 @@ const PROMPT_IDEAS: string[] = [
   'A corgi astronaut planting a GPTees flag on the moon.',
   'Neon dragon riding a bicycle through a cyberpunk alley.',
   'Minimal line-art koi fish with flowing neon water.',
-  '“404: Boring tee not found” in bold glitch type.',
+  '"404: Boring tee not found" in bold glitch type.',
   'A fox curled up in a blanket of clouds, dreamy and whimsical, pastel tones',
   'Clusters of abstract shapes arranged in a surreal, dream-like composition.',
   'Steam forming tiny hearts over a teacup, soft focus, warm colors',
@@ -34,6 +35,7 @@ const PROMPT_IDEAS: string[] = [
 
 const GUEST_PREVIEW_KEY = 'gptees_preview_guest';
 const QUICKSTART_STYLE = 'trendy';
+const QUICKSTART_TIER = 'PREMIUM';
 
 export default function Quickstart(): JSX.Element {
   const [products, setProducts] = useState<Product[]>([]);
@@ -56,6 +58,7 @@ export default function Quickstart(): JSX.Element {
 
   const navigate = useNavigate();
   const { isSignedIn, getToken } = useAuth();
+  const { addToCart, cart } = useCart();
 
   useEffect(() => {
     const loadProducts = async () => {
@@ -100,7 +103,7 @@ export default function Quickstart(): JSX.Element {
     product?.sizes?.[2] ||
     product?.sizes?.[0] ||
     'XL';
-  const tier = 'PREMIUM';
+  const tier = QUICKSTART_TIER;
   const basePrice = Number(product?.basePrice || 0);
   const tierPrice = product?.tierPricing?.[tier]?.price || 0;
   const quickstartTotal = basePrice + tierPrice;
@@ -125,7 +128,7 @@ export default function Quickstart(): JSX.Element {
       const customEvent = event as CustomEvent<{ prompt?: string }>;
       const idea = customEvent.detail?.prompt;
       if (!idea) return;
-      setPrompt((prev) => (prev ? `${prev} • ${idea}` : idea));
+      setPrompt((prev) => (prev ? `${prev} / ${idea}` : idea));
       const textarea = document.getElementById(textareaId);
       if (textarea) {
         textarea.focus();
@@ -143,6 +146,35 @@ export default function Quickstart(): JSX.Element {
     return () => clearInterval(id);
   }, []);
 
+  const addPreviewToCart = (designData?: Design | null) => {
+    if (!product) return;
+
+    const selectedSize = size || defaultSize;
+    const selectedColor = color || defaultColor;
+    const alreadyInCart = cart.some(
+      (item) =>
+        item.productId === product.id &&
+        item.size === selectedSize &&
+        item.color === selectedColor &&
+        item.tier === (tier as 'PREMIUM')
+    );
+
+    if (alreadyInCart) return;
+
+    addToCart({
+      productId: product.id,
+      productName: product.name,
+      size: selectedSize,
+      color: selectedColor,
+      tier: tier as 'PREMIUM',
+      quantity: 1,
+      basePrice: Number(product.basePrice || 0),
+      tierPrice: Number(product.tierPricing?.[tier]?.price || 0),
+      imageUrl: designData?.imageUrl || product.imageUrl || null,
+    });
+
+  };
+
   const generateDesignWithToken = async (
     orderId: string,
     promptText: string,
@@ -158,8 +190,10 @@ export default function Quickstart(): JSX.Element {
       },
       token
     );
-    setGeneratedDesign(response.data as Design);
+    const designData = response.data as Design;
+    setGeneratedDesign(designData);
     setCurrentOrderId(orderId);
+    addPreviewToCart(designData);
     trackEvent('quickstart.preview.generated', {
       order_id: orderId,
       prompt_length: promptText.length,
@@ -399,7 +433,7 @@ export default function Quickstart(): JSX.Element {
         <div className="space-y-2">
           <label className="text-xs font-semibold text-gray-700 dark:text-gray-300">Your prompt</label>
           <p className="text-xs text-gray-600 dark:text-gray-400">
-            Try it right here—describe the tee you want and we will reveal the artwork after you pick your fit.
+            Try it right here - describe the tee you want and we will reveal the artwork after you pick your fit.
           </p>
           <textarea
             id={textareaId}
@@ -412,7 +446,7 @@ export default function Quickstart(): JSX.Element {
         </div>
 
         {product && (
-          <div className="hidden! space-y-4">
+          <div className="space-y-4">
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
                 <p className="text-xs font-semibold text-gray-700 dark:text-gray-300">Color</p>
@@ -497,7 +531,7 @@ export default function Quickstart(): JSX.Element {
             </div>
       </div>
       <div className="w-full flex-shrink-0 space-y-3">
-        <div className="hidden! bg-gray-50 dark:bg-gray-900 rounded-lg p-3 border border-gray-200 dark:border-gray-700">
+        <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-3 border border-gray-200 dark:border-gray-700">
           <div className="flex items-center gap-3">
             {product.imageUrl ? (
               <img
@@ -512,12 +546,12 @@ export default function Quickstart(): JSX.Element {
             <div>
               <p className="text-sm font-semibold text-gray-900 dark:text-white">{product.name}</p>
               <p className="text-xs text-gray-600 dark:text-gray-400">
-                {color || defaultColor} • {size || defaultSize} • Limitless redraws · ${quickstartTotal.toFixed(2)} all-in
+                {color || defaultColor} / {size || defaultSize} / Limitless redraws / ${quickstartTotal.toFixed(2)} all-in
               </p>
             </div>
           </div>
           <p className="text-[11px] text-gray-500 dark:text-gray-400 mt-2">
-            Submit your fit and tier to unlock the design preview right after checkout.
+            We will carry these selections into checkout to keep your preview order attached.
           </p>
         </div>
         <Button
@@ -552,6 +586,9 @@ export default function Quickstart(): JSX.Element {
         {generatedDesign && (
           <div className="w-full rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 p-4 space-y-3">
             <p className="text-sm font-semibold text-gray-900 dark:text-white">Your preview</p>
+            <p className="text-xs text-gray-600 dark:text-gray-400">
+              Selected: {color || defaultColor} / {size || defaultSize}. We added this preview to your cart and saved it to your account.
+            </p>
             <div className="bg-white dark:bg-gray-800 rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700">
               <img
                 src={generatedDesign.imageUrl}
@@ -574,9 +611,12 @@ export default function Quickstart(): JSX.Element {
               >
                 {isGenerating ? 'Generating...' : 'Try again (Premium)'}
               </Button>
+              <Button variant="secondary" onClick={() => navigate('/cart')} className="w-full sm:w-auto">
+                Open cart
+              </Button>
             </div>
             <p className="text-[11px] text-gray-500 dark:text-gray-400">
-              We will reuse this preview order at checkout so your artwork stays attached.
+              We will reuse this preview order at checkout so your artwork stays attached. Removing it from the cart will not delete your saved preview; you can always find it under Account.
             </p>
           </div>
         )}
