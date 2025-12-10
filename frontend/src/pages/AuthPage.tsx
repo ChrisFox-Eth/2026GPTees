@@ -10,6 +10,7 @@ import { useLocation } from 'react-router-dom';
 export default function AuthPage(): JSX.Element {
   const location = useLocation();
   const isSignUp = location.pathname.includes('sign-up');
+  const redirectParam = new URLSearchParams(location.search).get('redirect') || '/';
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 py-8 px-4 sm:py-12 sm:px-6 lg:px-8">
@@ -18,7 +19,9 @@ export default function AuthPage(): JSX.Element {
           path="/auth/sign-up"
           routing="path"
           signInUrl="/auth"
-          fallbackRedirectUrl="/shop"
+          fallbackRedirectUrl={redirectParam}
+          redirectUrl={redirectParam}
+          afterSignUpUrl={redirectParam}
           appearance={{
             elements: {
               rootBox: "w-full max-w-md",
@@ -31,7 +34,9 @@ export default function AuthPage(): JSX.Element {
           path="/auth"
           routing="path"
           signUpUrl="/auth/sign-up"
-          fallbackRedirectUrl="/shop"
+          fallbackRedirectUrl={redirectParam}
+          redirectUrl={redirectParam}
+          afterSignInUrl={redirectParam}
           appearance={{
             elements: {
               rootBox: "w-full max-w-md",

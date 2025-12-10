@@ -121,28 +121,12 @@ export const createDesign = catchAsync(async (req: Request, res: Response) => {
     },
   });
 
-  // Upload to Supabase Storage synchronously so we return a permanent URL
-  let finalImageUrl = imageUrl;
-  let finalThumbnailUrl = imageUrl;
-
-  try {
-    const { imageUrl: supabaseUrl, thumbnailUrl: supabaseThumbnailUrl } = await uploadImage(
-      imageUrl,
-      design.id
-    );
-    finalImageUrl = supabaseUrl;
-    finalThumbnailUrl = supabaseThumbnailUrl;
-    console.log(`Design ${design.id} uploaded to Supabase Storage`);
-  } catch (error) {
-    console.error('Supabase upload error:', error);
-    // Fall back to temporary OpenAI URL; status still marked as completed
-  }
-
+  // Mark completed immediately with the OpenAI URL so we can return quickly
   const completedDesign = await prisma.design.update({
     where: { id: design.id },
     data: {
-      imageUrl: finalImageUrl,
-      thumbnailUrl: finalThumbnailUrl,
+      imageUrl,
+      thumbnailUrl: imageUrl,
       status: 'COMPLETED',
     },
   });
@@ -181,6 +165,23 @@ export const createDesign = catchAsync(async (req: Request, res: Response) => {
       is_preview: order.status === OrderStatus.PENDING_PAYMENT,
     },
   }).catch((err) => console.error('Failed to send design.generate.success analytics', err));
+
+  // Kick off Supabase upload in the background to avoid request timeouts
+  uploadImage(imageUrl, design.id)
+    .then(async ({ imageUrl: supabaseUrl, thumbnailUrl: supabaseThumbnailUrl }) => {
+      await prisma.design.update({
+        where: { id: design.id },
+        data: {
+          imageUrl: supabaseUrl,
+          thumbnailUrl: supabaseThumbnailUrl,
+          updatedAt: new Date(),
+        },
+      });
+      console.log(`Design ${design.id} uploaded to Supabase Storage`);
+    })
+    .catch((error) => {
+      console.error('Supabase upload error (non-blocking):', error);
+    });
 });
 
 /**

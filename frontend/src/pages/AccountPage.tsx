@@ -257,9 +257,16 @@ return (
                 )}
 
                 <div className="mt-4 flex gap-3 flex-wrap">
+                  {(order.status === 'PENDING_PAYMENT' || order.status === 'DESIGN_PENDING') && (
+                    <Link to={`/checkout?orderId=${order.id}`}>
+                      <Button variant="primary" size="sm">
+                        Checkout to print
+                      </Button>
+                    </Link>
+                  )}
                   {order.status === 'DESIGN_PENDING' && (
                     <Link to={`/design?orderId=${order.id}`}>
-                      <Button variant="primary" size="sm">
+                      <Button variant="secondary" size="sm">
                         Review & Approve
                       </Button>
                     </Link>

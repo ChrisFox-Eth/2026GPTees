@@ -316,7 +316,7 @@ export default function Quickstart(): JSX.Element {
           order_id: guestOrderId,
         });
 
-        navigate('/auth#');
+        navigate('/auth?redirect=/');
       } catch (err: any) {
         console.error('Error creating guest preview order:', err);
         setSubmitError(err?.message || 'Failed to start your preview. Please try again.');
@@ -544,7 +544,7 @@ export default function Quickstart(): JSX.Element {
             <p className="text-xs text-amber-800 dark:text-amber-200">
               We saved your prompt and preview order. Log in to see the design and keep generating.
             </p>
-            <Button variant="secondary" onClick={() => navigate('/auth#')} className="w-full sm:w-auto">
+            <Button variant="secondary" onClick={() => navigate('/auth?redirect=/')} className="w-full sm:w-auto">
               Sign in to reveal
             </Button>
           </div>
