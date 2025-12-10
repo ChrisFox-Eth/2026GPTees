@@ -298,7 +298,7 @@ export default function CheckoutPage(): JSX.Element {
           Printed & fulfilled by Printful - Secure payments via Stripe - Ships in 5-8 business days
         </p>
         {isPreviewCheckout && previewOrder && (
-          <div className="mt-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
+          <div className="hidden! mt-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
             <p className="text-sm text-blue-900 dark:text-blue-100 font-semibold">
               Reusing preview order {previewOrder.orderNumber}
             </p>
@@ -309,7 +309,7 @@ export default function CheckoutPage(): JSX.Element {
         )}
       </div>
 
-      <div className="mb-6">
+      <div className="hidden! mb-6">
         <ExamplesGallery />
       </div>
 

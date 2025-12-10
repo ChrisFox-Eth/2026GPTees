@@ -507,7 +507,7 @@ export default function Quickstart(): JSX.Element {
                   <p className="text-xs font-semibold text-gray-800 dark:text-gray-100">Prompt ideas - Choose to Use</p>
                 </div>
               </div>
-              <div className="relative overflow-hidden h-[64px] sm:h-[68px]">
+              <div className="cursor-pointer relative overflow-hidden h-[64px] sm:h-[68px]">
                 <AnimatePresence mode="wait" initial={false}>
                   <motion.button
                     key={ideaIndex}

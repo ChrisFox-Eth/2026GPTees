@@ -542,7 +542,7 @@ function DesignContent(): JSX.Element {
       </div>
 
       {/* Order Info Bar */}
-      <div className="bg-primary-50 dark:bg-primary-900/20 rounded-lg p-4 mb-6 flex flex-wrap items-center justify-between gap-4">
+      <div className="hidden! bg-primary-50 dark:bg-primary-900/20 rounded-lg p-4 mb-6 flex-wrap items-center justify-between gap-4">
         <div>
           <p className="text-sm text-primary-800 dark:text-primary-200">
             <strong>Order:</strong> {order.orderNumber}
@@ -752,7 +752,7 @@ function DesignContent(): JSX.Element {
           </div>
 
           {/* Preset Prompts */}
-          <div className="mb-6">
+          <div className="hidden! mb-6">
             <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Quick start</p>
             <div className="flex flex-wrap gap-2">
               {PRESET_PROMPTS.map((preset) => (
@@ -779,7 +779,7 @@ function DesignContent(): JSX.Element {
           </div>
 
           {/* Style Selector */}
-          <div className="mb-6">
+          <div className="hidden! mb-6">
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
               Choose Style
             </label>
