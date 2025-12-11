@@ -67,7 +67,10 @@ export default function CheckoutPage(): JSX.Element {
       const itemTotal = firstItem
         ? isPreviewCheckout
           ? Number((firstItem as OrderItem).unitPrice) * (firstItem as OrderItem).quantity
-          : ((firstItem as any).basePrice + (firstItem as any).tierPrice) * (firstItem as any).quantity
+          : (
+              ((firstItem as any).unitPrice ?? ((firstItem as any).basePrice || 0) + ((firstItem as any).tierPrice || 0)) *
+              (firstItem as any).quantity
+            )
         : subtotal;
       const discount = activeItems.length === 1 ? itemTotal : 0;
       return {
@@ -84,8 +87,6 @@ export default function CheckoutPage(): JSX.Element {
     };
   })();
   const totalWithShipping = discountedItemsTotal + shippingCost;
-  const activeTier = isPreviewCheckout ? previewOrder?.designTier : cart[0]?.tier;
-
   useEffect(() => {
     if (!isLoaded || isPreviewCheckout) return;
     if (cart.length === 0) {
@@ -530,7 +531,7 @@ export default function CheckoutPage(): JSX.Element {
                 {isSubmitting ? 'Processing...' : 'Proceed to Payment'}
               </Button>
               <p className="text-xs text-gray-600 dark:text-gray-400">
-                Ships in 5-8 business days • {activeTier === 'PREMIUM' ? 'Unlimited redraws' : '1 artwork included'}
+                Ships in 5-8 business days • Unlimited redraws included
               </p>
             </div>
           </div>
@@ -555,20 +556,19 @@ export default function CheckoutPage(): JSX.Element {
               const productName = isPreviewCheckout
                 ? ((item as OrderItem).product?.name || 'Custom GPTee')
                 : (item as any).productName;
-              const itemTier = isPreviewCheckout ? previewOrder?.designTier : (item as any).tier;
-              const unitPrice = isPreviewCheckout
-                ? Number((item as OrderItem).unitPrice)
-                : (item as any).basePrice + (item as any).tierPrice;
+               const unitPrice = isPreviewCheckout
+                 ? Number((item as OrderItem).unitPrice)
+                 : Number((item as any).unitPrice ?? ((item as any).basePrice || 0) + ((item as any).tierPrice || 0));
 
               return (
                 <div key={`${item.productId}-${idx}`} className="flex justify-between">
                   <div>
                     <p className="font-semibold text-gray-900 dark:text-white">{productName}</p>
                     <p className="text-sm text-gray-600 dark:text-gray-400">
-                      {item.size} / {item.color} / {itemTier === 'PREMIUM' ? 'Limitless redraws' : 'Classic (1 artwork)'}
+                      {item.size} / {item.color} / Limitless redraws
                     </p>
                     <p className="text-xs text-gray-500 dark:text-gray-400">
-                      {itemTier === 'PREMIUM' ? 'Unlimited redraws until approval.' : 'Includes 1 artwork.'}
+                      Unlimited redraws until approval.
                     </p>
                     {!isPreviewCheckout && (item as any).bundle && (
                       <p className="text-xs text-primary-700 dark:text-primary-300">
@@ -617,7 +617,7 @@ export default function CheckoutPage(): JSX.Element {
         <div className="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 p-4 lg:hidden z-30 shadow-lg">
           <div className="container-max">
             <p className="text-xs text-gray-600 dark:text-gray-400 mb-2 text-center">
-              Ships in 5-8 business days • {activeTier === 'PREMIUM' ? 'Unlimited redraws' : '1 artwork included'}
+              Ships in 5-8 business days • Unlimited redraws included
             </p>
             <Button
               variant="primary"

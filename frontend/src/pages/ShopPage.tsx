@@ -118,7 +118,7 @@ export default function ShopPage(): JSX.Element {
           Create your fit
         </h1>
         <p className="text-lg text-gray-600 dark:text-gray-400 max-w-3xl">
-          Your design is ready to go—pick your tier and fit and we will show the artwork right after checkout.
+          Your design is ready to go—pick your fit, we&apos;ll generate the artwork, and you pay after you approve. Limitless redraws included.
         </p>
         {/* <div className="grid gap-2 sm:grid-cols-2 max-w-xl">
           <div className="flex items-center gap-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 px-3 py-2">

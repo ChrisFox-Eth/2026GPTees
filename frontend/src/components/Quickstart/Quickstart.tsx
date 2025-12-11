@@ -35,7 +35,7 @@ const PROMPT_IDEAS: string[] = [
 const GUEST_PREVIEW_KEY = 'gptees_preview_guest';
 const PREVIEW_CACHE_KEY = 'gptees_quickstart_preview_cache';
 const QUICKSTART_STYLE = 'trendy';
-const QUICKSTART_TIER = 'PREMIUM';
+const QUICKSTART_TIER = 'LIMITLESS';
 
 const isTemporaryUrl = (url?: string | null) => {
   if (!url) return true;

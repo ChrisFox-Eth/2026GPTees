@@ -9,7 +9,6 @@ import { catchAsync, AppError } from '../middleware/error.middleware.js';
 import { syncAllPrintfulOrders } from '../services/printful.service.js';
 import prisma from '../config/database.js';
 import crypto from 'crypto';
-import { Prisma } from '@prisma/client';
 
 /**
  * Sync all Printful orders into local DB (dev-only)
@@ -47,8 +46,8 @@ export const createPromoCode = catchAsync(async (req: Request, res: Response) =>
     }
   }
 
-  if (type === 'FREE_PRODUCT' && productTier && !['BASIC', 'PREMIUM', 'TEST'].includes(String(productTier))) {
-    throw new AppError('productTier must be BASIC/PREMIUM/TEST for FREE_PRODUCT codes', 400);
+  if (type === 'FREE_PRODUCT' && productTier && !['LIMITLESS'].includes(String(productTier))) {
+    throw new AppError('productTier must be LIMITLESS for FREE_PRODUCT codes', 400);
   }
 
   const generatedCode = (code as string | undefined)?.trim() || crypto.randomUUID().slice(0, 12).toUpperCase();
@@ -86,14 +85,14 @@ export const listPromoCodes = catchAsync(async (req: Request, res: Response) => 
   const from = req.query.from ? new Date(String(req.query.from)) : null;
   const to = req.query.to ? new Date(String(req.query.to)) : null;
 
-  const where: Prisma.PromoCodeWhereInput = {};
+  const where: any = {};
   if (search) {
     where.code = { contains: search, mode: 'insensitive' };
   }
   if (type && ['FREE_PRODUCT', 'PERCENT_OFF'].includes(type)) {
     where.type = type as any;
   }
-  if (tier && ['BASIC', 'PREMIUM', 'TEST'].includes(tier)) {
+  if (tier && ['LIMITLESS'].includes(tier)) {
     where.productTier = tier as any;
   }
   if (disabled === 'true' || disabled === 'false') {
@@ -190,9 +189,7 @@ export const getPromoCodesMetrics = catchAsync(async (req: Request, res: Respons
 
   const whereClause = filters.length ? `WHERE ${filters.join(' AND ')}` : '';
 
-  const series = await prisma.$queryRawUnsafe<
-    { bucket: Date; redemptions: number; revenue: number }[]
-  >(
+  const series = await prisma.$queryRawUnsafe(
     `SELECT date_trunc($1, o."paidAt") as bucket,
         COUNT(*)::int as redemptions,
         COALESCE(SUM(o."totalAmount"),0)::float as revenue
@@ -259,9 +256,7 @@ export const getPromoCodeMetricsById = catchAsync(async (req: Request, res: Resp
   }
   const whereClause = filters.length ? `WHERE ${filters.join(' AND ')}` : '';
 
-  const series = await prisma.$queryRawUnsafe<
-    { bucket: Date; redemptions: number; revenue: number }[]
-  >(
+  const series = await prisma.$queryRawUnsafe(
     `SELECT date_trunc($1, o."paidAt") as bucket,
         COUNT(*)::int as redemptions,
         COALESCE(SUM(o."totalAmount"),0)::float as revenue

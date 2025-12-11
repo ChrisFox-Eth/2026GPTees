@@ -17,7 +17,7 @@ export type OrderStatus =
   | 'CANCELLED'
   | 'REFUNDED';
 
-export type DesignTier = 'BASIC' | 'PREMIUM' | 'TEST';
+export type DesignTier = 'LIMITLESS' | 'PREMIUM';
 
 export interface OrderItem {
   id: string;

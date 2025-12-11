@@ -6,6 +6,7 @@
 import { Button } from '@components/Button';
 import { trackEvent } from '@utils/analytics';
 import { Link } from 'react-router-dom';
+import GPTeesBW from '../../assets/GPTeesIconDarkMode.png';
 
 export default function Hero(): JSX.Element {
   const scrollToQuickstart = () => {
@@ -18,7 +19,14 @@ export default function Hero(): JSX.Element {
   return (
     <section className="md:py-16 text-center container-max px-4">
       {/* Main Headline */}
-
+      <div className="flex justify-center mb-6">
+        <img
+          src={GPTeesBW}
+          alt="GPTees logo"
+          className="h-24 w-auto drop-shadow-sm"
+          loading="lazy"
+        />
+      </div>
       <h1 className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-4">
         One-of-one tees. One shot or unlimited redraws.
       </h1>
@@ -29,7 +37,8 @@ export default function Hero(): JSX.Element {
         </span> */}
       </div>
       <p className="hidden! text-base md:text-lg text-gray-600 dark:text-gray-300 mb-8 max-w-2xl mx-auto leading-relaxed">
-        Choose Classic for a one-and-done creation, or Limitless to keep redrawing with new prompts until you approve. Every tee is a 1/1 made from your words.
+        Choose Classic for a one-and-done creation, or Limitless to keep redrawing with new prompts
+        until you approve. Every tee is a 1/1 made from your words.
       </p>
 
       {/* Value Props */}
@@ -71,7 +80,9 @@ export default function Hero(): JSX.Element {
             variant="secondary"
             size="md"
             className="hidden! px-6 py-3 text-base"
-            onClick={() => trackEvent('home.hero.cta_click', { cta: 'gift_codes', surface: 'hero' })}
+            onClick={() =>
+              trackEvent('home.hero.cta_click', { cta: 'gift_codes', surface: 'hero' })
+            }
           >
             Gift a GPTee
           </Button>

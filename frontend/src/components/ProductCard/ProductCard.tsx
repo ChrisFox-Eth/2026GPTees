@@ -12,12 +12,8 @@ export interface ProductCardProps {
 }
 
 export default function ProductCard({ product, onClick }: ProductCardProps): JSX.Element {
-  const basePrice = Number(product.basePrice) || 0;
-  const basicTierPrice =
-    product.tierPricing?.BASIC?.price ??
-    product.tierPricing?.PREMIUM?.price ??
-    34.99;
-  const startingPrice = basePrice + basicTierPrice;
+  const LIMITLESS_PRICE = 54.99;
+  const startingPrice = LIMITLESS_PRICE;
   const deliveryText = 'Ships in 5-8 business days';
 
   return (
@@ -66,15 +62,15 @@ export default function ProductCard({ product, onClick }: ProductCardProps): JSX
 
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-sm text-gray-500 dark:text-gray-400">From</p>
+            <p className="text-sm text-gray-500 dark:text-gray-400">Limitless GPTee</p>
             <p className="text-xl font-bold text-primary-600 dark:text-primary-400">
               ${startingPrice.toFixed(2)}
             </p>
-            <p className="text-xs text-gray-500 dark:text-gray-400">{deliveryText}</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400">Unlimited redraws included · {deliveryText}</p>
           </div>
 
           <button className="px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-md transition-colors duration-200">
-            Check out your design
+            Start a Limitless tee
           </button>
         </div>
 

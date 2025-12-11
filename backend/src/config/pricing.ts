@@ -5,9 +5,7 @@
  */
 
 export enum TierType {
-  BASIC = 'BASIC',
-  PREMIUM = 'PREMIUM',
-  TEST = 'TEST',
+  LIMITLESS = 'PREMIUM',
 }
 
 export interface TierConfig {
@@ -18,23 +16,11 @@ export interface TierConfig {
 }
 
 export const TIERS: Record<TierType, TierConfig> = {
-  [TierType.BASIC]: {
-    name: 'Basic',
-    price: 34.99,
-    maxDesigns: 1,
-    description: 'Generate 1 GPTee design',
-  },
-  [TierType.PREMIUM]: {
-    name: 'Premium',
+  [TierType.LIMITLESS]: {
+    name: 'Limitless',
     price: 54.99,
     maxDesigns: 9999,
     description: 'Unlimited GPTee design regeneration',
-  },
-  [TierType.TEST]: {
-    name: 'Test',
-    price: 0.01,
-    maxDesigns: 1,
-    description: 'Test tier for development',
   },
 };
 

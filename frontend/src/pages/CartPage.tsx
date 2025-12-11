@@ -55,7 +55,7 @@ export default function CartPage(): JSX.Element {
     <div className="container-max py-6 sm:py-8 pb-24 lg:pb-8">
       <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-6 sm:mb-8">Shopping Cart</h1>
       <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-        Submit your size, color, and tier to unlock your design preview after checkout. Clicking a product CTA again will add another of the same design to your cart.
+        Submit your size and color to unlock your design preview after checkout. Each cart holds one Limitless GPTee with unlimited redraws.
       </p>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
@@ -90,16 +90,14 @@ export default function CartPage(): JSX.Element {
                 <div className="text-sm text-gray-600 dark:text-gray-400 space-y-1">
                   <p>Size: {item.size}</p>
                   <p>Color: {item.color}</p>
-                  <p className="font-medium">
-                    {item.tier === 'BASIC' ? 'Classic (1 artwork)' : 'Limitless redraws'}
-                  </p>
+                  <p className="font-medium">Limitless redraws included</p>
                   {item.bundle && (
                     <p className="text-xs text-primary-700 dark:text-primary-300">
                       Bundle applied: 2 tees, 10% off tier price
                     </p>
                   )}
                   <p className="text-xs text-gray-500 dark:text-gray-400">
-                    {item.tier === 'PREMIUM' ? 'Unlimited redraws until you approve.' : 'Includes 1 artwork.'}
+                    Unlimited redraws until you approve.
                   </p>
                 </div>
 

@@ -26,7 +26,7 @@ export const getProducts = catchAsync(async (_req: Request, res: Response) => {
 
   res.json({
     success: true,
-    data: products.map((p) => ({ ...p, tierPricing })),
+    data: products.map((p: any) => ({ ...p, tierPricing })),
     count: products.length,
   });
 });

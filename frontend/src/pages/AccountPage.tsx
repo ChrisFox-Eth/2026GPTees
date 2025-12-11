@@ -130,7 +130,7 @@ const fetchOrders = async () => {
       productName,
       size,
       color,
-      tier: order.designTier === 'BASIC' ? 'BASIC' : 'PREMIUM',
+      tier: 'LIMITLESS',
       quantity: 1,
       basePrice,
       tierPrice: 0,

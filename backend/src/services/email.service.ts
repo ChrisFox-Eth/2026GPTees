@@ -492,14 +492,14 @@ export async function sendGiftCodeEmail(
     </div>
     <div class="content">
       <p>Hi ${data.customerName || 'there'},</p>
-      <p>Thanks for purchasing a gift code. Share it with a friend (or keep it for yourself) to redeem a ${data.tier === 'PREMIUM' ? 'Limitless' : 'Classic'} tee.</p>
+      <p>Thanks for purchasing a gift code. Share it with a friend (or keep it for yourself) to redeem a Limitless tee.</p>
 
       <div class="code-box" aria-label="Gift code">${data.code}</div>
       <p style="text-align:center; margin-top:-10px;">${usageText} · Tier: ${data.tier}</p>
 
       <ol style="padding-left:18px; color:#334155;">
         <li>Go to <a href="${data.redeemUrl}">${data.redeemUrl}</a></li>
-        <li>Add a ${data.tier === 'PREMIUM' ? 'Premium (Limitless)' : 'Basic (Classic)'} tee to cart</li>
+        <li>Add a Limitless tee to cart</li>
         <li>Enter the code at checkout to apply it</li>
       </ol>
 

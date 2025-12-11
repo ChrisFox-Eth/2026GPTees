@@ -8,15 +8,11 @@ import prisma from '../config/database.js';
 import { TIERS, TierConfig, TierType } from '../config/pricing.js';
 
 const PRICE_KEYS: Record<TierType, string> = {
-  [TierType.BASIC]: 'basic_tier_price',
-  [TierType.PREMIUM]: 'premium_tier_price',
-  [TierType.TEST]: 'test_tier_price',
+  [TierType.LIMITLESS]: 'premium_tier_price',
 };
 
 const MAX_DESIGNS_KEYS: Record<TierType, string> = {
-  [TierType.BASIC]: 'basic_tier_max_designs',
-  [TierType.PREMIUM]: 'premium_tier_max_designs',
-  [TierType.TEST]: 'test_tier_max_designs',
+  [TierType.LIMITLESS]: 'premium_tier_max_designs',
 };
 
 /**
@@ -44,19 +40,19 @@ export async function getTierPricingMap(): Promise<Record<TierType, TierConfig>>
     where: { key: { in: settingKeys } },
   });
 
-  const settingsMap = new Map(settings.map((s) => [s.key, s.value]));
+  const settingsMap = new Map<string, string | null>(
+    settings.map((s: any) => [s.key, s.value as string | null])
+  );
 
   const merged: Record<TierType, TierConfig> = {
-    [TierType.BASIC]: { ...TIERS[ TierType.BASIC ] },
-    [TierType.PREMIUM]: { ...TIERS[ TierType.PREMIUM ] },
-    [TierType.TEST]: { ...TIERS[ TierType.TEST ] },
+    [TierType.LIMITLESS]: { ...TIERS[TierType.LIMITLESS] },
   };
 
   Object.values(TierType).forEach((tier) => {
     const priceKey = PRICE_KEYS[tier];
     const maxDesignsKey = MAX_DESIGNS_KEYS[tier];
-    const price = parseNumberSetting(settingsMap.get(priceKey));
-    const maxDesigns = parseNumberSetting(settingsMap.get(maxDesignsKey));
+    const price = parseNumberSetting(settingsMap.get(priceKey) as string | null);
+    const maxDesigns = parseNumberSetting(settingsMap.get(maxDesignsKey) as string | null);
 
     if (price !== null) {
       merged[tier].price = price;
@@ -66,8 +62,8 @@ export async function getTierPricingMap(): Promise<Record<TierType, TierConfig>>
     }
   });
 
-  // Ensure Premium remains unlimited unless explicitly overridden
-  merged[TierType.PREMIUM].maxDesigns = merged[TierType.PREMIUM].maxDesigns || TIERS[TierType.PREMIUM].maxDesigns;
+  // Ensure Limitless remains unlimited unless explicitly overridden
+  merged[TierType.LIMITLESS].maxDesigns = merged[TierType.LIMITLESS].maxDesigns || TIERS[TierType.LIMITLESS].maxDesigns;
 
   return merged;
 }

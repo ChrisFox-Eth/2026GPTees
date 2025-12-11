@@ -21,7 +21,7 @@ export const purchaseGiftCode = catchAsync(async (req: Request, res: Response) =
   const normalizedTier = typeof tier === 'string' ? tier.trim().toUpperCase() : '';
 
   if (!normalizedTier || !Object.values(TierType).includes(normalizedTier as TierType)) {
-    throw new AppError('tier must be BASIC or PREMIUM', 400);
+    throw new AppError('tier must be LIMITLESS', 400);
   }
 
   const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';

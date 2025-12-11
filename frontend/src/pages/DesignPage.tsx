@@ -234,7 +234,7 @@ function DesignContent(): JSX.Element {
       setSelectedSize(nextSize);
 
       const latestDesign = designs[0];
-      const tierForCart = order.designTier === 'BASIC' ? 'BASIC' : 'PREMIUM';
+      const tierForCart = 'LIMITLESS';
       const priceFromOrder = Number(firstItem.unitPrice) || Number(product.basePrice || 0);
 
       updateItemVariant(
@@ -433,7 +433,7 @@ function DesignContent(): JSX.Element {
     if (product && firstItem) {
       const targetColor = selectedColor || firstItem.color;
       const targetSize = selectedSize || firstItem.size;
-      const tierForCart = order.designTier === 'BASIC' ? 'BASIC' : 'PREMIUM';
+      const tierForCart = 'LIMITLESS';
       const priceFromOrder = Number(firstItem.unitPrice) || Number(product.basePrice || 0);
       const matchInCart = cart.some(
         (c) =>

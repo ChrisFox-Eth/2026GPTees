@@ -25,8 +25,7 @@ export default function ProductModal({ product, isOpen, onClose }: ProductModalP
 
   const [selectedSize, setSelectedSize] = useState(preferredSize);
   const [selectedColor, setSelectedColor] = useState(preferredColor);
-  const [selectedTier, setSelectedTier] = useState<'BASIC' | 'PREMIUM'>('PREMIUM');
-  const [bundleDeal, setBundleDeal] = useState(false);
+  const [bundleDeal] = useState(false);
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('Added to cart!');
 
@@ -47,15 +46,12 @@ export default function ProductModal({ product, isOpen, onClose }: ProductModalP
     };
   }, [isOpen]);
 
-  const tierPricing = product.tierPricing || {};
-  const basicTier = tierPricing['BASIC'];
-  const premiumTier = tierPricing['PREMIUM'];
-
-  const basePrice = Number(product.basePrice);
-  const tierPriceRaw = tierPricing[selectedTier]?.price ?? 0;
-  const tierPrice = bundleDeal ? tierPriceRaw * 0.9 : tierPriceRaw; // 10% off with bundle
-  const quantity = bundleDeal ? 2 : 1;
-  const totalPrice = (basePrice + tierPrice) * quantity;
+  const LIMITLESS_PRICE = 54.99;
+  const basePrice = 0;
+  const tierPriceRaw = LIMITLESS_PRICE;
+  const tierPrice = LIMITLESS_PRICE;
+  const quantity = 1;
+  const totalPrice = tierPrice * quantity;
   const deliveryText = 'Ships in 5-8 business days';
 
   const handleSizeChange = (size: string) => {
@@ -78,24 +74,6 @@ export default function ProductModal({ product, isOpen, onClose }: ProductModalP
     });
   };
 
-  const handleTierChange = (tier: 'BASIC' | 'PREMIUM') => {
-    setSelectedTier(tier);
-    trackEvent('shop.product.option_change', {
-      product_id: product.id,
-      option_type: 'tier',
-      option_value: tier,
-    });
-  };
-
-  const handleBundleToggle = () => {
-    const next = !bundleDeal;
-    setBundleDeal(next);
-    trackEvent('shop.upsell.bundle_toggle', {
-      product_id: product.id,
-      bundle_enabled: next,
-    });
-  };
-
   const handleAddToCart = () => {
     const existingItems = getTotalItems();
 
@@ -104,7 +82,7 @@ export default function ProductModal({ product, isOpen, onClose }: ProductModalP
       productName: product.name,
       size: selectedSize,
       color: selectedColor.name,
-      tier: selectedTier,
+      tier: 'LIMITLESS',
       quantity,
       basePrice,
       tierPrice,
@@ -116,7 +94,7 @@ export default function ProductModal({ product, isOpen, onClose }: ProductModalP
     trackEvent('shop.product.add_to_cart', {
       product_id: product.id,
       product_name: product.name,
-      tier: selectedTier,
+      tier: 'LIMITLESS',
       price: totalPrice,
     });
 
@@ -146,7 +124,7 @@ export default function ProductModal({ product, isOpen, onClose }: ProductModalP
       productName: product.name,
       size: selectedSize,
       color: selectedColor.name,
-      tier: selectedTier,
+      tier: 'LIMITLESS',
       quantity,
       basePrice,
       tierPrice,
@@ -158,7 +136,7 @@ export default function ProductModal({ product, isOpen, onClose }: ProductModalP
     trackEvent('shop.product.buy_now', {
       product_id: product.id,
       product_name: product.name,
-      tier: selectedTier,
+      tier: 'LIMITLESS',
       price: totalPrice,
       is_signed_in: isSignedIn,
     });
@@ -167,7 +145,7 @@ export default function ProductModal({ product, isOpen, onClose }: ProductModalP
       ? `Added another tee of this design. Cart now has ${existingItems + quantity} item${
           existingItems + quantity !== 1 ? 's' : ''
         }.`
-      : 'Added your design setup. Submit your size, color, and tier to see the artwork after checkout.';
+      : 'Added your design setup. Submit your size and color to see the artwork after checkout.';
     setToastMessage(message);
     onClose();
     goToCheckout();
@@ -279,77 +257,13 @@ export default function ProductModal({ product, isOpen, onClose }: ProductModalP
 
               {/* Tier Selection */}
               <div className="mb-6">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Design Tier
-                </label>
-                <div className="space-y-2">
-                  <button
-                    onClick={() => handleTierChange('BASIC')}
-                    className={`w-full p-4 border rounded-lg text-left transition-colors ${
-                      selectedTier === 'BASIC'
-                        ? 'border-primary-600 bg-primary-50 dark:bg-primary-900'
-                        : 'border-gray-300 dark:border-gray-600'
-                    }`}
-                  >
-                    <div className="flex justify-between items-center">
-                      <div>
-                        <p className="font-semibold text-gray-900 dark:text-white">
-                          Classic (1 design) - ${Number(basicTier?.price ?? 0).toFixed(2)}
-                        </p>
-                        <p className="text-sm text-gray-600 dark:text-gray-400">
-                          {basicTier?.description || 'One custom design crafted from your prompt'}
-                        </p>
-                      </div>
-                      {selectedTier === 'BASIC' && <span className="text-primary-600 text-sm">Selected</span>}
-                    </div>
-                  </button>
-                  <button
-                    onClick={() => handleTierChange('PREMIUM')}
-                    className={`w-full p-4 border rounded-lg text-left transition-colors ${
-                      selectedTier === 'PREMIUM'
-                        ? 'border-primary-600 bg-primary-50 dark:bg-primary-900'
-                        : 'border-gray-300 dark:border-gray-600'
-                    }`}
-                  >
-                    <div className="flex justify-between items-center">
-                      <div>
-                        <p className="font-semibold text-gray-900 dark:text-white">
-                          Limitless redraws - ${Number(premiumTier?.price ?? 0).toFixed(2)}
-                        </p>
-                        <p className="text-sm text-gray-600 dark:text-gray-400">
-                          {premiumTier?.description || 'We redraw until you love it—no extra charges'}
-                        </p>
-                      </div>
-                      {selectedTier === 'PREMIUM' && <span className="text-primary-600 text-sm">Selected</span>}
-                    </div>
-                  </button>
-                </div>
-              </div>
-
-              {/* Bundle Toggle */}
-              <div className="mb-6">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Bundle & Save
-                </label>
-                <div className="flex items-center justify-between border border-gray-300 dark:border-gray-600 rounded-lg p-4 gap-3">
-                  <div>
-                    <p className="font-semibold text-gray-900 dark:text-white">Buy 2, save 10% on tier</p>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">
-                      We will duplicate this tee (same size and color) and apply 10% off the tier price.
-                    </p>
-                  </div>
-                  <button
-                    onClick={handleBundleToggle}
-                    className={`w-14 h-8 rounded-full border transition-colors flex items-center ${
-                      bundleDeal
-                        ? 'bg-primary-600 border-primary-600 justify-end'
-                        : 'bg-gray-200 dark:bg-gray-700 border-gray-300 dark:border-gray-600 justify-start'
-                    }`}
-                    aria-pressed={bundleDeal}
-                    aria-label="Toggle bundle discount"
-                  >
-                    <span className="w-6 h-6 bg-white rounded-full shadow" />
-                  </button>
+                <div className="w-full p-4 border rounded-lg text-left bg-primary-50 dark:bg-primary-900/20 border-primary-200 dark:border-primary-800">
+                  <p className="font-semibold text-gray-900 dark:text-white">
+                    Limitless redraws - ${tierPrice.toFixed(2)}
+                  </p>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    We redraw until you love it—no extra charges. Unlimited designs included.
+                  </p>
                 </div>
               </div>
 

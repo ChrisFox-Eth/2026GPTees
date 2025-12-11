@@ -26,7 +26,7 @@ interface CheckoutItem {
   productId: string;
   size: string;
   color: string;
-  tier: 'BASIC' | 'PREMIUM' | 'TEST';
+  tier: TierType;
   quantity: number;
 }
 
@@ -76,7 +76,7 @@ export async function createCheckoutSession(
   if (orderId) {
     existingOrder = await prisma.order.findUnique({
       where: { id: orderId },
-      include: { items: true, promoCode: true },
+      include: { items: true, promoCode: true, user: true, address: true },
     });
 
     if (!existingOrder) {
@@ -111,7 +111,7 @@ export async function createCheckoutSession(
       size: item.size,
       color: item.color,
       quantity: item.quantity,
-      tier: (existingOrder.designTier as TierType) || TierType.BASIC,
+      tier: TierType.LIMITLESS,
       orderItemId: item.id,
     }));
   } else {
@@ -124,25 +124,17 @@ export async function createCheckoutSession(
       size: item.size,
       color: item.color,
       quantity: item.quantity,
-      tier: (item.tier as TierType) || TierType.BASIC,
+      tier: TierType.LIMITLESS,
     }));
   }
 
-  const uniqueTiers = Array.from(new Set(normalizedItems.map((item) => item.tier)));
-  if (uniqueTiers.length !== 1) {
-    throw new AppError('All items must use the same tier for checkout.', 400);
-  }
-
-  const orderTier = uniqueTiers[0] as TierType;
-  if (!Object.values(TierType).includes(orderTier)) {
-    throw new AppError('Invalid tier selection.', 400);
-  }
+  const orderTier = TierType.LIMITLESS;
 
   const productIds = Array.from(new Set(normalizedItems.map((item) => item.productId)));
-  const products = await prisma.product.findMany({
+  const products = (await prisma.product.findMany({
     where: { id: { in: productIds } },
-  });
-  const productMap = new Map(products.map((p) => [p.id, p]));
+  })) as any[];
+  const productMap = new Map<string, any>(products.map((p: any) => [p.id, p]));
 
   const validatedItems = normalizedItems.map((item) => {
     const product = productMap.get(item.productId);
@@ -161,7 +153,7 @@ export async function createCheckoutSession(
     }
 
     const matchedSize =
-      product.sizes.find((s) => s.toLowerCase() === item.size.toLowerCase()) || product.sizes[0];
+      product.sizes.find((s: string) => s.toLowerCase() === item.size.toLowerCase()) || product.sizes[0];
 
     if (!matchedSize) {
       throw new AppError(`Selected size unavailable for ${product.name}`, 400);
@@ -176,7 +168,7 @@ export async function createCheckoutSession(
       throw new AppError('Tier configuration missing', 500);
     }
 
-    const unitPrice = Number(product.basePrice) + tierConfig.price;
+    const unitPrice = tierConfig.price;
 
     const variantId = getPrintfulVariantId(product.printfulId, matchedColor.name, matchedSize);
     if (!variantId) {
@@ -317,7 +309,7 @@ export async function createCheckoutSession(
           status: OrderStatus.PAID,
           paidAt: new Date(),
           totalAmount: 0,
-          designTier: orderTier,
+          designTier: orderTier as any,
           maxDesigns: tierPricingMap[orderTier].maxDesigns,
           addressId: address.id,
           promoCodeId: promoCode?.id || null,
@@ -371,7 +363,7 @@ export async function createCheckoutSession(
         status: OrderStatus.PAID,
         paidAt: new Date(),
         totalAmount: 0,
-        designTier: orderTier,
+        designTier: orderTier as any,
         maxDesigns: adjustedItems[0].tierConfig.maxDesigns,
         designsGenerated: 0,
         addressId: address.id,
@@ -438,7 +430,7 @@ export async function createCheckoutSession(
         userId,
         status: OrderStatus.PENDING_PAYMENT,
         totalAmount,
-        designTier: orderTier,
+        designTier: orderTier as any,
         maxDesigns: adjustedItems[0].tierConfig.maxDesigns,
         designsGenerated: 0,
         addressId: address.id,
@@ -466,7 +458,7 @@ export async function createCheckoutSession(
       data: {
         totalAmount,
         addressId: address.id,
-        designTier: orderTier,
+        designTier: orderTier as any,
         maxDesigns: adjustedItems[0].tierConfig.maxDesigns,
         promoCodeId: promoCode?.id || null,
       },
@@ -548,14 +540,8 @@ export async function createGiftCodeSession(
   const { userId, tier, usageLimit = 1, successUrl, cancelUrl } = data;
   const tierPricingMap = await getTierPricingMap();
 
-  // Use first active product to derive base price; fall back to zero.
-  const product = await prisma.product.findFirst({
-    where: { isActive: true },
-    orderBy: { createdAt: 'asc' },
-  });
-  const basePrice = product ? Number(product.basePrice) : 0;
   const tierPrice = tierPricingMap[tier].price;
-  const unitPrice = basePrice + tierPrice;
+  const unitPrice = tierPrice;
 
   const session = await stripe.checkout.sessions.create({
     payment_method_types: ['card'],
@@ -564,7 +550,7 @@ export async function createGiftCodeSession(
         price_data: {
           currency: 'usd',
           product_data: {
-            name: `Gift Code - ${tier === 'PREMIUM' ? 'Limitless Tee' : 'Classic Tee'}`,
+          name: 'Gift Code - Limitless Tee',
             description: usageLimit === 1 ? 'Single-use gift code' : `Gift code (${usageLimit} uses)`,
           },
           unit_amount: Math.round(unitPrice * 100),
@@ -823,7 +809,7 @@ export function constructWebhookEvent(
  * Atomically increment promo usage, enforcing usageLimit when present.
  */
 async function incrementPromoUsage(promoCodeId: string): Promise<void> {
-  await prisma.$transaction(async (tx) => {
+  await prisma.$transaction(async (tx: any) => {
     const promo = await tx.promoCode.findUnique({ where: { id: promoCodeId } });
     if (!promo) {
       throw new Error('Promo code not found');

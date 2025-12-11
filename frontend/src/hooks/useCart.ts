@@ -12,7 +12,7 @@ export interface CartItem {
   productName: string;
   size: string;
   color: string;
-  tier: 'BASIC' | 'PREMIUM';
+  tier: 'LIMITLESS' | 'PREMIUM';
   quantity: number;
   basePrice: number;
   tierPrice: number;

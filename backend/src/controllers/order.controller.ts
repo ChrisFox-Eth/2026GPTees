@@ -66,7 +66,7 @@ export const createPreviewOrder = catchAsync(async (req: Request, res: Response)
     return;
   }
 
-  const { productId, color, size, tier, quantity } = req.body;
+  const { productId, color, size, quantity } = req.body;
 
   if (!productId || !color || !size) {
     res.status(400).json({
@@ -76,11 +76,7 @@ export const createPreviewOrder = catchAsync(async (req: Request, res: Response)
     return;
   }
 
-  const normalizedTier = (tier || TierType.BASIC).toString().toUpperCase() as TierType;
-  const isSupportedTier = Object.values(TierType).includes(normalizedTier);
-  if (!isSupportedTier) {
-    throw new AppError('Invalid design tier supplied for preview order', 400);
-  }
+  const normalizedTier = TierType.LIMITLESS;
 
   const qty = Number(quantity) || 1;
   if (!Number.isFinite(qty) || qty <= 0) {
@@ -111,7 +107,7 @@ export const createPreviewOrder = catchAsync(async (req: Request, res: Response)
   }
 
   const sizeMatch =
-    product.sizes.find((s) => s.toLowerCase() === size.toString().toLowerCase()) || product.sizes[0];
+    product.sizes.find((s: string) => s.toLowerCase() === size.toString().toLowerCase()) || product.sizes[0];
 
   if (!sizeMatch) {
     throw new AppError('Selected size is not available for this product', 400);
@@ -125,7 +121,7 @@ export const createPreviewOrder = catchAsync(async (req: Request, res: Response)
     );
   }
 
-  const unitPrice = Number(product.basePrice) + tierConfig.price;
+  const unitPrice = tierConfig.price;
   const totalAmount = unitPrice * qty;
 
   const reusableOrder = await prisma.order.findFirst({
@@ -157,7 +153,7 @@ export const createPreviewOrder = catchAsync(async (req: Request, res: Response)
     order = await prisma.order.update({
       where: { id: reusableOrder.id },
       data: {
-        designTier: normalizedTier,
+        designTier: normalizedTier as any,
         maxDesigns: tierConfig.maxDesigns,
         totalAmount,
         items: {
@@ -184,7 +180,7 @@ export const createPreviewOrder = catchAsync(async (req: Request, res: Response)
         userId: req.user.id,
         status: OrderStatus.PENDING_PAYMENT,
         totalAmount,
-        designTier: normalizedTier,
+        designTier: normalizedTier as any,
         designsGenerated: 0,
         maxDesigns: tierConfig.maxDesigns,
         items: {
@@ -234,7 +230,7 @@ export const createPreviewOrder = catchAsync(async (req: Request, res: Response)
  * POST /api/orders/preview/guest
  */
 export const createGuestPreviewOrder = catchAsync(async (req: Request, res: Response) => {
-  const { productId, color, size, tier, quantity } = req.body;
+  const { productId, color, size, quantity } = req.body;
 
   if (!productId || !color || !size) {
     res.status(400).json({
@@ -244,11 +240,7 @@ export const createGuestPreviewOrder = catchAsync(async (req: Request, res: Resp
     return;
   }
 
-  const normalizedTier = (tier || TierType.PREMIUM).toString().toUpperCase() as TierType;
-  const isSupportedTier = Object.values(TierType).includes(normalizedTier);
-  if (!isSupportedTier) {
-    throw new AppError('Invalid design tier supplied for preview order', 400);
-  }
+  const normalizedTier = TierType.LIMITLESS;
 
   const qty = Number(quantity) || 1;
   if (!Number.isFinite(qty) || qty <= 0) {
@@ -279,7 +271,7 @@ export const createGuestPreviewOrder = catchAsync(async (req: Request, res: Resp
   }
 
   const sizeMatch =
-    product.sizes.find((s) => s.toLowerCase() === size.toString().toLowerCase()) || product.sizes[0];
+    product.sizes.find((s: string) => s.toLowerCase() === size.toString().toLowerCase()) || product.sizes[0];
 
   if (!sizeMatch) {
     throw new AppError('Selected size is not available for this product', 400);
@@ -305,7 +297,7 @@ export const createGuestPreviewOrder = catchAsync(async (req: Request, res: Resp
     },
   });
 
-  const unitPrice = Number(product.basePrice) + tierConfig.price;
+  const unitPrice = tierConfig.price;
   const totalAmount = unitPrice * qty;
   const orderNumber = `ORDER-${Date.now()}-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
 
@@ -315,7 +307,7 @@ export const createGuestPreviewOrder = catchAsync(async (req: Request, res: Resp
       userId: guestUser.id,
       status: OrderStatus.PENDING_PAYMENT,
       totalAmount,
-      designTier: normalizedTier,
+      designTier: normalizedTier as any,
       designsGenerated: 0,
       maxDesigns: tierConfig.maxDesigns,
       previewGuestToken: guestToken,
@@ -514,7 +506,7 @@ export const updatePreviewItemVariant = catchAsync(async (req: Request, res: Res
   }
 
   const sizeMatch =
-    product.sizes.find((s) => s.toLowerCase() === size.toString().toLowerCase()) || product.sizes[0];
+    product.sizes.find((s: string) => s.toLowerCase() === size.toString().toLowerCase()) || product.sizes[0];
 
   if (!sizeMatch) {
     throw new AppError('Selected size is not available for this product', 400);
