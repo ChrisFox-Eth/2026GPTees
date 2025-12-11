@@ -15,7 +15,6 @@ import { QUICKSTART_PROMPT_KEY } from '@utils/quickstart';
 import type { Order } from '../types/order';
 import type { Design } from '../types/design';
 import type { Product } from '../types/product';
-import { useCart } from '../hooks/useCart';
 import previewBlack from '../assets/previewBlack.png';
 import previewWhite from '../assets/previewWhite.png';
 import previewGray from '../assets/previewGray.png';
@@ -56,15 +55,14 @@ function DesignContent(): JSX.Element {
   const [isGenerating, setIsGenerating] = useState(false);
   const [isLoadingSurprise, setIsLoadingSurprise] = useState(false);
   const [isApproving, setIsApproving] = useState<string | null>(null);
-  const [isUpdatingVariant, setIsUpdatingVariant] = useState(false);
   const [variantMessage, setVariantMessage] = useState<string | null>(null);
+  const [isCheckingOut, setIsCheckingOut] = useState(false);
   const [shareFeedback, setShareFeedback] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const hasTrackedOrderView = useRef(false);
   const hasLoadedQuickstartPrompt = useRef(false);
   const hasGeneratingDesign = designs.some((d) => d.status === 'GENERATING');
-  const { updateItemVariant, addToCart, cart } = useCart();
 
   const previewMocks: Record<string, string> = {
     black: previewBlack,
@@ -205,85 +203,15 @@ function DesignContent(): JSX.Element {
     }
   };
 
-  const handleVariantUpdate = async (nextColor: string, nextSize: string) => {
-    if (!orderId || !order || !product) return;
-    if (isUpdatingVariant) return;
-    const firstItem = order.items?.[0];
-    if (!firstItem) return;
-    if (firstItem.color === nextColor && firstItem.size === nextSize) return;
-
-    setIsUpdatingVariant(true);
-    setVariantMessage(null);
-
-    try {
-      const token = await getToken();
-      if (!token) {
-        setError('Authentication required. Please sign in again.');
-        return;
-      }
-
-      const updated = await apiPatch(
-        `/api/orders/${orderId}/item`,
-        { color: nextColor, size: nextSize },
-        token
-      );
-
-      const updatedOrder = updated.data as Order;
-      setOrder(updatedOrder);
-      setSelectedColor(nextColor);
-      setSelectedSize(nextSize);
-
-      const latestDesign = designs[0];
-      const tierForCart = 'LIMITLESS';
-      const priceFromOrder = Number(firstItem.unitPrice) || Number(product.basePrice || 0);
-
-      updateItemVariant(
-        firstItem.productId,
-        firstItem.size,
-        firstItem.color,
-        {
-          color: nextColor,
-          size: nextSize,
-          imageUrl: latestDesign?.thumbnailUrl || latestDesign?.imageUrl || null,
-        }
-      );
-
-      const matchInCart = cart.some(
-        (c) =>
-          c.productId === firstItem.productId &&
-          c.size === nextSize &&
-          c.color === nextColor &&
-          c.tier === tierForCart
-      );
-
-      if (!matchInCart) {
-        addToCart({
-          productId: firstItem.productId,
-          productName: product.name,
-          size: nextSize,
-          color: nextColor,
-          tier: tierForCart,
-          quantity: 1,
-          basePrice: priceFromOrder,
-          tierPrice: 0,
-          imageUrl: latestDesign?.thumbnailUrl || latestDesign?.imageUrl || product.imageUrl || null,
-        });
-      }
-
-      setVariantMessage('Fit updated for this preview order.');
-      trackEvent('design.variant.updated', {
-        order_id: orderId,
-        from_color: firstItem.color,
-        from_size: firstItem.size,
-        to_color: nextColor,
-        to_size: nextSize,
-      });
-    } catch (err: any) {
-      console.error('Error updating size/color:', err);
-      setError(err?.message || 'Failed to update size/color');
-    } finally {
-      setIsUpdatingVariant(false);
-    }
+  const handleVariantSelect = (nextColor: string, nextSize: string) => {
+    setSelectedColor(nextColor);
+    setSelectedSize(nextSize);
+    setVariantMessage('Fit updated. We will save this choice when you checkout.');
+    trackEvent('design.variant.selected', {
+      order_id: orderId,
+      color: nextColor,
+      size: nextSize,
+    });
   };
 
   const handleSurpriseMe = async () => {
@@ -424,45 +352,60 @@ function DesignContent(): JSX.Element {
     }
   };
 
-  const handleCheckoutRedirect = () => {
-    if (!orderId || !order) {
+  const handleCheckoutRedirect = async () => {
+    if (!orderId || !order || !product || isCheckingOut) {
       return;
     }
 
     const firstItem = order.items?.[0];
-    if (product && firstItem) {
-      const targetColor = selectedColor || firstItem.color;
-      const targetSize = selectedSize || firstItem.size;
-      const tierForCart = 'LIMITLESS';
-      const priceFromOrder = Number(firstItem.unitPrice) || Number(product.basePrice || 0);
-      const matchInCart = cart.some(
-        (c) =>
-          c.productId === firstItem.productId &&
-          c.size === targetSize &&
-          c.color === targetColor &&
-          c.tier === tierForCart
-      );
-      if (!matchInCart) {
-        addToCart({
-          productId: firstItem.productId,
-          productName: product.name,
-          size: targetSize,
-          color: targetColor,
-          tier: tierForCart,
-          quantity: 1,
-          basePrice: priceFromOrder,
-          tierPrice: 0,
-          imageUrl: designs[0]?.imageUrl || product.imageUrl || null,
-        });
-      }
-    }
+    const targetColor = selectedColor || firstItem?.color || product.colors[0]?.name || 'Black';
+    const targetSize = selectedSize || firstItem?.size || product.sizes[0];
 
-    trackEvent('design.checkout.preview', {
-      order_id: orderId,
-      design_tier: order.designTier,
-      designs_generated: order.designsGenerated,
-    });
-    navigate(`/checkout?orderId=${orderId}`);
+    try {
+      setIsCheckingOut(true);
+      setError(null);
+      const token = await getToken();
+      if (!token) {
+        setError('Authentication required. Please sign in again.');
+        setIsCheckingOut(false);
+        return;
+      }
+
+      if (firstItem) {
+        const updatedOrderResponse = await apiPatch(
+          `/api/orders/${orderId}/item`,
+          { color: targetColor, size: targetSize },
+          token
+        );
+        setOrder(updatedOrderResponse.data as Order);
+      }
+
+      const latestCompleted = [...designs]
+        .filter((d) => d.status === 'COMPLETED')
+        .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())[0];
+
+      if (latestCompleted && !latestCompleted.approvalStatus) {
+        await apiPost(`/api/designs/${latestCompleted.id}/approve`, {}, token);
+        setDesigns((prev) =>
+          prev.map((d) =>
+            d.id === latestCompleted.id ? { ...d, approvalStatus: true } : d
+          )
+        );
+        setOrder((prev) => (prev ? { ...prev, status: 'DESIGN_APPROVED' } : prev));
+      }
+
+      trackEvent('design.checkout.preview', {
+        order_id: orderId,
+        design_tier: order.designTier,
+        designs_generated: order.designsGenerated,
+      });
+      navigate(`/checkout?orderId=${orderId}`);
+    } catch (err: any) {
+      console.error('Error preparing checkout:', err);
+      setError(err?.message || 'Failed to prepare checkout. Please try again.');
+    } finally {
+      setIsCheckingOut(false);
+    }
   };
 
   const handleShareDesign = async (design: Design) => {
@@ -636,10 +579,15 @@ function DesignContent(): JSX.Element {
               Preview mode: generate before you pay.
             </p>
             <p className="text-xs text-blue-800 dark:text-blue-200 mt-1">
-              We will reuse this preview order at checkout so your designs and prompt stay attached.
+              We will reuse this preview order at checkout so your designs and prompt stay attached. Checkout will lock the latest design and fit you selected.
             </p>
           </div>
-          <Button variant="primary" onClick={handleCheckoutRedirect} className="w-full md:w-auto">
+          <Button
+            variant="primary"
+            onClick={handleCheckoutRedirect}
+            className="w-full md:w-auto"
+            disabled={isCheckingOut}
+          >
             Checkout to print
           </Button>
         </div>
@@ -651,7 +599,7 @@ function DesignContent(): JSX.Element {
             <div>
               <p className="text-sm font-semibold text-gray-900 dark:text-white">Pick your fit</p>
               <p className="text-xs text-gray-600 dark:text-gray-400">
-                Choose size and color now that you see the artwork. We will save it to this preview order and your cart.
+                Choose size and color now that you see the artwork. Your choice is saved when you checkout.
               </p>
             </div>
             {variantMessage && (
@@ -668,8 +616,8 @@ function DesignContent(): JSX.Element {
                     <button
                       key={c.name}
                       type="button"
-                      onClick={() => handleVariantUpdate(c.name, selectedSize || product.sizes[0])}
-                      className={`w-10 h-10 rounded-full border-2 transition-all ${
+                      onClick={() => handleVariantSelect(c.name, selectedSize || product.sizes[0])}
+                      className={`w-10 h-10 rounded-full border-2 transition-all cursor-pointer ${
                         selectedColor === c.name
                           ? 'border-primary-600 scale-110'
                           : 'border-gray-300 dark:border-gray-600'
@@ -688,12 +636,12 @@ function DesignContent(): JSX.Element {
                       key={s}
                       type="button"
                       onClick={() =>
-                        handleVariantUpdate(
+                        handleVariantSelect(
                           selectedColor || product.colors[0]?.name || 'Black',
                           s
                         )
                       }
-                      className={`px-3 py-2 rounded-full border transition-colors ${
+                      className={`px-3 py-2 rounded-full border transition-colors cursor-pointer ${
                         selectedSize === s
                           ? 'border-primary-600 bg-primary-50 dark:bg-primary-900/20 text-primary-700 dark:text-primary-200'
                           : 'border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200'
@@ -706,7 +654,7 @@ function DesignContent(): JSX.Element {
                 </div>
               </div>
               <p className="text-[11px] text-gray-500 dark:text-gray-400">
-                Changes are saved for this preview order. You can still adjust before checkout; once paid, fit is locked for printing.
+                Apply the fit that matches your design. We capture it when you checkout; once paid, fit is locked for printing.
               </p>
             </div>
 
@@ -743,9 +691,6 @@ function DesignContent(): JSX.Element {
             )}
           </div>
 
-          {isUpdatingVariant && (
-            <p className="text-xs text-blue-700 dark:text-blue-300 mt-2">Saving fit...</p>
-          )}
         </div>
       )}
 
@@ -1000,6 +945,7 @@ function DesignContent(): JSX.Element {
                           size="sm"
                           onClick={handleCheckoutRedirect}
                           className="w-full sm:w-auto"
+                          disabled={isCheckingOut}
                         >
                           Checkout to print
                         </Button>

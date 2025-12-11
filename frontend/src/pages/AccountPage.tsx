@@ -53,6 +53,7 @@ interface Order {
     productTier?: string | null;
   } | null;
 }
+
 const statusStyles: Record<string, string> = {
   PENDING_PAYMENT: 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300',
   PAID: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300',
@@ -83,12 +84,11 @@ const reorderEligibleStatuses = ['PAID', 'DESIGN_APPROVED', 'SUBMITTED', 'SHIPPE
 function AccountContent(): JSX.Element {
   const { user } = useUser();
   const { getToken, isSignedIn, isLoaded } = useAuth();
-  const { addToCart, getTotalItems } = useCart();
+  const { addToCart } = useCart();
 
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const cartCount = getTotalItems();
 
   useEffect(() => {
     if (isLoaded && isSignedIn) {
@@ -155,33 +155,18 @@ function AccountContent(): JSX.Element {
         </p>
       </div>
 
-      {cartCount > 0 && (
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-gradient-to-r from-primary-600 to-purple-600 text-white rounded-xl px-4 py-3 shadow-md">
-          <div>
-            <p className="text-sm font-semibold">
-              {cartCount} item{cartCount === 1 ? '' : 's'} ready in your cart
-            </p>
-            <p className="text-xs text-white/80">
-              Finish checkout to print, or keep refining in My Designs.
-            </p>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            <Link to="/cart">
-              <Button variant="secondary" size="sm" className="bg-white text-primary-700">
-                Go to cart
-              </Button>
-            </Link>
-            <Link to="/#quickstart">
-              <Button variant="secondary" size="sm" className="bg-white/10 border-white text-white hover:bg-white/20">
-                Continue design
-              </Button>
-            </Link>
-          </div>
-        </div>
-      )}
-
       <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 p-6">
-        <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">Order History</h2>
+        <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
+          <div>
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Order History</h2>
+            <p className="text-sm text-gray-600 dark:text-gray-400">
+              Open your latest design to choose color/fit and checkout from the design page.
+            </p>
+          </div>
+          <Link to="/#quickstart">
+            <Button variant="primary" size="sm">Start a new design</Button>
+          </Link>
+        </div>
 
         {loading && (
           <div className="flex items-center justify-center py-12">
@@ -219,21 +204,22 @@ function AccountContent(): JSX.Element {
                     </p>
                   </div>
                 </div>
+
                 <div className="flex flex-wrap items-center gap-3 text-sm text-gray-600 dark:text-gray-300">
                   <span>{order.items.length} item{order.items.length !== 1 ? 's' : ''}</span>
-                  <span>•</span>
-                  <span>{order.designTier} Tier</span>
-                  <span>•</span>
+                  <span className="text-gray-400">•</span>
+                  <span>{order.designTier} tier</span>
+                  <span className="text-gray-400">•</span>
                   <span>Designs: {order.designsGenerated}/{order.maxDesigns === 9999 ? '∞' : order.maxDesigns}</span>
                   {order.fulfillmentStatus && (
                     <>
-                      <span>•</span>
+                      <span className="text-gray-400">•</span>
                       <span>Fulfillment: {order.fulfillmentStatus}</span>
                     </>
                   )}
                   {order.trackingNumber && (
                     <>
-                      <span>•</span>
+                      <span className="text-gray-400">•</span>
                       <span>Tracking: </span>
                       <a
                         href={`https://myorders.co/tracking/${encodeURIComponent(order.trackingNumber)}`}
@@ -247,11 +233,12 @@ function AccountContent(): JSX.Element {
                   )}
                   {order.promoCode && (
                     <>
-                      <span>•</span>
+                      <span className="text-gray-400">•</span>
                       <span>Code: {formatPromo(order.promoCode)}</span>
                     </>
                   )}
                 </div>
+
                 {order.designs?.length > 0 && (
                   <div className="mt-4">
                     <p className="text-sm font-semibold text-gray-900 dark:text-white mb-2">Designs</p>
@@ -295,28 +282,21 @@ function AccountContent(): JSX.Element {
                 )}
 
                 <div className="mt-4 flex gap-3 flex-wrap">
-                  {(order.status === 'PENDING_PAYMENT' || order.status === 'DESIGN_PENDING') && (
-                    <Link to={`/checkout?orderId=${order.id}`}>
-                      <Button variant="primary" size="sm">
-                        Checkout to print
-                      </Button>
-                    </Link>
-                  )}
                   <Link to={`/design?orderId=${order.id}`}>
-                    <Button variant="secondary" size="sm">
-                      Continue design
+                    <Button variant="primary" size="sm">
+                      Open design & checkout
                     </Button>
                   </Link>
                   {order.designs.length > 0 && (
                     <Link to={`/orders/${order.id}`}>
                       <Button variant="secondary" size="sm">
-                        View Designs ({order.designs.length})
+                        View designs ({order.designs.length})
                       </Button>
                     </Link>
                   )}
                   <Link to={`/orders/${order.id}`}>
                     <Button variant="secondary" size="sm">
-                      View Details
+                      View details
                     </Button>
                   </Link>
                 </div>
@@ -327,10 +307,10 @@ function AccountContent(): JSX.Element {
 
         {!loading && !error && orders.length === 0 && (
           <div className="text-center py-12">
-            <div className="text-6xl mb-4">🛍️</div>
+            <div className="text-5xl mb-4">🛍️</div>
             <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">No orders yet</h3>
             <p className="text-gray-600 dark:text-gray-400 mb-6">
-              Start shopping to create your first one-of-one GPTee!
+              Start a new preview to create your first one-of-one GPTee.
             </p>
             <Link to="/#quickstart">
               <Button variant="primary">Start a new design</Button>
