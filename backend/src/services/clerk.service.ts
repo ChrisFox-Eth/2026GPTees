@@ -8,15 +8,38 @@ import { clerkClient } from '@clerk/clerk-sdk-node';
 import { Webhook } from 'svix';
 import prisma from '../config/database.js';
 
+function resolveFallbackEmail(candidate: any, clerkId?: string): string | null {
+  if (!candidate && clerkId) {
+    return `${clerkId}@noemail.clerk.local`;
+  }
+  if (typeof candidate === 'string') {
+    return candidate;
+  }
+  if (Array.isArray(candidate)) {
+    const first = candidate[0];
+    if (!first) return clerkId ? `${clerkId}@noemail.clerk.local` : null;
+    if (typeof first === 'string') return first;
+    if (typeof first === 'object' && (first as any).email_address) return (first as any).email_address;
+    if (typeof first === 'object' && (first as any).email) return (first as any).email;
+  }
+  if (typeof candidate === 'object' && candidate !== null) {
+    if ((candidate as any).email_address) return (candidate as any).email_address;
+    if ((candidate as any).email) return (candidate as any).email;
+  }
+  return clerkId ? `${clerkId}@noemail.clerk.local` : null;
+}
+
 /**
  * Sync Clerk user to database
  * @param {any} clerkUser - Clerk user object
  * @returns {Promise<any>} Created/updated user
  */
-export async function syncUserToDatabase(clerkUser: any) {
-  const { id: clerkId, email_addresses, first_name, last_name } = clerkUser;
+export async function syncUserToDatabase(clerkUser: any, fallbackEmail?: string) {
+  const { id: clerkId, email_addresses, first_name, last_name } = clerkUser || {};
 
-  const email = email_addresses?.[0]?.email_address;
+  const email =
+    email_addresses?.[0]?.email_address ||
+    resolveFallbackEmail(fallbackEmail, clerkId);
 
   if (!email) {
     throw new Error('User email not found');

@@ -66,7 +66,11 @@ export const requireAuth = async (
     if (!user) {
       // Auto-provision user if missing in our DB
       const clerkUser = await getClerkUser(clerkUserId);
-      user = await syncUserToDatabase(clerkUser);
+      const fallbackEmail =
+        (payload as any)?.email ||
+        (payload as any)?.email_address ||
+        (payload as any)?.email_addresses?.[0];
+      user = await syncUserToDatabase(clerkUser, fallbackEmail);
     }
 
     req.user = {

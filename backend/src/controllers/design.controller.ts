@@ -8,13 +8,16 @@ import { Request, Response } from 'express';
 import { catchAsync, AppError } from '../middleware/error.middleware.js';
 import { generateDesign, generateRandomPrompt } from '../services/openai.service.js';
 import { uploadImage } from '../services/supabase-storage.service.js';
-import { createPrintfulOrder } from '../services/printful.service.js';
-import { sendDesignApproved } from '../services/email.service.js';
 import prisma from '../config/database.js';
 import { sendAnalyticsEvent } from '../services/analytics.service.js';
+import type { PrismaClient } from '@prisma/client';
 import { OrderStatus } from '@prisma/client';
 import { getSupabaseServiceRoleClient } from '../services/supabase-admin.service.js';
 import { v4 as uuidv4 } from 'uuid';
+import { sendDesignApproved } from '../services/email.service.js';
+import { createPrintfulOrder } from '../services/printful.service.js';
+
+type TransactionClient = PrismaClient;
 
 /**
  * Generate AI design
@@ -210,19 +213,6 @@ export const createDesignGuest = catchAsync(async (req: Request, res: Response) 
     throw new AppError('Order not found', 404);
   }
 
-  // Ensure the order's user still exists (guest rows can be missing)
-  const designUser = await prisma.user.findUnique({ where: { id: order.userId } });
-  if (!designUser) {
-    await prisma.user.create({
-      data: {
-        id: order.userId,
-        email: `guest+${order.id}@guest.gptees`,
-        clerkId: `guest_repair_${order.id}`,
-        firstName: 'Guest',
-      },
-    });
-  }
-
   if (order.previewGuestToken !== guestToken) {
     throw new AppError('Invalid guest token for this preview order', 403);
   }
@@ -251,26 +241,41 @@ export const createDesignGuest = catchAsync(async (req: Request, res: Response) 
     style,
   });
 
-  const design = await prisma.design.create({
-    data: {
-      userId: order.userId,
-      orderId,
-      prompt,
-      revisedPrompt,
-      aiModel: 'dall-e-3',
-      imageUrl,
-      thumbnailUrl: imageUrl,
-      status: 'GENERATING',
-      style,
-    },
-  });
+  const { design } = await prisma.$transaction(async (tx: TransactionClient) => {
+    await tx.user.upsert({
+      where: { id: order.userId },
+      update: {},
+      create: {
+        id: order.userId,
+        email: `guest+${order.id}@guest.gptees`,
+        clerkId: `guest_repair_${order.id}`,
+        firstName: 'Guest',
+      },
+    });
 
-  await prisma.order.update({
-    where: { id: orderId },
-    data: {
-      designsGenerated: order.designsGenerated + 1,
-      status: 'DESIGN_PENDING',
-    },
+    const createdDesign = await tx.design.create({
+      data: {
+        userId: order.userId,
+        orderId,
+        prompt,
+        revisedPrompt,
+        aiModel: 'dall-e-3',
+        imageUrl,
+        thumbnailUrl: imageUrl,
+        status: 'GENERATING',
+        style,
+      },
+    });
+
+    await tx.order.update({
+      where: { id: orderId },
+      data: {
+        designsGenerated: order.designsGenerated + 1,
+        status: 'DESIGN_PENDING',
+      },
+    });
+
+    return { design: createdDesign };
   });
 
   // Mark completed immediately so the client can proceed; upload to Supabase in background
@@ -574,14 +579,14 @@ export const approveDesign = catchAsync(async (req: Request, res: Response) => {
     orderNumber: design.order.orderNumber,
     designImageUrl: design.imageUrl,
     orderUrl: `${frontendUrl}/orders/${design.orderId}`,
-  }).catch((error) => {
+  }).catch((error: unknown) => {
     console.error('Failed to send design approved email:', error);
   });
 
   // Submit order to Printful for fulfillment (non-blocking)
   // This runs in the background to not block the user response
   createPrintfulOrder(design.orderId!, id)
-    .then((result) => {
+    .then((result: { success: boolean; printfulOrderId?: number; error?: string }) => {
       if (result.success) {
         console.log(`✓ Order ${design.orderId} submitted to Printful: ${result.printfulOrderId}`);
       } else {
@@ -590,7 +595,7 @@ export const approveDesign = catchAsync(async (req: Request, res: Response) => {
         // or add the order to a retry queue
       }
     })
-    .catch((error) => {
+    .catch((error: unknown) => {
       console.error('Unexpected error submitting to Printful:', error);
     });
 
