@@ -163,7 +163,7 @@ export default function Quickstart(): JSX.Element {
       const customEvent = event as CustomEvent<{ prompt?: string }>;
       const idea = customEvent.detail?.prompt;
       if (!idea) return;
-      setPrompt((prev) => (prev ? `${prev} / ${idea}` : idea));
+      setPrompt(idea);
       const textarea = document.getElementById(textareaId);
       if (textarea) {
         textarea.focus();
