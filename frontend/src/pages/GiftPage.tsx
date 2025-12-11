@@ -10,12 +10,12 @@ import { Button } from '@components/Button';
 import { apiPost } from '@utils/api';
 import { trackEvent } from '@utils/analytics';
 
-type TierOption = 'BASIC' | 'PREMIUM';
+type TierOption = 'PREMIUM';
 
 export default function GiftPage(): JSX.Element {
   const { isSignedIn, isLoaded, getToken } = useAuth();
   const navigate = useNavigate();
-  const [tier, setTier] = useState<TierOption>('BASIC');
+  const [tier] = useState<TierOption>('PREMIUM');
   const [usageLimit, ] = useState(1);
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -64,35 +64,15 @@ export default function GiftPage(): JSX.Element {
           </p>
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Gift a one-of-one GPTee</h1>
           <p className="text-gray-600 dark:text-gray-400">
-            Send someone a redeemable code so they can design their own tee. Classic is one-shot; Limitless lets them redraw until they love it.
+            Send someone a redeemable code so they can design their own tee. Limitless includes unlimited redraws until they love it.
           </p>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <button
-            type="button"
-            onClick={() => setTier('BASIC')}
-            className={`p-4 border rounded-lg text-left transition ${
-              tier === 'BASIC'
-                ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20'
-                : 'border-gray-200 dark:border-gray-700'
-            }`}
-          >
-            <p className="font-semibold text-gray-900 dark:text-white">Classic Tee</p>
-            <p className="text-sm text-gray-600 dark:text-gray-400">One-and-done artwork for decisive giftees</p>
-          </button>
-          <button
-            type="button"
-            onClick={() => setTier('PREMIUM')}
-            className={`p-4 border rounded-lg text-left transition ${
-              tier === 'PREMIUM'
-                ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20'
-                : 'border-gray-200 dark:border-gray-700'
-            }`}
-          >
+          <div className="p-4 border rounded-lg text-left border-primary-500 bg-primary-50 dark:bg-primary-900/20">
             <p className="font-semibold text-gray-900 dark:text-white">Limitless Tee</p>
             <p className="text-sm text-gray-600 dark:text-gray-400">Unlimited redraws until they say &ldquo;perfect&rdquo;</p>
-          </button>
+          </div>
         </div>
 
         {/* <div className="space-y-2">
@@ -131,7 +111,7 @@ export default function GiftPage(): JSX.Element {
           <ol className="list-decimal list-inside space-y-1">
             <li>You check out now via Stripe.</li>
             <li>We email you the gift code instantly.</li>
-            <li>Your friend redeems it at checkout for Classic or Limitless and designs their tee.</li>
+            <li>Your friend redeems it for a Limitless tee and designs to their heart&apos;s content.</li>
           </ol>
         </div>
       </div>

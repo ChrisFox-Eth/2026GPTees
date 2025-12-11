@@ -8,8 +8,8 @@ export default function HowItWorks(): JSX.Element {
   const steps = [
     {
       number: '1',
-      title: 'Pick Classic or Limitless',
-      description: 'Classic is one-shot: we print the artwork you approve first. Limitless lets you redraw with new prompts until you lock in your favorite.',
+      title: 'Start a free preview',
+      description: 'Jump into Quickstart, capture your prompt, and we create a preview order without payment. Your spot is saved, even before login.',
       icon: (
         <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
@@ -28,8 +28,8 @@ export default function HowItWorks(): JSX.Element {
     },
     {
       number: '3',
-      title: 'We craft the art',
-      description: 'We turn your words into artwork in seconds. In Limitless you can change the prompt and redraw until you approve; Classic is one-and-done.',
+      title: 'Limitless redraws',
+      description: 'We turn your words into artwork in seconds. Keep refining the prompt until you love it—no caps, all included.',
       icon: (
         <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
@@ -38,8 +38,8 @@ export default function HowItWorks(): JSX.Element {
     },
     {
       number: '4',
-      title: 'We Print & Ship',
-      description: 'Approve your design and we\'ll handle the rest. High-quality printing and fast worldwide delivery.',
+      title: 'Pick fit, pay, and ship',
+      description: 'Preview on all four shirt colors, choose size and fit, then check out. We print and ship once you approve.',
       icon: (
         <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />

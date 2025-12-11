@@ -131,8 +131,8 @@ export default function ShopPage(): JSX.Element {
           <div className="flex items-center gap-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 px-3 py-2">
             <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-primary-600 text-white text-sm font-semibold">2</span>
             <div>
-              <p className="text-sm font-semibold text-gray-900 dark:text-white">Flexible pay options</p>
-              <p className="text-xs text-gray-600 dark:text-gray-400">Choose Classic or Limitless redraws when you check out.</p>
+              <p className="text-sm font-semibold text-gray-900 dark:text-white">Limitless by default</p>
+              <p className="text-xs text-gray-600 dark:text-gray-400">Unlimited redraws and pay-after-approval flow built in.</p>
             </div>
           </div>
         </div> */}

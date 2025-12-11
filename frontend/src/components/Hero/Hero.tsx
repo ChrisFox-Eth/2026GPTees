@@ -28,7 +28,7 @@ export default function Hero(): JSX.Element {
         />
       </div>
       <h1 className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-4">
-        One-of-one tees. One shot or unlimited redraws.
+        Limitless tees. Design first, pay when you print.
       </h1>
 
       <div className="mb-2">
@@ -37,8 +37,8 @@ export default function Hero(): JSX.Element {
         </span> */}
       </div>
       <p className="hidden! text-base md:text-lg text-gray-600 dark:text-gray-300 mb-8 max-w-2xl mx-auto leading-relaxed">
-        Choose Classic for a one-and-done creation, or Limitless to keep redrawing with new prompts
-        until you approve. Every tee is a 1/1 made from your words.
+        Start with a free preview, iterate with limitless redraws, then pick your color and fit
+        before checkout. Every tee is a 1/1 made from your words.
       </p>
 
       {/* Value Props */}

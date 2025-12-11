@@ -23,33 +23,20 @@ interface TierCard {
 
 const DEFAULT_TIERS: TierCard[] = [
   {
-    name: 'Basic',
-    displayName: 'Classic',
-    price: '$34.99',
-    description: '1 artwork included (one-shot)',
-    features: [
-      'Super-soft GPTee',
-      '1 artwork crafted from your words',
-      'One shot: approve it or rerun as Limitless',
-      'High-quality printing & shipping',
-    ],
-    cta: 'Get Started',
-    highlighted: false,
-  },
-  {
-    name: 'Premium',
+    name: 'Limitless',
     displayName: 'Limitless',
     price: '$54.99',
-    description: 'Unlimited redraws',
+    description: 'Design first, pay when you print. Unlimited redraws included.',
     features: [
       'Super-soft GPTee',
       'Unlimited redraws until you love it',
-      'Change the prompt between redraws',
-      'High-quality printing & shipping',
+      'Preview on all four colors before checkout',
+      'Choose size and fit after you see the design',
+      'High-quality printing & tracked shipping',
     ],
-    cta: 'Go Limitless',
+    cta: 'Start Limitless',
     highlighted: true,
-    badge: 'Most choose this',
+    badge: 'Design-first',
   },
 ];
 
@@ -71,20 +58,19 @@ export default function PricingSection(): JSX.Element {
         const products = response?.data || [];
         const firstProduct = Array.isArray(products) ? products[0] : null;
         const tierPricing = firstProduct?.tierPricing;
+        const price =
+          tierPricing?.PREMIUM?.price ??
+          tierPricing?.LIMITLESS?.price ??
+          firstProduct?.basePrice;
 
-        if (!tierPricing || cancelled) return;
+        if (!price || cancelled) return;
 
         setTiers((current) =>
-          current.map((tier) => {
-            const key = tier.name.toUpperCase();
-            const config = tierPricing[key];
-            if (!config) return tier;
-            return {
-              ...tier,
-              price: formatPrice(config.price),
-              description: config.description || tier.description,
-            };
-          })
+          current.map((tier) => ({
+            ...tier,
+            price: formatPrice(price),
+            description: tier.description,
+          }))
         );
       } catch (error) {
         console.error('Failed to load pricing from API', error);
@@ -106,11 +92,11 @@ export default function PricingSection(): JSX.Element {
             Simple, Transparent Pricing
           </h2>
           <p className="text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
-            Classic is one-and-done. Limitless lets you redraw with new prompts until you approve. Both include the tee, artwork, and fast shipping.
+            One Limitless plan: generate for free, refine without limits, pay when you print.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-1 gap-8 max-w-3xl mx-auto">
           {tiers.map((tier) => (
             <div
               key={tier.name}
@@ -141,7 +127,7 @@ export default function PricingSection(): JSX.Element {
                 </div>
                 <p className="text-gray-600 dark:text-gray-300">{tier.description}</p>
                 <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
-                  Ships in 5-8 business days • Secure checkout by Stripe
+                  Ships in 5-8 business days | Secure checkout by Stripe
                 </p>
               </div>
 
@@ -166,9 +152,9 @@ export default function PricingSection(): JSX.Element {
               </ul>
 
               {/* CTA */}
-              <Link to="/shop" className="block">
+              <Link to="/#quickstart" className="block">
                 <Button
-                  variant={tier.highlighted ? 'primary' : 'secondary'}
+                  variant="primary"
                   className="w-full"
                   size="lg"
                   onClick={() =>

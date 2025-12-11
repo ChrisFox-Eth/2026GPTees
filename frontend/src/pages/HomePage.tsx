@@ -34,11 +34,11 @@ export default function HomePage(): JSX.Element {
       <Features />
       <PricingSection />
       <CallToAction />
-      <Link to="/shop">
+      <Link to="/#quickstart">
         <StickyCtaBar
-          primaryLabel="Feeling lucky? One-shot Classic for $34.99"
-          subcopy=""
-          href="#"
+          primaryLabel="Start your Limitless tee for $54.99 — design first"
+          subcopy="Unlimited redraws, pay when you print"
+          href="#quickstart"
         />
       </Link>
     </main>

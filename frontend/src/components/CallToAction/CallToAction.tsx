@@ -23,16 +23,16 @@ export default function CallToAction(): JSX.Element {
           Ready to drop your 1/1 GPTee?
         </h2>
         <p className="text-xl text-white/90 mb-8 max-w-2xl mx-auto">
-          Classic is one-shot. Limitless lets you keep redrawing with new prompts until you approve. Your idea, your call.
+          One Limitless plan: generate free previews, redraw until it is perfect, then pick color and fit before checkout.
         </p>
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
-          <Link to="/shop">
+          <Link to="/#quickstart">
             <Button
               size="lg"
               className="bg-primary-600 text-white border-2 border-white hover:bg-gray-100 px-8 py-3 text-lg"
               onClick={() => handleCtaClick('browse_products')}
             >
-              Browse Products
+              Start a Limitless tee
             </Button>
           </Link>
           <Link to="/gift">
