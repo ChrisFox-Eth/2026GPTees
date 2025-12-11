@@ -381,20 +381,6 @@ function DesignContent(): JSX.Element {
         setOrder(updatedOrderResponse.data as Order);
       }
 
-      const latestCompleted = [...designs]
-        .filter((d) => d.status === 'COMPLETED')
-        .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())[0];
-
-      if (latestCompleted && !latestCompleted.approvalStatus) {
-        await apiPost(`/api/designs/${latestCompleted.id}/approve`, {}, token);
-        setDesigns((prev) =>
-          prev.map((d) =>
-            d.id === latestCompleted.id ? { ...d, approvalStatus: true } : d
-          )
-        );
-        setOrder((prev) => (prev ? { ...prev, status: 'DESIGN_APPROVED' } : prev));
-      }
-
       trackEvent('design.checkout.preview', {
         order_id: orderId,
         design_tier: order.designTier,
@@ -584,7 +570,7 @@ function DesignContent(): JSX.Element {
               Preview mode: generate before you pay.
             </p>
             <p className="text-xs text-blue-800 dark:text-blue-200 mt-1">
-              We will reuse this preview order at checkout so your designs and prompt stay attached. Checkout will lock the latest design and fit you selected.
+              We reuse this preview order at checkout so your designs and prompt stay attached. Paying will lock the latest design and fit you selected.
             </p>
           </div>
           <Button
