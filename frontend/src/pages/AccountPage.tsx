@@ -83,11 +83,12 @@ const reorderEligibleStatuses = ['PAID', 'DESIGN_APPROVED', 'SUBMITTED', 'SHIPPE
 function AccountContent(): JSX.Element {
   const { user } = useUser();
   const { getToken, isSignedIn, isLoaded } = useAuth();
-  const { addToCart } = useCart();
+  const { addToCart, getTotalItems } = useCart();
 
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const cartCount = getTotalItems();
 
   useEffect(() => {
     if (isLoaded && isSignedIn) {
@@ -95,8 +96,8 @@ function AccountContent(): JSX.Element {
     }
   }, [isLoaded, isSignedIn]);
 
-const fetchOrders = async () => {
-   try {
+  const fetchOrders = async () => {
+    try {
       setLoading(true);
       const token = await getToken();
       if (!token) {
@@ -144,28 +145,50 @@ const fetchOrders = async () => {
       tier: order.designTier,
     });
   };
-return (
-    <div className="container-max py-8">
-      {/* User Info */}
-      <div className="mb-8">
+
+  return (
+    <div className="container-max py-8 space-y-6">
+      <div>
         <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">My Account</h1>
         <p className="text-gray-600 dark:text-gray-400">
           Welcome back, {user?.firstName || user?.emailAddresses[0]?.emailAddress}!
         </p>
       </div>
 
-      {/* Orders Section */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+      {cartCount > 0 && (
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-gradient-to-r from-primary-600 to-purple-600 text-white rounded-xl px-4 py-3 shadow-md">
+          <div>
+            <p className="text-sm font-semibold">
+              {cartCount} item{cartCount === 1 ? '' : 's'} ready in your cart
+            </p>
+            <p className="text-xs text-white/80">
+              Finish checkout to print, or keep refining in My Designs.
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <Link to="/cart">
+              <Button variant="secondary" size="sm" className="bg-white text-primary-700">
+                Go to cart
+              </Button>
+            </Link>
+            <Link to="/#quickstart">
+              <Button variant="secondary" size="sm" className="bg-white/10 border-white text-white hover:bg-white/20">
+                Continue design
+              </Button>
+            </Link>
+          </div>
+        </div>
+      )}
+
+      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 p-6">
         <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">Order History</h2>
 
-        {/* Loading State */}
         {loading && (
           <div className="flex items-center justify-center py-12">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
           </div>
         )}
 
-        {/* Error State */}
         {error && (
           <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4 mb-6">
             <p className="text-red-800 dark:text-red-400">{error}</p>
@@ -175,13 +198,12 @@ return (
           </div>
         )}
 
-        {/* Orders List */}
         {!loading && !error && orders.length > 0 && (
           <div className="space-y-4">
             {orders.map((order) => (
               <div
                 key={order.id}
-                className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 hover:border-primary-400 transition-colors"
+                className="border border-gray-200 dark:border-gray-700 rounded-xl p-4 hover:border-primary-400/80 hover:shadow transition bg-gray-50 dark:bg-gray-900/60"
               >
                 <div className="flex flex-wrap items-start justify-between gap-4 mb-3">
                   <div>
@@ -197,7 +219,7 @@ return (
                     </p>
                   </div>
                 </div>
-                <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600 dark:text-gray-400">
+                <div className="flex flex-wrap items-center gap-3 text-sm text-gray-600 dark:text-gray-300">
                   <span>{order.items.length} item{order.items.length !== 1 ? 's' : ''}</span>
                   <span>•</span>
                   <span>{order.designTier} Tier</span>
@@ -237,35 +259,37 @@ return (
                       {order.designs.map((design) => (
                         <div
                           key={design.id}
-                          className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden bg-gray-50 dark:bg-gray-900"
-                          >
-                            <div className="bg-gray-100 dark:bg-gray-800 flex items-center justify-center h-32">
-                              {design.imageUrl ? (
-                                <img src={design.imageUrl} alt={design.prompt} className="w-full h-full object-contain" />
-                              ) : (
-                                <div className="text-xs text-gray-500 dark:text-gray-400">Design preview coming soon</div>
-                              )}
-                            </div>
-                            <p className="text-xs text-gray-700 dark:text-gray-300 line-clamp-2 px-3 py-2">{design.prompt}</p>
-                            <div className="px-3 pb-3">
-                              <Link to={`/design?orderId=${order.id}`}>
-                                <Button variant="secondary" size="sm">
-                                  Open design
-                                </Button>
-                              </Link>
-                              {reorderEligibleStatuses.includes(order.status) && (
-                                <Button
-                                  variant="primary"
-                                  size="sm"
-                                  className="mt-2 w-full"
-                                  onClick={() => handleReorder(order, design)}
-                                >
-                                  Reorder this design
-                                </Button>
-                              )}
-                            </div>
+                          className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden bg-white dark:bg-gray-900 shadow-sm"
+                        >
+                          <div className="bg-gray-100 dark:bg-gray-800 flex items-center justify-center h-40">
+                            {design.imageUrl ? (
+                              <img src={design.imageUrl} alt={design.prompt} className="max-h-36 object-contain" />
+                            ) : (
+                              <div className="text-xs text-gray-500 dark:text-gray-400">Design preview coming soon</div>
+                            )}
                           </div>
-                        ))}
+                          <p className="text-xs text-gray-700 dark:text-gray-300 line-clamp-3 px-3 py-2">
+                            {design.prompt}
+                          </p>
+                          <div className="px-3 pb-3 flex flex-col gap-2">
+                            <Link to={`/design?orderId=${order.id}`}>
+                              <Button variant="secondary" size="sm" className="w-full">
+                                Open design
+                              </Button>
+                            </Link>
+                            {reorderEligibleStatuses.includes(order.status) && (
+                              <Button
+                                variant="primary"
+                                size="sm"
+                                className="w-full"
+                                onClick={() => handleReorder(order, design)}
+                              >
+                                Reorder this design
+                              </Button>
+                            )}
+                          </div>
+                        </div>
+                      ))}
                     </div>
                   </div>
                 )}
@@ -278,27 +302,11 @@ return (
                       </Button>
                     </Link>
                   )}
-                  {order.status === 'DESIGN_PENDING' && (
-                    <Link to={`/design?orderId=${order.id}`}>
-                      <Button variant="secondary" size="sm">
-                        Review & Approve
-                      </Button>
-                    </Link>
-                  )}
-                  {order.status === 'PAID' && order.designsGenerated < order.maxDesigns && (
-                    <Link to={`/design?orderId=${order.id}`}>
-                      <Button variant="primary" size="sm">
-                        Generate Design
-                      </Button>
-                      </Link>
-                  )}
-                  {order.status === 'PAID' && (
-                    <Link to={`/design?orderId=${order.id}`}>
-                      <Button variant="secondary" size="sm">
-                        Design Page
-                      </Button>
-                    </Link>
-                  )}
+                  <Link to={`/design?orderId=${order.id}`}>
+                    <Button variant="secondary" size="sm">
+                      Continue design
+                    </Button>
+                  </Link>
                   {order.designs.length > 0 && (
                     <Link to={`/orders/${order.id}`}>
                       <Button variant="secondary" size="sm">
@@ -317,14 +325,13 @@ return (
           </div>
         )}
 
-        {/* Empty State */}
         {!loading && !error && orders.length === 0 && (
           <div className="text-center py-12">
-            <div className="text-6xl mb-4">📦</div>
+            <div className="text-6xl mb-4">🛍️</div>
             <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">No orders yet</h3>
             <p className="text-gray-600 dark:text-gray-400 mb-6">
               Start shopping to create your first one-of-one GPTee!
-              </p>
+            </p>
             <Link to="/#quickstart">
               <Button variant="primary">Start a new design</Button>
             </Link>
