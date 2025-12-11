@@ -411,6 +411,17 @@ export const claimPreviewOrder = catchAsync(async (req: Request, res: Response) 
     include: { items: true },
   });
 
+  // Reassign any guest designs on this order to the authenticated user
+  await prisma.design.updateMany({
+    where: {
+      orderId,
+      userId: previousUserId,
+    },
+    data: {
+      userId: req.user.id,
+    },
+  });
+
   // Clean up guest user if unused
   if (previousUserId !== req.user.id) {
     const remainingOrders = await prisma.order.count({ where: { userId: previousUserId } });
