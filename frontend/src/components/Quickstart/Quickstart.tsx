@@ -471,7 +471,7 @@ export default function Quickstart(): JSX.Element {
       </div>
       <div className="w-full flex-shrink-0 space-y-3">
         <Button
-          variant="primary"
+          variant="pulse-gradient"
           className="bg-gradient-to-r from-primary-600 to-purple-600 w-full"
           onClick={handleSubmit}
           disabled={isCreating || isGenerating}

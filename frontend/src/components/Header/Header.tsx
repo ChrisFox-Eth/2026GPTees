@@ -9,7 +9,6 @@ import { Link } from 'react-router-dom';
 import { useUser, useClerk, SignedIn, SignedOut } from '@clerk/clerk-react';
 import { HeaderProps } from './Header.types';
 import { Button } from '@components/Button';
-import { useCart } from '../../hooks/useCart';
 import GPTeesIconDarkMode from '../../assets/GPTeesIconDarkMode.png';
 import GPTeesIconLightMode from '../../assets/GPTeesIconLightMode.png';
 
@@ -17,8 +16,6 @@ export default function Header({ isDark }: HeaderProps): JSX.Element {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { user } = useUser();
   const { signOut } = useClerk();
-  const { getTotalItems } = useCart();
-  const cartItemCount = getTotalItems();
 
   const handleSignOut = () => {
     signOut();
@@ -96,17 +93,6 @@ export default function Header({ isDark }: HeaderProps): JSX.Element {
                 </Button>
               </div>
             </SignedIn>
-
-            <Link to="/cart" className="relative">
-              <Button variant="secondary" size="sm" ariaLabel="Open cart">
-                Cart
-                {cartItemCount > 0 && (
-                  <span className="absolute -top-2 -right-2 bg-primary-600 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
-                    {cartItemCount}
-                  </span>
-                )}
-              </Button>
-            </Link>
 {/* 
             <Button
               style={{ display: 'none' }}
@@ -121,17 +107,6 @@ export default function Header({ isDark }: HeaderProps): JSX.Element {
 
           {/* Mobile Controls */}
           <div className="flex md:hidden items-center gap-2">
-            <Link to="/cart" className="relative">
-              <Button variant="secondary" size="sm" ariaLabel="Open cart" className="px-3 py-1.5 text-sm">
-                Cart
-                {cartItemCount > 0 && (
-                  <span className="absolute -top-1 -right-1 bg-primary-600 text-white text-xs font-bold rounded-full h-4 w-4 flex items-center justify-center text-[10px]">
-                    {cartItemCount}
-                  </span>
-                )}
-              </Button>
-            </Link>
-
             <Button
               variant="primary"
               size="sm"

@@ -162,10 +162,10 @@ export default function CheckoutSuccessPage(): JSX.Element {
             </svg>
           </div>
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-            Payment Successful!
+            Design locked & paid
           </h1>
           <p className="text-lg text-gray-600 dark:text-gray-400">
-            Your order has been placed successfully. We&apos;re sending you to the design page to finish your artwork.
+            Your order is locked with your latest design and fit. We&apos;re sending you to your design page for a final look.
           </p>
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">If you&apos;re not redirected, use the button below.</p>
         </div>
@@ -173,7 +173,7 @@ export default function CheckoutSuccessPage(): JSX.Element {
         {/* Order Info */}
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-5">
           <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
-            What's Next?
+            What&apos;s next?
           </h2>
           <div className="space-y-3">
             <div className="flex items-start gap-3">
@@ -181,8 +181,8 @@ export default function CheckoutSuccessPage(): JSX.Element {
                 <span className="text-primary-600 dark:text-primary-400 font-bold">1</span>
               </div>
               <div>
-                <h3 className="font-semibold text-gray-900 dark:text-white">Design Your GPTee</h3>
-                <p className="text-sm text-gray-600 dark:text-gray-400">Tell us what to print and we&rsquo;ll craft the artwork.</p>
+                <h3 className="font-semibold text-gray-900 dark:text-white">Review your locked design</h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400">We applied your latest design and fit. You can view it in My Designs.</p>
               </div>
             </div>
             <div className="flex items-start gap-3">
@@ -190,8 +190,8 @@ export default function CheckoutSuccessPage(): JSX.Element {
                 <span className="text-primary-600 dark:text-primary-400 font-bold">2</span>
               </div>
               <div>
-                <h3 className="font-semibold text-gray-900 dark:text-white">Confirm Your Design</h3>
-                <p className="text-sm text-gray-600 dark:text-gray-400">Approve your one-of-one artwork so we can print.</p>
+                <h3 className="font-semibold text-gray-900 dark:text-white">We&apos;ll print & ship</h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400">Our team is moving it to production. You&apos;ll get tracking as soon as it ships.</p>
               </div>
             </div>
             <div className="flex items-start gap-3">
@@ -199,8 +199,8 @@ export default function CheckoutSuccessPage(): JSX.Element {
                 <span className="text-primary-600 dark:text-primary-400 font-bold">3</span>
               </div>
               <div>
-                <h3 className="font-semibold text-gray-900 dark:text-white">We Print & Ship</h3>
-                <p className="text-sm text-gray-600 dark:text-gray-400">We&rsquo;ll print it and send tracking.</p>
+                <h3 className="font-semibold text-gray-900 dark:text-white">Need tweaks?</h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400">If something looks off, reach out within 24 hours at team@gptees.app.</p>
               </div>
             </div>
           </div>
@@ -213,7 +213,7 @@ export default function CheckoutSuccessPage(): JSX.Element {
             onClick={() => navigate(`/design?orderId=${orderId}`)}
             className="flex-1 text-lg py-4"
           >
-            Generate My Design
+            View my locked design
           </Button>
         </div>
 

@@ -7,9 +7,9 @@
 
 /**
  * Supported button variants for different use cases
- * @typedef {('primary' | 'secondary' | 'danger' | 'success' | 'warning')} ButtonVariant
+ * @typedef {('primary' | 'secondary' | 'danger' | 'success' | 'warning' | 'pulse-gradient')} ButtonVariant
  */
-export type ButtonVariant = 'primary' | 'secondary' | 'danger' | 'success' | 'warning';
+export type ButtonVariant = 'primary' | 'secondary' | 'danger' | 'success' | 'warning' | 'pulse-gradient';
 
 /**
  * Supported button sizes

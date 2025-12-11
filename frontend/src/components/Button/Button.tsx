@@ -93,6 +93,8 @@ export default function Button({
    */
   const getVariantClasses = (): string => {
     switch (variant) {
+      case 'pulse-gradient':
+        return 'btn-pulse-gradient text-white';
       case 'secondary':
         return 'bg-secondary-600 text-white hover:bg-secondary-700 focus-visible:outline-secondary-500 dark:bg-secondary-700 dark:hover:bg-secondary-600';
       case 'danger':

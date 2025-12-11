@@ -60,6 +60,7 @@ function DesignContent(): JSX.Element {
   const [shareFeedback, setShareFeedback] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [expandedPrompts, setExpandedPrompts] = useState<Record<string, boolean>>({});
   const hasTrackedOrderView = useRef(false);
   const hasLoadedQuickstartPrompt = useRef(false);
   const hasGeneratingDesign = designs.some((d) => d.status === 'GENERATING');
@@ -461,6 +462,10 @@ function DesignContent(): JSX.Element {
     }
   };
 
+  const togglePrompt = (designId: string) => {
+    setExpandedPrompts((prev) => ({ ...prev, [designId]: !prev[designId] }));
+  };
+
   const handlePresetSelect = (preset: string) => {
     setPrompt(preset);
     trackEvent('design.prompt.preset_select', {
@@ -588,7 +593,7 @@ function DesignContent(): JSX.Element {
             className="w-full md:w-auto"
             disabled={isCheckingOut}
           >
-            Checkout to print
+            Lock & checkout
           </Button>
         </div>
       )}
@@ -908,9 +913,22 @@ function DesignContent(): JSX.Element {
 
                 {/* Design Info */}
                 <div className="p-4">
-                  <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
-                    <strong>Your Prompt:</strong> {design.prompt}
-                  </p>
+                  <div className="mb-2 space-y-1">
+                    <p
+                      className={`text-sm text-gray-600 dark:text-gray-400 ${expandedPrompts[design.id] ? '' : 'line-clamp-3'}`}
+                    >
+                      <strong>Your Prompt:</strong> {design.prompt}
+                    </p>
+                    {design.prompt.length > 140 && (
+                      <button
+                        type="button"
+                        onClick={() => togglePrompt(design.id)}
+                        className="text-xs text-primary-600 dark:text-primary-300 font-semibold"
+                      >
+                        {expandedPrompts[design.id] ? 'Show less' : 'See full prompt'}
+                      </button>
+                    )}
+                  </div>
                   {design.style && (
                     <p className="text-xs text-gray-500 dark:text-gray-500 mb-2">
                       <strong>Style:</strong> {design.style}
@@ -920,7 +938,7 @@ function DesignContent(): JSX.Element {
                     {new Date(design.createdAt).toLocaleString()}
                   </p>
 
-                  <div className="mt-3 flex flex-col sm:flex-row gap-2">
+                  <div className="mt-3 flex flex-col sm:flex-row gap-2 sm:static sticky bottom-0 bg-white dark:bg-gray-800 py-3 sm:py-0 border-t sm:border-0 border-gray-200 dark:border-gray-700">
                     {!design.approvalStatus && design.status === 'COMPLETED' && (
                       isPaidOrFulfillment ? (
                         <Button
@@ -947,7 +965,7 @@ function DesignContent(): JSX.Element {
                           className="w-full sm:w-auto"
                           disabled={isCheckingOut}
                         >
-                          Checkout to print
+                          Lock & checkout
                         </Button>
                       )
                     )}
