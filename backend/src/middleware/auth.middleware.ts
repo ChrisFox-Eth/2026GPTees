@@ -7,7 +7,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { verifyToken } from '@clerk/backend';
 import { AppError } from './error.middleware.js';
-import { getUserByClerkId } from '../services/clerk.service.js';
+import { getUserByClerkId, getClerkUser, syncUserToDatabase } from '../services/clerk.service.js';
 
 /**
  * Require authentication middleware
@@ -61,10 +61,12 @@ export const requireAuth = async (
 
     const clerkUserId = payload.sub;
 
-    const user = await getUserByClerkId(clerkUserId);
+    let user = await getUserByClerkId(clerkUserId);
 
     if (!user) {
-      throw new AppError('User not found', 404);
+      // Auto-provision user if missing in our DB
+      const clerkUser = await getClerkUser(clerkUserId);
+      user = await syncUserToDatabase(clerkUser);
     }
 
     req.user = {

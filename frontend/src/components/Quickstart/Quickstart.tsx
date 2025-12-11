@@ -259,7 +259,7 @@ export default function Quickstart(): JSX.Element {
   }, []);
 
   const pollDesignForSupabaseUrl = async (designId: string, token: string) => {
-    for (let i = 0; i < 8; i += 1) {
+    for (let i = 0; i < 12; i += 1) {
       const designResp = await apiGet(`/api/designs/${designId}`, token);
       const design = designResp?.data as Design;
       if (design && !isTemporaryUrl(design.imageUrl || design.thumbnailUrl)) {
@@ -367,21 +367,26 @@ export default function Quickstart(): JSX.Element {
           }
         }
 
+        // Retry-fetch designs if not immediately available (reassignment race)
         if (!designToUse) {
-          try {
-            const designsResp = await apiGet(`/api/designs?orderId=${pendingGuest.orderId}`, token);
-            const designs = designsResp?.data as Design[];
-            if (designs?.length) {
-              designToUse = designs[0];
-              setCurrentOrderId(pendingGuest.orderId);
-              setGeneratedDesign(designToUse);
-              localStorage.setItem(
-                PREVIEW_CACHE_KEY,
-                JSON.stringify({ orderId: pendingGuest.orderId, design: designToUse, userId: user?.id || null })
-              );
+          for (let i = 0; i < 3 && !designToUse; i += 1) {
+            try {
+              const designsResp = await apiGet(`/api/designs?orderId=${pendingGuest.orderId}`, token);
+              const designs = designsResp?.data as Design[];
+              if (designs?.length) {
+                designToUse = designs[0];
+                setCurrentOrderId(pendingGuest.orderId);
+                setGeneratedDesign(designToUse);
+                localStorage.setItem(
+                  PREVIEW_CACHE_KEY,
+                  JSON.stringify({ orderId: pendingGuest.orderId, design: designToUse, userId: user?.id || null })
+                );
+                break;
+              }
+            } catch (err) {
+              console.warn('Unable to fetch designs after claim (attempt)', err);
             }
-          } catch (err) {
-            console.warn('Unable to fetch designs after claim', err);
+            await new Promise((resolve) => setTimeout(resolve, 700));
           }
         }
 
