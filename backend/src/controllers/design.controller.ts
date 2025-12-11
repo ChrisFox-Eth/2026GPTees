@@ -312,7 +312,10 @@ export const cloneDesign = catchAsync(async (req: Request, res: Response) => {
     throw new AppError('Unauthorized access to target order', 403);
   }
 
-  if (![OrderStatus.PENDING_PAYMENT, OrderStatus.DESIGN_PENDING].includes(targetOrder.status as OrderStatus)) {
+  if (
+    targetOrder.status !== OrderStatus.PENDING_PAYMENT &&
+    targetOrder.status !== OrderStatus.DESIGN_PENDING
+  ) {
     throw new AppError('Target order must be an unpaid preview order', 400);
   }
 

@@ -39,7 +39,8 @@
     "resend": "^6.5.2",
     "sharp": "^0.34.5",
     "stripe": "^20.0.0",
-    "svix": "^1.81.0"
+    "svix": "^1.81.0",
+    "uuid": "^9.0.1"
   },
   "devDependencies": {
     "@types/cors": "^2.8.19",
@@ -47,6 +48,7 @@
     "@types/morgan": "^1.9.10",
     "@types/multer": "^2.0.0",
     "@types/node": "^20.19.25",
+    "@types/uuid": "^9.0.7",
     "@typescript-eslint/eslint-plugin": "^6.13.0",
     "@typescript-eslint/parser": "^6.13.0",
     "eslint": "^8.54.0",
