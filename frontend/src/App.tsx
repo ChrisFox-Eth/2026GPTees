@@ -54,6 +54,21 @@ function ScrollToTop(): JSX.Element | null {
   return null;
 }
 
+function ScrollToHash(): JSX.Element | null {
+  const location = useLocation();
+
+  useEffect(() => {
+    if (!location.hash) return;
+    const id = location.hash.replace('#', '');
+    const el = document.getElementById(id);
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }, [location.hash]);
+
+  return null;
+}
+
 export default function App(): JSX.Element {
   const getInitialTheme = () => {
     if (typeof window === 'undefined') {
@@ -107,6 +122,7 @@ export default function App(): JSX.Element {
     <ErrorBoundary>
       <PageViewTracker />
       <ScrollToTop />
+      <ScrollToHash />
       <div className="min-h-screen bg-white dark:bg-gray-900 transition-colors duration-200 flex flex-col overflow-x-hidden pt-8 ">
         <Header isDark={isDark} onToggleTheme={toggleTheme} />
         <div className="flex-1">
