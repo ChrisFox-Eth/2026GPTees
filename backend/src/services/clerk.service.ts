@@ -8,7 +8,7 @@ import { clerkClient } from '@clerk/clerk-sdk-node';
 import { Webhook } from 'svix';
 import prisma from '../config/database.js';
 
-function resolveFallbackEmail(candidate: any, clerkId?: string): string | null {
+function resolveFallbackEmail(candidate: any, clerkId?: string): string {
   if (!candidate && clerkId) {
     return `${clerkId}@noemail.clerk.local`;
   }
@@ -17,7 +17,7 @@ function resolveFallbackEmail(candidate: any, clerkId?: string): string | null {
   }
   if (Array.isArray(candidate)) {
     const first = candidate[0];
-    if (!first) return clerkId ? `${clerkId}@noemail.clerk.local` : null;
+    if (!first) return clerkId ? `${clerkId}@noemail.clerk.local` : 'noemail@clerk.local';
     if (typeof first === 'string') return first;
     if (typeof first === 'object' && (first as any).email_address) return (first as any).email_address;
     if (typeof first === 'object' && (first as any).email) return (first as any).email;
@@ -26,7 +26,7 @@ function resolveFallbackEmail(candidate: any, clerkId?: string): string | null {
     if ((candidate as any).email_address) return (candidate as any).email_address;
     if ((candidate as any).email) return (candidate as any).email;
   }
-  return clerkId ? `${clerkId}@noemail.clerk.local` : null;
+  return clerkId ? `${clerkId}@noemail.clerk.local` : 'noemail@clerk.local';
 }
 
 /**
@@ -40,10 +40,6 @@ export async function syncUserToDatabase(clerkUser: any, fallbackEmail?: string)
   const email =
     email_addresses?.[0]?.email_address ||
     resolveFallbackEmail(fallbackEmail, clerkId);
-
-  if (!email) {
-    throw new Error('User email not found');
-  }
 
   const user = await prisma.user.upsert({
     where: { clerkId },
