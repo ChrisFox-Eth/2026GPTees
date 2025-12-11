@@ -88,6 +88,24 @@ interface PrintfulOrderResponse {
   };
 }
 
+export interface PrintfulVariantSummary {
+  id: number;
+  name: string;
+  color: string;
+  size: string;
+}
+
+export async function fetchPrintfulProductVariants(productId: string): Promise<PrintfulVariantSummary[]> {
+  const response = await printfulApi.get(`/products/${productId}`, { headers: STORE_HEADERS });
+  const variants = response.data?.result?.variants || response.data?.result?.items || [];
+  return variants.map((v: any) => ({
+    id: v.id,
+    name: v.name,
+    color: v.color,
+    size: v.size,
+  }));
+}
+
 /**
  * Map product color names to Printful variant IDs
  * This is a simplified mapping - in production, you'd query Printful's variant API
@@ -96,14 +114,14 @@ interface PrintfulOrderResponse {
 const COLOR_VARIANT_MAP: Record<string, Record<string, Record<string, number>>> = {
   '71': {
     // Bella+Canvas 3001 tee
-    Black: {
+    White: {
       S: 4011,
       M: 4012,
       L: 4013,
       XL: 4014,
       '2XL': 4015,
     },
-    White: {
+    Black: {
       S: 4016,
       M: 4017,
       L: 4018,
@@ -111,11 +129,11 @@ const COLOR_VARIANT_MAP: Record<string, Record<string, Record<string, number>>> 
       '2XL': 4020,
     },
     Navy: {
-      S: 4021,
-      M: 4022,
-      L: 4023,
-      XL: 4024,
-      '2XL': 4025,
+      S: 4111,
+      M: 4112,
+      L: 4113,
+      XL: 4114,
+      '2XL': 4115,
     },
     Gray: {
       S: 4026,
@@ -831,7 +849,4 @@ export async function handlePrintfulWebhook(webhookData: any): Promise<void> {
 }
 
 export default printfulApi;
-
-
-
 

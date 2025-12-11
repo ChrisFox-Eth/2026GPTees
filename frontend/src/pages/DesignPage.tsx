@@ -567,10 +567,10 @@ function DesignContent(): JSX.Element {
         <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 mb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
           <div>
             <p className="text-sm font-semibold text-blue-900 dark:text-blue-100">
-              Preview mode: generate before you pay.
+              Design first, pay when you’re ready.
             </p>
             <p className="text-xs text-blue-800 dark:text-blue-200 mt-1">
-              We reuse this preview order at checkout so your designs and prompt stay attached. Paying will lock the latest design and fit you selected.
+              Checkout saves your art, size, and color. You’ll see your tee exactly as you approved it.
             </p>
           </div>
           <Button
@@ -579,7 +579,7 @@ function DesignContent(): JSX.Element {
             className="w-full md:w-auto"
             disabled={isCheckingOut}
           >
-            Lock & checkout
+            Print this tee
           </Button>
         </div>
       )}
@@ -588,9 +588,9 @@ function DesignContent(): JSX.Element {
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4 mb-6 border border-gray-200 dark:border-gray-700">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-4">
             <div>
-              <p className="text-sm font-semibold text-gray-900 dark:text-white">Pick your fit</p>
+              <p className="text-sm font-semibold text-gray-900 dark:text-white">Choose your fit</p>
               <p className="text-xs text-gray-600 dark:text-gray-400">
-                Choose size and color now that you see the artwork. Your choice is saved when you checkout.
+                Pick size and color you want printed. We save it when you checkout.
               </p>
             </div>
             {variantMessage && (
@@ -645,7 +645,7 @@ function DesignContent(): JSX.Element {
                 </div>
               </div>
               <p className="text-[11px] text-gray-500 dark:text-gray-400">
-                Apply the fit that matches your design. We capture it when you checkout; once paid, fit is locked for printing.
+                We capture this fit at checkout; once paid, it’s locked for printing.
               </p>
             </div>
 
@@ -710,7 +710,7 @@ function DesignContent(): JSX.Element {
         {/* Design Generator Form */}
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
           <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
-            Generate New Design
+            Try a new idea
           </h2>
 
           {!canGenerate && (
@@ -746,14 +746,14 @@ function DesignContent(): JSX.Element {
               htmlFor="prompt"
               className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
             >
-              Describe Your Design
+              Describe your design
             </label>
             <textarea
               id="prompt"
               rows={4}
               value={prompt}
               onChange={(e) => setPrompt(e.target.value)}
-              placeholder="e.g., A fierce lion with a crown in a minimalist style"
+              placeholder="Short and clear wins: e.g., retro surf wave badge"
               disabled={!canGenerate || hasReachedLimit}
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white disabled:opacity-50 disabled:cursor-not-allowed"
             />
@@ -852,7 +852,7 @@ function DesignContent(): JSX.Element {
             Your Designs ({designs.length})
           </h2>
           <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
-            Share a design to get opinions and invite friends to make their own GPTee.
+            Show off your favorite version and then print it.
           </p>
           {shareFeedback && (
             <div className="bg-primary-50 dark:bg-primary-900/20 border border-primary-100 dark:border-primary-800 rounded-lg p-3 text-sm text-primary-800 dark:text-primary-200 mb-4">
@@ -940,7 +940,7 @@ function DesignContent(): JSX.Element {
                               Approving...
                             </span>
                           ) : (
-                            'Approve This Design'
+                            'Approve & submit'
                           )}
                         </Button>
                       ) : (
@@ -951,7 +951,7 @@ function DesignContent(): JSX.Element {
                           className="w-full sm:w-auto"
                           disabled={isCheckingOut}
                         >
-                          Lock & checkout
+                          Print this tee
                         </Button>
                       )
                     )}
@@ -963,7 +963,7 @@ function DesignContent(): JSX.Element {
                       isDisabled={design.status !== 'COMPLETED'}
                       className="w-full sm:w-auto"
                     >
-                      Share this design
+                      Share link
                     </Button>
                   </div>
 
@@ -976,7 +976,7 @@ function DesignContent(): JSX.Element {
                   )}
 
                   <p className="text-xs text-gray-500 dark:text-gray-500 mt-2">
-                    Sharing uses your device share sheet when available. Otherwise we copy a link you can paste.
+                    We’ll copy a link if sharing isn’t available on your device.
                   </p>
                 </div>
               </div>

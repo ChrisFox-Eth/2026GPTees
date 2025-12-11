@@ -8,6 +8,7 @@ import {
   getPromoCodeMetricsById,
   disablePromoCode,
   enablePromoCode,
+  getPrintfulVariants,
 } from '../controllers/admin.controller.js';
 import { requireAuth } from '../middleware/auth.middleware.js';
 import { requireAdmin } from '../middleware/admin.middleware.js';
@@ -29,5 +30,8 @@ router.get('/promo-codes/:id/metrics', requireAuth, requireAdmin, getPromoCodeMe
 router.get('/promo-codes/:id', requireAuth, requireAdmin, getPromoCodeDetail);
 router.patch('/promo-codes/:id/disable', requireAuth, requireAdmin, disablePromoCode);
 router.patch('/promo-codes/:id/enable', requireAuth, requireAdmin, enablePromoCode);
+
+// Printful utility
+router.get('/printful/variants', requireAuth, requireAdmin, getPrintfulVariants);
 
 export default router;

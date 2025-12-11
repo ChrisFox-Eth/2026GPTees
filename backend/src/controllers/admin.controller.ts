@@ -6,7 +6,7 @@
 
 import { Request, Response } from 'express';
 import { catchAsync, AppError } from '../middleware/error.middleware.js';
-import { syncAllPrintfulOrders } from '../services/printful.service.js';
+import { syncAllPrintfulOrders, fetchPrintfulProductVariants } from '../services/printful.service.js';
 import prisma from '../config/database.js';
 import crypto from 'crypto';
 
@@ -68,6 +68,35 @@ export const createPromoCode = catchAsync(async (req: Request, res: Response) =>
   res.json({
     success: true,
     data: promo,
+  });
+});
+
+/**
+ * Fetch Printful variants for a product (admin utility)
+ * GET /api/admin/printful/variants?productId=71&color=Navy
+ */
+export const getPrintfulVariants = catchAsync(async (req: Request, res: Response) => {
+  const productId = (req.query.productId as string | undefined)?.trim();
+  const colorFilter = (req.query.color as string | undefined)?.trim();
+
+  if (!productId) {
+    throw new AppError('productId is required', 400);
+  }
+
+  const variants = await fetchPrintfulProductVariants(productId);
+
+  const filtered = colorFilter
+    ? variants.filter((v) => v.color.toLowerCase() === colorFilter.toLowerCase())
+    : variants;
+
+  res.json({
+    success: true,
+    data: filtered,
+    meta: {
+      total: filtered.length,
+      productId,
+      color: colorFilter || null,
+    },
   });
 });
 

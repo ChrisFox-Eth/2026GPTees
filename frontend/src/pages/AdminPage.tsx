@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { apiPost } from '../utils/api';
+import { apiPost, apiGet } from '../utils/api';
 import { Button } from '@components/Button';
 
 interface SyncResult {
@@ -22,6 +22,11 @@ export default function AdminPage(): JSX.Element {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<SyncResult | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [variantProductId, setVariantProductId] = useState<string>('71');
+  const [variantColor, setVariantColor] = useState<string>('');
+  const [variantLoading, setVariantLoading] = useState(false);
+  const [variantError, setVariantError] = useState<string | null>(null);
+  const [variantResults, setVariantResults] = useState<Array<{ id: number; color: string; size: string }>>([]);
 
   if (!import.meta.env.DEV) {
     return (
@@ -113,6 +118,82 @@ export default function AdminPage(): JSX.Element {
               View help
             </Button>
           </Link>
+        </div>
+
+        <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-5 space-y-3">
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Printful Variant Lookup</h2>
+          <p className="text-sm text-gray-700 dark:text-gray-300">
+            Fetch live variant IDs by product ID (e.g., 71 for Bella+Canvas 3001). Optional color filter (case-insensitive).
+          </p>
+          <div className="flex flex-col sm:flex-row gap-3 sm:items-end">
+            <div className="flex-1">
+              <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">Product ID</label>
+              <input
+                value={variantProductId}
+                onChange={(e) => setVariantProductId(e.target.value)}
+                className="w-full border border-gray-300 dark:border-gray-700 rounded px-3 py-2 bg-white dark:bg-gray-900 text-sm"
+                placeholder="e.g., 71"
+              />
+            </div>
+            <div className="flex-1">
+              <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">Color (optional)</label>
+              <input
+                value={variantColor}
+                onChange={(e) => setVariantColor(e.target.value)}
+                className="w-full border border-gray-300 dark:border-gray-700 rounded px-3 py-2 bg-white dark:bg-gray-900 text-sm"
+                placeholder="e.g., Navy"
+              />
+            </div>
+            <Button
+              variant="primary"
+              onClick={async () => {
+                setVariantLoading(true);
+                setVariantError(null);
+                try {
+                  const params = new URLSearchParams();
+                  params.set('productId', variantProductId.trim());
+                  if (variantColor.trim()) params.set('color', variantColor.trim());
+                  const response = await apiGet(`/api/admin/printful/variants?${params.toString()}`);
+                  const data = response.data || [];
+                  setVariantResults(data);
+                  if (!data.length) {
+                    setVariantError('No variants found for the provided filters.');
+                  }
+                } catch (err: any) {
+                  setVariantError(err?.message || 'Failed to fetch variants');
+                  setVariantResults([]);
+                } finally {
+                  setVariantLoading(false);
+                }
+              }}
+              isDisabled={variantLoading || !variantProductId.trim()}
+            >
+              {variantLoading ? 'Loading...' : 'Fetch variants'}
+            </Button>
+          </div>
+          {variantError && <p className="text-sm text-red-600 dark:text-red-400">{variantError}</p>}
+          {variantResults.length > 0 && (
+            <div className="border border-gray-200 dark:border-gray-700 rounded overflow-auto max-h-80">
+              <table className="min-w-full text-sm">
+                <thead className="bg-gray-50 dark:bg-gray-900/40 text-left">
+                  <tr>
+                    <th className="px-3 py-2">Variant ID</th>
+                    <th className="px-3 py-2">Color</th>
+                    <th className="px-3 py-2">Size</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {variantResults.map((v) => (
+                    <tr key={`${v.id}`} className="border-t border-gray-200 dark:border-gray-700">
+                      <td className="px-3 py-2 font-mono text-xs">{v.id}</td>
+                      <td className="px-3 py-2">{v.color}</td>
+                      <td className="px-3 py-2">{v.size}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
       </div>
 

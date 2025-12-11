@@ -13,7 +13,7 @@ interface StickyCtaBarProps {
 
 export function StickyCtaBar({ primaryLabel, subcopy, href }: StickyCtaBarProps): JSX.Element {
   return (
-    <div className="fixed bottom-0 inset-x-0 z-30 md:hidden bg-white/95 backdrop-blur border-t border-gray-200 shadow-lg">
+    <div className="fixed bottom-0 inset-x-0 z-30 hidden bg-white/95 backdrop-blur border-t border-gray-200 shadow-lg">
       <div className="container-max max-w-full px-4 py-3 flex items-center justify-between gap-3">
         <div>
           <p className="text-xs text-gray-500">{subcopy}</p>
