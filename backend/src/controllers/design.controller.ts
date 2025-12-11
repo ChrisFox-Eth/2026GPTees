@@ -277,7 +277,7 @@ export const getDesignGallery = catchAsync(async (req: Request, res: Response) =
   const designs = await prisma.design.findMany({
     where: {
       status: { in: ['COMPLETED', 'APPROVED'] },
-      NOT: [{ imageUrl: null }, { imageUrl: '' }],
+      AND: [{ imageUrl: { not: null } }, { imageUrl: { not: '' } }],
     },
     select: {
       id: true,
