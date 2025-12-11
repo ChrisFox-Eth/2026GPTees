@@ -268,6 +268,36 @@ export const getDesignsByOrder = catchAsync(async (req: Request, res: Response) 
 });
 
 /**
+ * Public design gallery feed (no auth)
+ * GET /api/designs/gallery?limit=12
+ */
+export const getDesignGallery = catchAsync(async (req: Request, res: Response) => {
+  const limit = Math.min(24, Math.max(1, Number(req.query.limit) || 12));
+
+  const designs = await prisma.design.findMany({
+    where: {
+      status: { in: ['COMPLETED', 'APPROVED'] },
+      imageUrl: { not: null },
+    },
+    select: {
+      id: true,
+      prompt: true,
+      revisedPrompt: true,
+      imageUrl: true,
+      thumbnailUrl: true,
+      createdAt: true,
+    },
+    orderBy: { createdAt: 'desc' },
+    take: limit,
+  });
+
+  res.json({
+    success: true,
+    data: designs,
+  });
+});
+
+/**
  * Approve design
  * POST /api/designs/:id/approve
  */
@@ -372,4 +402,3 @@ export const getRandomPrompt = catchAsync(async (_req: Request, res: Response) =
     data: { prompt },
   });
 });
-

@@ -53,10 +53,16 @@ export default function Header({ isDark }: HeaderProps): JSX.Element {
           <div className="hidden md:flex items-center gap-3 lg:gap-4">
             <nav className="flex items-center gap-4">
               <Link
-                to="/shop"
+                to="/#quickstart"
                 className="text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 transition-colors"
               >
-                Shop
+                Start
+              </Link>
+              <Link
+                to="/#gallery"
+                className="text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 transition-colors"
+              >
+                Gallery
               </Link>
               <Link
                 to="/gift"
@@ -156,11 +162,18 @@ export default function Header({ isDark }: HeaderProps): JSX.Element {
                 Home
               </Link>
               <Link
-                to="/shop"
+                to="/#quickstart"
                 onClick={closeMobileMenu}
                 className="text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 transition-colors py-2 px-3 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700"
               >
-                Shop
+                Start
+              </Link>
+              <Link
+                to="/#gallery"
+                onClick={closeMobileMenu}
+                className="text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 transition-colors py-2 px-3 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700"
+              >
+                Gallery
               </Link>
               <Link
                 to="/gift"

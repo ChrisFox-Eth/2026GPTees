@@ -23,8 +23,8 @@ export default function GiftSuccessPage(): JSX.Element {
           <Button variant="primary" onClick={() => (window.location.href = '/gift')}>
             Buy another code
           </Button>
-          <Link to="/shop">
-            <Button variant="secondary">Browse tees</Button>
+          <Link to="/#quickstart">
+            <Button variant="secondary">Start a design</Button>
           </Link>
         </div>
       </div>

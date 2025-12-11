@@ -13,7 +13,7 @@ export default function SignUpPage(): JSX.Element {
         path="/sign-up"
         routing="path"
         signInUrl="/sign-in"
-        fallbackRedirectUrl="/shop"
+        fallbackRedirectUrl="/#quickstart"
         appearance={{
           elements: {
             rootBox: "w-full max-w-md",

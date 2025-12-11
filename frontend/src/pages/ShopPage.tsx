@@ -15,6 +15,7 @@ import { trackEvent } from '@utils/analytics';
 import SocialProofStrip from '@components/SocialProofStrip/SocialProofStrip';
 import { Button } from '@components/Button';
 import { useCart } from '../hooks/useCart';
+import Hero from '@components/Hero/Hero';
 
 const FAQ_ITEMS = [
   {
@@ -46,12 +47,21 @@ export default function ShopPage(): JSX.Element {
   const cartItems = getTotalItems();
   const cartSubtotal = getSubtotal();
   const hasCartItems = cart.length > 0;
+  const SHOP_HIDDEN = true;
 
   useEffect(() => {
+    if (SHOP_HIDDEN) {
+      navigate('/#quickstart', { replace: true });
+    }
+  }, [navigate, SHOP_HIDDEN]);
+
+  useEffect(() => {
+    if (SHOP_HIDDEN) return;
     fetchProducts();
-  }, []);
+  }, [SHOP_HIDDEN]);
 
   useEffect(() => {
+    if (SHOP_HIDDEN) return;
     const params = new URLSearchParams(window.location.search);
     const source = params.get('utm_source') || params.get('source');
     const campaign = params.get('utm_campaign');
@@ -69,6 +79,10 @@ export default function ShopPage(): JSX.Element {
       trackEvent('marketing.attribution.capture', payload);
     }
   }, []);
+
+  if (SHOP_HIDDEN) {
+    return <Hero />;
+  }
 
   const fetchProducts = async () => {
     try {

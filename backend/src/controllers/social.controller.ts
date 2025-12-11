@@ -904,20 +904,19 @@ const generateFramesFallback = async (post: SocialPostRecord, suggestions: any[]
 };
 
 const evergreenThemes = [
-  'Classic vs Limitless explainer (one-shot vs rerun until happy)',
-  'Gift cards (Classic and Limitless) for friends and family',
+  'Limitless design-first explainer (free preview, unlimited redraws)',
+  'Gift cards for Limitless tees',
   'Behind the scenes of printing / fulfillment',
   'Customer spotlight / community showcase',
   'Holiday or seasonal hook',
   'Prompt-of-the-day challenge',
   'Color/size selection made simple',
   'Design in minutes: pick a prompt, pick a color',
-  'Inspiration carousel (3–5 prompt ideas)',
+  'Inspiration carousel (3-5 prompt ideas)',
   'Speed-to-tee: fast creation flow',
   'Gifting experience (unboxing/joy)',
   'Your prompt becomes a tee (examples)',
   'Style guide: minimalist vs bold',
-  'Evergreen reminder: approvals are final on Classic, rerun on Limitless',
   'Limited-time nudge or FOMO framing',
 ];
 
@@ -936,8 +935,8 @@ const generateWeekPlan = async (startDate: Date, count = 7, context?: string): P
   const themeList = evergreenThemes.join(' | ');
   const system = `You output ${count} social posts for GPTees (Facebook + Instagram) as JSON array.
 Rules:
-- GPTees sells Classic (one-shot: first design is final) and Limitless (rerun prompt until happy). No editing tools.
-- Users enter a prompt, pick color/size, approve design. Gift cards for Classic or Limitless exist.
+- GPTees sells one Limitless plan: free preview, unlimited redraws until approved, then pay when printing. No editing tools.
+- Users enter a prompt, preview on four colors, pick size/fit, approve, then pay. Gift cards for Limitless exist.
 - Do not promise advanced editing or extra features.
 - Platforms: both FB and IG.
 - Alternate POST/REEL/STORY; reels/stories should be motion-friendly.
@@ -978,8 +977,8 @@ If context is provided, you must reference it in every title and caption.`;
       date.setDate(date.getDate() + idx);
       return {
         title: `GPTees drop ${idx + 1}`,
-        caption: 'Design your tee with GPTees: Classic (one-shot) or Limitless (rerun until happy).',
-        cta: 'Create yours at GPTees.app. Gift cards available.',
+        caption: 'Design your tee with GPTees: free preview, Limitless redraws until you approve.',
+        cta: 'Create yours at GPTees.app. Limitless included. Gift codes available.',
         hashtags: ['GPTees', 'CustomTees', 'AIArt'],
         fb_type: idx % 2 === 0 ? 'POST' : 'REEL',
         ig_type: idx % 2 === 0 ? 'POST' : 'REEL',

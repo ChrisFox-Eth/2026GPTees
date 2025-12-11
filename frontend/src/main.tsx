@@ -32,8 +32,8 @@ if (import.meta.env.PROD) {
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <ClerkProvider
     publishableKey={CLERK_PUBLISHABLE_KEY || ''}
-    signInFallbackRedirectUrl="/shop"
-    signUpFallbackRedirectUrl="/shop"
+    signInFallbackRedirectUrl="/#quickstart"
+    signUpFallbackRedirectUrl="/#quickstart"
     signInUrl="/auth"
     signUpUrl="/auth/sign-up"
   >

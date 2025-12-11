@@ -101,8 +101,8 @@ export default function GiftPage(): JSX.Element {
           <Button variant="primary" onClick={handlePurchase} disabled={isSubmitting}>
             {isSubmitting ? 'Starting checkout...' : 'Gift this GPTee'}
           </Button>
-          <Button variant="secondary" onClick={() => navigate('/shop')}>
-            Browse tees
+          <Button variant="secondary" onClick={() => navigate('/#quickstart')}>
+            Start a design
           </Button>
         </div>
 

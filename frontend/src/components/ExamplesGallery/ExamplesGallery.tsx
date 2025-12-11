@@ -1,67 +1,109 @@
 /**
  * @module components/ExamplesGallery
- * @description Small gallery of example designs to build confidence.
+ * @description Small gallery of real designs pulled from Supabase.
  */
 
-const EXAMPLES = [
-  {
-    src: 'https://ncgvjcormulfgtxkuvat.supabase.co/storage/v1/object/public/designs/ExampleImages/img-czLKfdUwU1d41urmntC7zjzG.png',
-    alt: 'Vintage surf wave tee',
-    label: 'A fluffy cat dressed as a pink princess',
-  },
-  {
-    src: 'https://ncgvjcormulfgtxkuvat.supabase.co/storage/v1/object/public/designs/ExampleImages/content%20(5).png',
-    alt: 'Clean monogram',
-    label: 'An old-timey telephone with a silly pun on the line.',
-  },
-  {
-    src: 'https://ncgvjcormulfgtxkuvat.supabase.co/storage/v1/object/public/designs/ExampleImages/img-xK173YaVJi4uhQxzeQoBNeow.png',
-    alt: 'Minimal line art',
-    label: 'A majestic dragon with flowing lines',
-  },
-  {
-    src: 'https://ncgvjcormulfgtxkuvat.supabase.co/storage/v1/object/public/designs/ExampleImages/ChatGPT%20Image%20Nov%2026,%202025,%2009_56_03%20AM.png',
-    alt: 'Retro badge',
-    label: 'A T-Rex playing video games',
-  },
-  {
-    src: 'https://ncgvjcormulfgtxkuvat.supabase.co/storage/v1/object/public/designs/ExampleImages/ChatGPT%20Image%20Nov%2026,%202025,%2009_56_07%20AM.png',
-    alt: 'Streetwear graphic',
-    label: 'The planet Saturn, but its rings are made of cheese',
-  },
-  {
-    src: 'https://ncgvjcormulfgtxkuvat.supabase.co/storage/v1/object/public/designs/ExampleImages/img-k3tVkSmu5oyBTJhf1WPCQPsm.png',
-    alt: 'Bold graphic',
-    label: 'A trendy fashionable pop star diva admiring her closet, wardrobe, and shoe collection',
-  },
-];
+import { useEffect, useState } from 'react';
+import { apiGet } from '@utils/api';
+import type { GalleryDesign } from '../../types/gallery';
+
+const LIMIT = 12;
 
 export default function ExamplesGallery(): JSX.Element {
+  const [designs, setDesigns] = useState<GalleryDesign[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const load = async () => {
+      try {
+        setLoading(true);
+        const response = await apiGet(`/api/designs/gallery?limit=${LIMIT}`);
+        if (cancelled) return;
+        setDesigns((response?.data as GalleryDesign[]) || []);
+        setError(null);
+      } catch (err: any) {
+        if (cancelled) return;
+        setError(err?.message || 'Unable to load gallery right now.');
+      } finally {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      }
+    };
+
+    load();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const renderContent = () => {
+    if (loading) {
+      return (
+        <div className="grid grid-cols-3 sm:grid-cols-6 gap-3">
+          {Array.from({ length: LIMIT }).map((_, idx) => (
+            <div
+              key={`skeleton-${idx}`}
+              className="w-full aspect-square rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-800 animate-pulse"
+            />
+          ))}
+        </div>
+      );
+    }
+
+    if (error) {
+      return (
+        <div className="text-sm text-red-600 dark:text-red-400">
+          {error}
+        </div>
+      );
+    }
+
+    if (!designs.length) {
+      return (
+        <p className="text-sm text-gray-600 dark:text-gray-400">
+          New designs are on the way. Check back soon.
+        </p>
+      );
+    }
+
+    return (
+      <div className="grid grid-cols-3 sm:grid-cols-6 gap-3">
+        {designs.map((design) => {
+          const preview = design.thumbnailUrl || design.imageUrl;
+          return (
+            <figure key={design.id} className="relative group">
+              <img
+                src={preview}
+                alt={design.prompt}
+                loading="lazy"
+                decoding="async"
+                sizes="(max-width: 640px) 30vw, 16vw"
+                className="w-full aspect-square object-cover rounded-lg border border-gray-200 dark:border-gray-700"
+              />
+              <figcaption className="absolute bottom-1 left-1 right-1 bg-black/70 text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity line-clamp-2">
+                {design.revisedPrompt || design.prompt}
+              </figcaption>
+            </figure>
+          );
+        })}
+      </div>
+    );
+  };
+
   return (
-    <div className="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-4 sm:p-5">
+    <div className="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-4 sm:p-5" id="gallery">
       <div className="flex items-center justify-between mb-3">
         <div>
-          <p className="text-sm font-semibold text-gray-900 dark:text-white">See examples</p>
-          <p className="text-xs text-gray-600 dark:text-gray-400">Real styles you can create.</p>
+          <p className="text-sm font-semibold text-gray-900 dark:text-white">See what others made</p>
+          <p className="text-xs text-gray-600 dark:text-gray-400">Live previews from recent designs.</p>
         </div>
       </div>
-      <div className="grid grid-cols-3 sm:grid-cols-6 gap-3">
-        {EXAMPLES.map((ex) => (
-          <div key={ex.alt} className="relative group">
-            <img
-              src={ex.src}
-              alt={ex.alt}
-              loading="lazy"
-              decoding="async"
-              sizes="(max-width: 640px) 30vw, 16vw"
-              className="w-full aspect-square object-cover rounded-lg border border-gray-200 dark:border-gray-700"
-            />
-            <span className="absolute bottom-1 left-1 bg-black/60 text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity">
-              {ex.label}
-            </span>
-          </div>
-        ))}
-      </div>
+      {renderContent()}
     </div>
   );
 }

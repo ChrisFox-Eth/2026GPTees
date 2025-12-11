@@ -143,8 +143,8 @@ export default function CheckoutSuccessPage(): JSX.Element {
           <p className="text-gray-600 dark:text-gray-400 mb-6">
             No order information found.
           </p>
-          <Link to="/shop">
-            <Button variant="primary">Continue Shopping</Button>
+          <Link to="/#quickstart">
+            <Button variant="primary">Start another design</Button>
           </Link>
         </div>
       </div>

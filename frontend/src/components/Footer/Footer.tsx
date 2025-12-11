@@ -21,13 +21,13 @@ export default function Footer(): JSX.Element {
             </p>
           </div>
 
-          {/* Shop */}
+          {/* Explore */}
           <div>
-            <h4 className="text-white font-semibold mb-4">Shop</h4>
+            <h4 className="text-white font-semibold mb-4">Explore</h4>
             <ul className="space-y-2 text-sm">
               <li>
-                <Link to="/shop" className="hover:text-white transition-colors">
-                  All Products
+                <Link to="/#quickstart" className="hover:text-white transition-colors">
+                  Start a Limitless tee
                 </Link>
               </li>
               <li>
@@ -36,13 +36,13 @@ export default function Footer(): JSX.Element {
                 </Link>
               </li>
               <li>
-                <Link to="/cart" className="hover:text-white transition-colors">
-                  Shopping Cart
+                <Link to="/#gallery" className="hover:text-white transition-colors">
+                  Gallery
                 </Link>
               </li>
               <li>
                 <Link to="/account" className="hover:text-white transition-colors">
-                  My Orders
+                  My Designs
                 </Link>
               </li>
             </ul>
@@ -85,9 +85,7 @@ export default function Footer(): JSX.Element {
                 </Link>
               </li>
               <li>
-                <Link to="/shop" className="hover:text-white transition-colors">
-                  Shop GPTees
-                </Link>
+                <span className="text-gray-500">Design-first support: team@gptees.app</span>
               </li>
             </ul>
           </div>

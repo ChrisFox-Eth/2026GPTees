@@ -41,10 +41,10 @@ export default function CartPage(): JSX.Element {
             Your cart is empty
           </h1>
           <p className="text-gray-600 dark:text-gray-400 mb-8">
-            Start shopping to add your first GPTee.
+            Start designing to add your first GPTee.
           </p>
-          <Link to="/shop">
-            <Button variant="primary">Browse Products</Button>
+          <Link to="/#quickstart">
+            <Button variant="primary">Start a new design</Button>
           </Link>
         </div>
       </div>
@@ -185,9 +185,9 @@ export default function CartPage(): JSX.Element {
               {isSignedIn ? 'Proceed to Checkout' : 'Sign In to Checkout'}
             </Button>
 
-            <Link to="/shop">
+            <Link to="/#quickstart">
               <Button variant="secondary" className="w-full">
-                Continue Shopping
+                Continue designing
               </Button>
             </Link>
 

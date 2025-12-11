@@ -11,6 +11,7 @@ import {
   getDesignsByOrder,
   approveDesign,
   getRandomPrompt,
+  getDesignGallery,
 } from '../controllers/design.controller.js';
 import { requireAuth } from '../middleware/auth.middleware.js';
 
@@ -27,6 +28,12 @@ router.get('/random-prompt', getRandomPrompt);
  * Generate new AI design (requires authentication)
  */
 router.post('/generate', requireAuth, createDesign);
+
+/**
+ * GET /api/designs/gallery
+ * Public gallery feed of recent designs
+ */
+router.get('/gallery', getDesignGallery);
 
 /**
  * GET /api/designs

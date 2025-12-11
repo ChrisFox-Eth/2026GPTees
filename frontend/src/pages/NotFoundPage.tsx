@@ -26,9 +26,9 @@ export default function NotFoundPage(): JSX.Element {
               Back to Home
             </Button>
           </Link>
-          <Link to="/shop">
+          <Link to="/#quickstart">
             <Button variant="secondary" size="lg">
-              Browse Products
+              Start a design
             </Button>
           </Link>
         </div>
