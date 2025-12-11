@@ -108,7 +108,7 @@ export default function Quickstart(): JSX.Element {
   const textareaId = 'quickstart-prompt';
 
   const navigate = useNavigate();
-  const { isSignedIn, getToken } = useAuth();
+  const { isSignedIn, getToken, isLoaded } = useAuth();
 
   useEffect(() => {
     const loadProducts = async () => {
@@ -207,18 +207,10 @@ export default function Quickstart(): JSX.Element {
   }, [isSignedIn, currentOrderId, getToken, user?.id]);
 
   useEffect(() => {
-    if (isSignedIn) return;
-    localStorage.removeItem(PREVIEW_CACHE_KEY);
-    localStorage.removeItem(GUEST_PREVIEW_KEY);
-    setCurrentOrderId(null);
-    setGeneratedDesign(null);
-  }, [isSignedIn]);
-
-  useEffect(() => {
-    if (!isSignedIn && pendingGuest) {
+    if (!isSignedIn && pendingGuest && isLoaded) {
       navigate('/auth?redirect=/');
     }
-  }, [isSignedIn, pendingGuest, navigate]);
+  }, [isSignedIn, pendingGuest, navigate, isLoaded]);
 
   const defaultColor =
     product?.colors?.find((c) => c.name.toLowerCase() === 'black')?.name ||
@@ -361,6 +353,46 @@ export default function Quickstart(): JSX.Element {
         localStorage.removeItem(GUEST_PREVIEW_KEY);
         setPendingGuest(null);
         setPrompt('');
+
+        // try to hydrate design from cache or fetch latest
+        const cached = localStorage.getItem(PREVIEW_CACHE_KEY);
+        let designToUse: Design | null = null;
+        if (cached) {
+          try {
+            const parsed = JSON.parse(cached) as { orderId: string; design: Design };
+            if (parsed.orderId === pendingGuest.orderId) {
+              designToUse = parsed.design;
+              setCurrentOrderId(parsed.orderId);
+              setGeneratedDesign(parsed.design);
+            }
+          } catch (err) {
+            console.error('Failed to parse preview cache post-claim', err);
+          }
+        }
+
+        if (!designToUse) {
+          try {
+            const designsResp = await apiGet(`/api/designs?orderId=${pendingGuest.orderId}`, token);
+            const designs = designsResp?.data as Design[];
+            if (designs?.length) {
+              designToUse = designs[0];
+              setCurrentOrderId(pendingGuest.orderId);
+              setGeneratedDesign(designToUse);
+              localStorage.setItem(
+                PREVIEW_CACHE_KEY,
+                JSON.stringify({ orderId: pendingGuest.orderId, design: designToUse, userId: user?.id || null })
+              );
+            }
+          } catch (err) {
+            console.warn('Unable to fetch designs after claim', err);
+          }
+        }
+
+        // If we still have a temp URL, poll Supabase until it is durable
+        if (designToUse && isTemporaryUrl(designToUse.imageUrl || designToUse.thumbnailUrl)) {
+          await pollDesignForSupabaseUrl(designToUse.id, token);
+        }
+
         navigate(`/design?orderId=${pendingGuest.orderId}`);
       } catch (err: any) {
         console.error('Error claiming preview order:', err);
