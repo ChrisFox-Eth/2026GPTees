@@ -13,6 +13,7 @@ import { sendDesignApproved } from '../services/email.service.js';
 import prisma from '../config/database.js';
 import { sendAnalyticsEvent } from '../services/analytics.service.js';
 import { OrderStatus } from '@prisma/client';
+import { getSupabaseServiceRoleClient } from '../services/supabase-admin.service.js';
 
 /**
  * Generate AI design
@@ -273,27 +274,33 @@ export const getDesignsByOrder = catchAsync(async (req: Request, res: Response) 
  */
 export const getDesignGallery = catchAsync(async (req: Request, res: Response) => {
   const limit = Math.min(24, Math.max(1, Number(req.query.limit) || 12));
+  const fetchPool = Math.max(limit * 5, 60); // pull a larger pool to randomize client-side
 
-  const designs = await prisma.design.findMany({
-    where: {
-      status: { in: ['COMPLETED', 'APPROVED'] },
-      AND: [{ imageUrl: { not: null } }, { imageUrl: { not: '' } }],
-    },
-    select: {
-      id: true,
-      prompt: true,
-      revisedPrompt: true,
-      imageUrl: true,
-      thumbnailUrl: true,
-      createdAt: true,
-    },
-    orderBy: { createdAt: 'desc' },
-    take: limit,
-  });
+  const supabase = getSupabaseServiceRoleClient();
+  const { data, error } = await supabase
+    .from('designs')
+    .select('id,prompt,revisedPrompt,imageUrl,thumbnailUrl,createdAt')
+    .in('status', ['COMPLETED', 'APPROVED'])
+    .not('imageUrl', 'is', null)
+    .neq('imageUrl', '')
+    .order('createdAt', { ascending: false })
+    .limit(fetchPool);
+
+  if (error) {
+    throw new AppError(`Failed to load gallery: ${error.message}`, 500);
+  }
+
+  const pool = data || [];
+
+  // Shuffle pool to avoid the same set each time; return a random slice of the requested size
+  for (let i = pool.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [pool[i], pool[j]] = [pool[j], pool[i]];
+  }
 
   res.json({
     success: true,
-    data: designs,
+    data: pool.slice(0, limit),
   });
 });
 

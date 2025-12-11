@@ -7,7 +7,7 @@ import { useEffect, useState } from 'react';
 import { apiGet } from '@utils/api';
 import type { GalleryDesign } from '../../types/gallery';
 
-const LIMIT = 12;
+const LIMIT = 24;
 
 export default function ExamplesGallery(): JSX.Element {
   const [designs, setDesigns] = useState<GalleryDesign[]>([]);
