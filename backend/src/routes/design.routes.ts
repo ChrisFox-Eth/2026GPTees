@@ -13,6 +13,7 @@ import {
   getRandomPrompt,
   getDesignGallery,
   cloneDesign,
+  createDesignGuest,
 } from '../controllers/design.controller.js';
 import { requireAuth } from '../middleware/auth.middleware.js';
 
@@ -29,6 +30,7 @@ router.get('/random-prompt', getRandomPrompt);
  * Generate new AI design (requires authentication)
  */
 router.post('/generate', requireAuth, createDesign);
+router.post('/generate/guest', createDesignGuest);
 
 /**
  * GET /api/designs/gallery

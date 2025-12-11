@@ -5,7 +5,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '@clerk/clerk-react';
+import { useAuth, useUser } from '@clerk/clerk-react';
 import { Button } from '@components/Button';
 import { apiGet, apiPost } from '@utils/api';
 import { trackEvent } from '@utils/analytics';
@@ -15,8 +15,6 @@ import { AnimatePresence, motion } from 'framer-motion';
 import type { Design } from '../../types/design';
 import type { PendingGuestPreview } from '../../types/preview';
 import type { ColorOption } from '../../types/product';
-// const STYLE_PRESETS = ['Retro surf', 'Minimal line art', 'Neon cyberpunk', 'Vintage anime', 'Bold typographic'];
-// const PROMPT_SUGGESTIONS = ['Birthday gift', 'Band tee', 'Inside joke', 'Sports drop', 'Team merch'];
 
 const PROMPT_IDEAS: string[] = [
   'A corgi astronaut planting a GPTees flag on the moon.',
@@ -85,6 +83,7 @@ export default function Quickstart(): JSX.Element {
   const [generatedDesign, setGeneratedDesign] = useState<Design | null>(null);
   const [currentOrderId, setCurrentOrderId] = useState<string | null>(null);
   const [pendingGuest, setPendingGuest] = useState<PendingGuestPreview | null>(null);
+  const { user } = useUser();
   const textareaId = 'quickstart-prompt';
 
   const navigate = useNavigate();
@@ -122,15 +121,74 @@ export default function Quickstart(): JSX.Element {
     const cached = localStorage.getItem(PREVIEW_CACHE_KEY);
     if (cached) {
       try {
-        const parsed = JSON.parse(cached) as { orderId: string; design: Design };
-        setCurrentOrderId(parsed.orderId);
-        setGeneratedDesign(parsed.design);
+        const parsed = JSON.parse(cached) as { orderId: string; design: Design; userId?: string | null };
+        const cachedUserId = parsed.userId || null;
+        const currentUserId = user?.id || null;
+        if ((cachedUserId && currentUserId && cachedUserId !== currentUserId) || (cachedUserId && !currentUserId)) {
+          localStorage.removeItem(PREVIEW_CACHE_KEY);
+        } else {
+          setCurrentOrderId(parsed.orderId);
+          setGeneratedDesign(parsed.design);
+        }
       } catch (err) {
         console.error('Failed to parse preview cache', err);
         localStorage.removeItem(PREVIEW_CACHE_KEY);
       }
     }
   }, []);
+
+  useEffect(() => {
+    const cached = localStorage.getItem(PREVIEW_CACHE_KEY);
+    if (!cached) return;
+    try {
+      const parsed = JSON.parse(cached) as { orderId: string; design: Design; userId?: string | null };
+      const cachedUserId = parsed.userId || null;
+      const currentUserId = user?.id || null;
+      if ((cachedUserId && currentUserId && cachedUserId !== currentUserId) || (cachedUserId && !currentUserId)) {
+        localStorage.removeItem(PREVIEW_CACHE_KEY);
+        setCurrentOrderId(null);
+        setGeneratedDesign(null);
+      } else if (!currentOrderId) {
+        setCurrentOrderId(parsed.orderId);
+        setGeneratedDesign(parsed.design);
+      }
+    } catch (err) {
+      console.error('Failed to parse preview cache on user change', err);
+      localStorage.removeItem(PREVIEW_CACHE_KEY);
+    }
+  }, [user?.id, currentOrderId]);
+
+  useEffect(() => {
+    if (isSignedIn && currentOrderId) {
+      const validateOwnership = async () => {
+        try {
+          const token = await getToken();
+          if (!token) return;
+          const orderResp = await apiGet(`/api/orders/${currentOrderId}`, token);
+          const orderUserId = orderResp?.data?.userId;
+          if (orderUserId && user?.id && orderUserId !== user.id) {
+            localStorage.removeItem(PREVIEW_CACHE_KEY);
+            setCurrentOrderId(null);
+            setGeneratedDesign(null);
+          }
+        } catch (err: any) {
+          console.warn('Preview ownership check failed, clearing cache', err?.message || err);
+          localStorage.removeItem(PREVIEW_CACHE_KEY);
+          setCurrentOrderId(null);
+          setGeneratedDesign(null);
+        }
+      };
+      validateOwnership();
+    }
+  }, [isSignedIn, currentOrderId, getToken, user?.id]);
+
+  useEffect(() => {
+    if (isSignedIn) return;
+    localStorage.removeItem(PREVIEW_CACHE_KEY);
+    localStorage.removeItem(GUEST_PREVIEW_KEY);
+    setCurrentOrderId(null);
+    setGeneratedDesign(null);
+  }, [isSignedIn]);
 
   const defaultColor =
     product?.colors?.find((c) => c.name.toLowerCase() === 'black')?.name ||
@@ -189,7 +247,7 @@ export default function Quickstart(): JSX.Element {
         setGeneratedDesign(design);
         localStorage.setItem(
           PREVIEW_CACHE_KEY,
-          JSON.stringify({ orderId: design.orderId, design })
+          JSON.stringify({ orderId: design.orderId, design, userId: user?.id || null })
         );
         return design;
       }
@@ -228,7 +286,7 @@ export default function Quickstart(): JSX.Element {
     } else {
       localStorage.setItem(
         PREVIEW_CACHE_KEY,
-        JSON.stringify({ orderId, design: designData })
+        JSON.stringify({ orderId, design: designData, userId: user?.id || null })
       );
     }
 
@@ -250,7 +308,7 @@ export default function Quickstart(): JSX.Element {
   useEffect(() => {
     if (!isSignedIn || !pendingGuest) return;
 
-    const claimAndGenerate = async () => {
+    const claimAndResume = async () => {
       try {
         setIsGenerating(true);
         setProgressMessage('Reattaching your preview...');
@@ -269,16 +327,11 @@ export default function Quickstart(): JSX.Element {
           token
         );
 
-        setProgressMessage('Generating your design...');
-        await generateDesignWithToken(
-          pendingGuest.orderId,
-          pendingGuest.prompt,
-          pendingGuest.style,
-          token
-        );
+        // We already kicked off generation as a guest; go straight to design page
         localStorage.removeItem(GUEST_PREVIEW_KEY);
         setPendingGuest(null);
         setPrompt('');
+        navigate(`/design?orderId=${pendingGuest.orderId}`);
       } catch (err: any) {
         console.error('Error claiming preview order:', err);
         setSubmitError(err?.message || 'Failed to claim your preview. Please try again.');
@@ -288,8 +341,8 @@ export default function Quickstart(): JSX.Element {
       }
     };
 
-    claimAndGenerate();
-  }, [isSignedIn, pendingGuest, getToken]);
+    claimAndResume();
+  }, [isSignedIn, pendingGuest, getToken, navigate]);
 
   const handleUseIdea = (idea: string) => {
     setPrompt(idea);
@@ -360,6 +413,28 @@ export default function Quickstart(): JSX.Element {
           order_id: guestOrderId,
         });
 
+        // Kick off generation as guest before redirect
+        try {
+          setProgressMessage('Generating your design while you sign in...');
+          const genResponse = await apiPost('/api/designs/generate/guest', {
+            orderId: guestOrderId,
+            guestToken,
+            prompt: promptText,
+            style: QUICKSTART_STYLE,
+          });
+          const designData = genResponse.data as Design;
+          setGeneratedDesign(designData);
+          localStorage.setItem(
+            PREVIEW_CACHE_KEY,
+            JSON.stringify({ orderId: guestOrderId, design: designData, userId: null })
+          );
+        } catch (err: any) {
+          console.warn('Guest design generation failed pre-auth', err);
+          // We will regenerate after claim if needed
+        } finally {
+          setProgressMessage(null);
+        }
+
         navigate('/auth?redirect=/');
       } catch (err: any) {
         console.error('Error creating guest preview order:', err);
@@ -421,67 +496,120 @@ export default function Quickstart(): JSX.Element {
     }
   };
 
+  const handleStartOver = () => {
+    trackEvent('quickstart.preview.reset');
+    localStorage.removeItem(PREVIEW_CACHE_KEY);
+    localStorage.removeItem(GUEST_PREVIEW_KEY);
+    setGeneratedDesign(null);
+    setCurrentOrderId(null);
+    setProgressMessage(null);
+    setSubmitError(null);
+  };
+
+  const hasPreview = Boolean(currentOrderId || generatedDesign);
+  const showPromptUI = !isGenerating && !hasPreview;
+  const showLoading = (isGenerating || isCreating) && !generatedDesign;
+
   return (
     <div className="bg-white dark:bg-gray-800 rounded-xl shadow border border-gray-200 dark:border-gray-700 p-5 sm:p-6 flex flex-col gap-6 items-start w-full max-w-full overflow-hidden">
-      <div className="flex-1 space-y-4 w-full">
-        <div className="space-y-2">
-          <label className="text-xs font-semibold text-gray-700 dark:text-gray-300">Your vision</label>
-          <p className="text-xs text-gray-600 dark:text-gray-400">
-            Describe the tee you want—we&apos;ll generate the artwork and take you to the design page to choose size and color before checkout.
-          </p>
-          <textarea
-            id={textareaId}
-            value={prompt}
-            onChange={(e) => setPrompt(e.target.value)}
-            placeholder="Try: Retro surf wave; Minimal line-art tiger; Neon cyberpunk skyline"
-            className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 px-3 py-2 text-sm text-gray-900 dark:text-white placeholder:text-gray-500 dark:placeholder:text-gray-500 focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none"
-            rows={3}
-          />
-        </div>
+      {showPromptUI && (
+        <div className="flex-1 space-y-4 w-full">
+          <div className="space-y-2">
+            <label className="text-xs font-semibold text-gray-700 dark:text-gray-300">Your vision</label>
+            <p className="text-xs text-gray-600 dark:text-gray-400">
+              Describe the tee you want—we&apos;ll generate the artwork and take you to the design page to choose size and color before checkout.
+            </p>
+            <textarea
+              id={textareaId}
+              value={prompt}
+              onChange={(e) => setPrompt(e.target.value)}
+              placeholder="Try: Retro surf wave; Minimal line-art tiger; Neon cyberpunk skyline"
+              className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 px-3 py-2 text-sm text-gray-900 dark:text-white placeholder:text-gray-500 dark:placeholder:text-gray-500 focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none"
+              rows={3}
+            />
+          </div>
 
-        <div className="rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 p-3 space-y-2">
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-                <div className="space-y-1">
-                  <p className="text-xs font-semibold text-gray-800 dark:text-gray-100">Prompt ideas - Choose to Use</p>
-                </div>
-              </div>
-              <div className="relative overflow-hidden h-[64px] sm:h-[68px]">
-                <AnimatePresence mode="wait" initial={false}>
-                  <motion.button
-                    key={ideaIndex}
-                    type="button"
-                    onClick={() => handleUseIdea(PROMPT_IDEAS[ideaIndex])}
-                    aria-label={`Try prompt: ${PROMPT_IDEAS[ideaIndex]}`}
-                    className="cursor-pointer absolute inset-0 group inline-flex items-center gap-3 rounded-xl border border-primary-200 dark:border-primary-800 hover:bg-primary-50 dark:hover:bg-primary-900 transition-colors transform px-3 py-2 text-left shadow-sm focus-visible:outline-2 focus-visible:outline-primary-500 focus-visible:outline-offset-2"
-                    initial={{ opacity: 0, y: 12, rotateX: -12 }}
-                    animate={{ opacity: 1, y: 0, rotateX: 0 }}
-                    exit={{ opacity: 0, y: -12, rotateX: 12 }}
-                    transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-                  >
-                    <span className="inline-flex items-center justify-center h-7 px-3 rounded-full bg-primary-600 text-white text-[9px] font-bold uppercase tracking-wide shadow-sm">
-                      Use
-                    </span>
-                    <span className="text-xs text-primary-900 dark:text-primary-50 leading-snug">
-                      {PROMPT_IDEAS[ideaIndex]}
-                    </span>
-                  </motion.button>
-                </AnimatePresence>
+          <div className="rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 p-3 space-y-2">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+              <div className="space-y-1">
+                <p className="text-xs font-semibold text-gray-800 dark:text-gray-100">Prompt ideas - Choose to Use</p>
               </div>
             </div>
-      </div>
+            <div className="relative overflow-hidden h-[64px] sm:h-[68px]">
+              <AnimatePresence mode="wait" initial={false}>
+                <motion.button
+                  key={ideaIndex}
+                  type="button"
+                  onClick={() => handleUseIdea(PROMPT_IDEAS[ideaIndex])}
+                  aria-label={`Try prompt: ${PROMPT_IDEAS[ideaIndex]}`}
+                  className="cursor-pointer absolute inset-0 group inline-flex items-center gap-3 rounded-xl border border-primary-200 dark:border-primary-800 hover:bg-primary-50 dark:hover:bg-primary-900 transition-colors transform px-3 py-2 text-left shadow-sm focus-visible:outline-2 focus-visible:outline-primary-500 focus-visible:outline-offset-2"
+                  initial={{ opacity: 0, y: 12, rotateX: -12 }}
+                  animate={{ opacity: 1, y: 0, rotateX: 0 }}
+                  exit={{ opacity: 0, y: -12, rotateX: 12 }}
+                  transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+                >
+                  <span className="inline-flex items-center justify-center h-7 px-3 rounded-full bg-primary-600 text-white text-[9px] font-bold uppercase tracking-wide shadow-sm">
+                    Use
+                  </span>
+                  <span className="text-xs text-primary-900 dark:text-primary-50 leading-snug">
+                    {PROMPT_IDEAS[ideaIndex]}
+                  </span>
+                </motion.button>
+              </AnimatePresence>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {!showPromptUI && showLoading && (
+        <div className="w-full rounded-lg border border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-900/20 p-4 space-y-2">
+          <p className="text-sm font-semibold text-blue-900 dark:text-blue-100">Hang tight</p>
+          <p className="text-xs text-blue-800 dark:text-blue-200">
+            We&apos;re generating your preview while you sign in / switch accounts.
+          </p>
+          {progressMessage && (
+            <p className="text-xs text-blue-900 dark:text-blue-100">{progressMessage}</p>
+          )}
+        </div>
+      )}
+
       <div className="w-full flex-shrink-0 space-y-3">
-        <Button
-          variant="pulse-gradient"
-          className="bg-gradient-to-r from-primary-600 to-purple-600 w-full"
-          onClick={handleSubmit}
-          disabled={isCreating || isGenerating}
-        >
-          {isCreating ? 'Starting preview...' : isGenerating ? 'Working on it...' : 'Design my Tee!'}
-        </Button>
+        {!hasPreview && (
+          <Button
+            variant="pulse-gradient"
+            className="bg-gradient-to-r from-primary-600 to-purple-600 w-full"
+            onClick={handleSubmit}
+            disabled={isCreating || isGenerating}
+          >
+            {isCreating ? 'Starting preview...' : isGenerating ? 'Working on it...' : 'Design my Tee!'}
+          </Button>
+        )}
+
+        {hasPreview && (
+          <div className="w-full space-y-2">
+            <Button
+              variant="pulse-gradient"
+              className="bg-gradient-to-r from-primary-600 to-purple-600 w-full"
+              onClick={handleCheckoutRedirect}
+              disabled={isGenerating || isCreating}
+            >
+              Go to your design
+            </Button>
+            <button
+              type="button"
+              onClick={handleStartOver}
+              className="text-xs text-primary-600 dark:text-primary-300 underline w-full text-center"
+              disabled={isGenerating || isCreating}
+            >
+              Start over
+            </button>
+          </div>
+        )}
+
         {submitError && (
           <p className="text-xs text-red-600 dark:text-red-400 text-center">{submitError}</p>
         )}
-        {progressMessage && (
+        {progressMessage && showPromptUI && (
           <div className="w-full rounded-lg border border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-900/20 p-3 text-sm text-blue-900 dark:text-blue-100">
             {progressMessage}
           </div>
@@ -509,21 +637,12 @@ export default function Quickstart(): JSX.Element {
                 className="w-full h-64 object-contain bg-gray-100 dark:bg-gray-900"
               />
             </div>
-            <p className="text-xs text-gray-600 dark:text-gray-400">
-              Prompt: {generatedDesign.prompt}
-            </p>
-            <div className="flex flex-col sm:flex-row gap-2">
-              <Button variant="primary" onClick={handleCheckoutRedirect} className="w-full sm:w-auto">
-                Go to your design
-              </Button>
-            </div>
             <p className="text-[11px] text-gray-500 dark:text-gray-400">
               We saved this preview to your account. Choose fit and continue on the design page.
             </p>
           </div>
         )}
       </div>
-
     </div>
   );
 }

@@ -187,6 +187,79 @@ export const createDesign = catchAsync(async (req: Request, res: Response) => {
 });
 
 /**
+ * Generate AI design for guest previews (guestToken auth)
+ * POST /api/designs/generate/guest
+ */
+export const createDesignGuest = catchAsync(async (req: Request, res: Response) => {
+  const { orderId, prompt, style, guestToken } = req.body;
+
+  if (!orderId || !prompt || !guestToken) {
+    res.status(400).json({
+      success: false,
+      message: 'Order ID, prompt, and guest token are required',
+    });
+    return;
+  }
+
+  const order = await prisma.order.findUnique({
+    where: { id: orderId },
+    include: { items: true },
+  });
+
+  if (!order) {
+    throw new AppError('Order not found', 404);
+  }
+
+  if (order.previewGuestToken !== guestToken) {
+    throw new AppError('Invalid guest token for this preview order', 403);
+  }
+
+  const allowedStatuses: OrderStatus[] = [
+    OrderStatus.PENDING_PAYMENT,
+    OrderStatus.DESIGN_PENDING,
+  ];
+  if (!allowedStatuses.includes(order.status as OrderStatus)) {
+    throw new AppError(
+      'Order must be an unpaid preview before generating designs',
+      400
+    );
+  }
+
+  if (order.designsGenerated >= order.maxDesigns) {
+    throw new AppError(
+      `Design limit reached for ${order.designTier} tier. Please sign in and upgrade.`,
+      400
+    );
+  }
+
+  console.log(`Generating design for guest order ${order.orderNumber}...`);
+  const { imageUrl, revisedPrompt } = await generateDesign({
+    prompt,
+    style,
+  });
+
+  const design = await prisma.design.create({
+    data: {
+      userId: order.userId,
+      orderId,
+      prompt,
+      revisedPrompt,
+      aiModel: 'dall-e-3',
+      imageUrl,
+      thumbnailUrl: imageUrl,
+      status: 'GENERATING',
+      style,
+    },
+  });
+
+  res.status(201).json({
+    success: true,
+    message: 'Design generation started',
+    data: design,
+  });
+});
+
+/**
  * Get design by ID
  * GET /api/designs/:id
  */
