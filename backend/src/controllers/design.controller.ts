@@ -210,6 +210,19 @@ export const createDesignGuest = catchAsync(async (req: Request, res: Response) 
     throw new AppError('Order not found', 404);
   }
 
+  // Ensure the order's user still exists (guest rows can be missing)
+  const designUser = await prisma.user.findUnique({ where: { id: order.userId } });
+  if (!designUser) {
+    await prisma.user.create({
+      data: {
+        id: order.userId,
+        email: `guest+${order.id}@guest.gptees`,
+        clerkId: `guest_repair_${order.id}`,
+        firstName: 'Guest',
+      },
+    });
+  }
+
   if (order.previewGuestToken !== guestToken) {
     throw new AppError('Invalid guest token for this preview order', 403);
   }
