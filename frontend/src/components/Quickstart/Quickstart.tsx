@@ -17,21 +17,42 @@ import type { PendingGuestPreview } from '../../types/preview';
 import type { ColorOption } from '../../types/product';
 
 const PROMPT_IDEAS: string[] = [
-  'A corgi astronaut planting a GPTees flag on the moon.',
-  'Neon dragon riding a bicycle through a cyberpunk alley.',
-  'Minimal line-art koi fish with flowing neon water.',
-  '"404: Boring tee not found" in bold glitch type.',
-  'A fox curled up in a blanket of clouds, dreamy and whimsical, pastel tones',
-  'Clusters of abstract shapes arranged in a surreal, dream-like composition.',
-  'Steam forming tiny hearts over a teacup, soft focus, warm colors',
-  'A castle perched on the back of a giant turtle, with a sunset in the background, magical atmosphere',
-  'Hamster DJ spinning tiny neon records, vibrant party scene, dynamic energy',
-  'A soft pink smoke swirling around shiny chrome objects, creating a dreamy atmosphere.',
   'Loaf-shaped corgi surrounded by sparkles, cozy and whimsical setting',
   'Thunderclouds forming the shape of a giant sleeping cat, with dramatic lighting and a whimsical atmosphere.',
   'Neon animal constellations floating in space.',
   'A mirrored tiger face with geometric shards reflecting a colorful spectrum.',
   'A 16-bit pixelated hero floating in space, with a dynamic and energetic atmosphere.',
+  'A corgi astronaut planting a GPTees flag on the moon.',
+  'Neon dragon riding a bicycle through a cyberpunk alley.',
+  'Minimal line-art koi fish with flowing neon water.',
+  '"404: Boring tee not found" in bold glitch type.',
+  'A fox curled up in a blanket of clouds, dreamy and whimsical, pastel tones.',
+  'Clusters of abstract shapes arranged in a surreal, dream-like composition.',
+  'Steam forming tiny hearts over a teacup, soft focus, warm colors.',
+  'A castle perched on the back of a giant turtle at sunset, magical atmosphere.',
+  'Hamster DJ spinning tiny neon records, vibrant party scene, dynamic energy.',
+  'A soft pink smoke swirling around shiny chrome objects, dreamy atmosphere.',
+  'Retro sunset with palm trees, vector style, high contrast.',
+  'Kawaii fox eating a slice of pizza, wearing a bow, no background.',
+  'Chrome heart reflecting neon city lights at night.',
+  'A phoenix rising from swirling ink, high contrast, centered.',
+  'A floating library above a serene pond, enchanted vibe.',
+  'Tiny dragon sleeping in a teacup, pastel florals around it.',
+  'Bubble tea cup with heart-shaped bubbles, playful and bright.',
+  'Steel rose with razor-blade petals, dramatic lighting.',
+  'Holographic butterflies drifting across a pastel sky.',
+  'Crystal cat lounging on clouds, iridescent glow.',
+  'Streetwear panda carrying a boombox, bold outlines.',
+  'Graffiti crown melting into butterflies, vibrant colors.',
+  'Astronaut helmet with flowers blooming inside, cosmic background.',
+  'Watercolor waves framed in a geometric shape, minimal palette.',
+  'Origami crane made of galaxy textures, centered composition.',
+  'Botanical skull with neon mushrooms, dark background.',
+  'Retro badge of a T-Rex playing video games, playful colors.',
+  'Minimal monogram with a lightning bolt, high contrast.',
+  'Vaporwave sunset with grid lines and a lone palm tree.',
+  'Solar eclipse with radiant rings and stardust.',
+  'Glowing sword embedded in crystal, ethereal light.',
 ];
 
 const GUEST_PREVIEW_KEY = 'gptees_preview_guest';
@@ -112,6 +133,9 @@ export default function Quickstart(): JSX.Element {
       try {
         const parsed = JSON.parse(stored) as PendingGuestPreview;
         setPendingGuest(parsed);
+        if (!isSignedIn) {
+          navigate('/auth?redirect=/');
+        }
       } catch (err) {
         console.error('Failed to parse pending guest preview', err);
         localStorage.removeItem(GUEST_PREVIEW_KEY);
@@ -189,6 +213,12 @@ export default function Quickstart(): JSX.Element {
     setCurrentOrderId(null);
     setGeneratedDesign(null);
   }, [isSignedIn]);
+
+  useEffect(() => {
+    if (!isSignedIn && pendingGuest) {
+      navigate('/auth?redirect=/');
+    }
+  }, [isSignedIn, pendingGuest, navigate]);
 
   const defaultColor =
     product?.colors?.find((c) => c.name.toLowerCase() === 'black')?.name ||

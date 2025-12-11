@@ -252,11 +252,45 @@ export const createDesignGuest = catchAsync(async (req: Request, res: Response) 
     },
   });
 
+  await prisma.order.update({
+    where: { id: orderId },
+    data: {
+      designsGenerated: order.designsGenerated + 1,
+      status: 'DESIGN_PENDING',
+    },
+  });
+
+  // Mark completed immediately so the client can proceed; upload to Supabase in background
+  const completedDesign = await prisma.design.update({
+    where: { id: design.id },
+    data: {
+      imageUrl,
+      thumbnailUrl: imageUrl,
+      status: 'COMPLETED',
+    },
+  });
+
   res.status(201).json({
     success: true,
     message: 'Design generation started',
-    data: design,
+    data: completedDesign,
   });
+
+  uploadImage(imageUrl, design.id)
+    .then(async ({ imageUrl: supabaseUrl, thumbnailUrl: supabaseThumbnailUrl }) => {
+      await prisma.design.update({
+        where: { id: design.id },
+        data: {
+          imageUrl: supabaseUrl,
+          thumbnailUrl: supabaseThumbnailUrl,
+          updatedAt: new Date(),
+        },
+      });
+      console.log(`Guest design ${design.id} uploaded to Supabase Storage`);
+    })
+    .catch((error) => {
+      console.error('Supabase upload error (guest non-blocking):', error);
+    });
 });
 
 /**
