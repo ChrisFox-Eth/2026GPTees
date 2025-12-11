@@ -629,7 +629,7 @@ export default function Quickstart(): JSX.Element {
         <div className="w-full rounded-lg border border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-900/20 p-4 space-y-2">
           <p className="text-sm font-semibold text-blue-900 dark:text-blue-100">Hang tight</p>
           <p className="text-xs text-blue-800 dark:text-blue-200">
-            We&apos;re generating your preview while you sign in / switch accounts.
+            We&apos;re generating your preview.
           </p>
           {progressMessage && (
             <p className="text-xs text-blue-900 dark:text-blue-100">{progressMessage}</p>
