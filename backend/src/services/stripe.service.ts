@@ -11,7 +11,7 @@ import prisma from '../config/database.js';
 import { TierType } from '../config/pricing.js';
 import { getTierPricingMap } from './pricing.service.js';
 import { calculateShipping } from '../config/shipping.js';
-import { getPrintfulVariantId } from './printful.service.js';
+import { getPrintfulVariantId, createPrintfulOrder } from './printful.service.js';
 import { AppError } from '../middleware/error.middleware.js';
 import { sendPromptGuide } from './email.service.js';
 import { sendAnalyticsEvent } from './analytics.service.js';
@@ -709,6 +709,8 @@ export async function handleSuccessfulPayment(sessionId: string): Promise<void> 
 
   console.log(`Order ${orderId} marked as PAID`);
 
+  await autoApproveLatestDesign(updatedOrder.id);
+
   if (updatedOrder.promoCodeId) {
     await incrementPromoUsage(updatedOrder.promoCodeId);
   }
@@ -746,6 +748,73 @@ export async function handleSuccessfulPayment(sessionId: string): Promise<void> 
       country: updatedOrder.address?.country || 'US',
     },
   });
+}
+
+async function autoApproveLatestDesign(orderId: string): Promise<void> {
+  const order = await prisma.order.findUnique({
+    where: { id: orderId },
+    include: {
+      designs: true,
+      items: true,
+    },
+  });
+
+  if (!order || !order.designs.length) {
+    return;
+  }
+
+  if (
+    order.printfulOrderId ||
+    order.status === OrderStatus.SUBMITTED ||
+    order.status === OrderStatus.SHIPPED ||
+    order.status === OrderStatus.DELIVERED
+  ) {
+    return;
+  }
+
+  const latestCompleted = order.designs
+    .filter((d: any) => d.status === 'COMPLETED')
+    .sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())[0];
+
+  if (!latestCompleted) {
+    return;
+  }
+
+  await prisma.$transaction(async (tx: any) => {
+    await tx.design.updateMany({
+      where: { orderId },
+      data: { approvalStatus: false, approvedAt: null },
+    });
+
+    await tx.design.update({
+      where: { id: latestCompleted.id },
+      data: {
+        approvalStatus: true,
+        approvedAt: new Date(),
+      },
+    });
+
+    await tx.order.update({
+      where: { id: orderId },
+      data: {
+        status: 'DESIGN_APPROVED',
+        items: {
+          updateMany: {
+            where: { orderId },
+            data: {
+              designId: latestCompleted.id,
+            },
+          },
+        },
+      },
+    });
+  });
+
+  try {
+    await createPrintfulOrder(orderId, latestCompleted.id);
+  } catch (err) {
+    console.error(`Failed to submit order ${orderId} to Printful after auto-approve:`, err);
+  }
 }
 
 

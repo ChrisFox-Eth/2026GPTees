@@ -359,8 +359,9 @@ function OrderDetailContent(): JSX.Element {
 
 
 
-  return (
+  const approvedDesignId = order.designs.find((d) => d.approvalStatus)?.id;
 
+  return (
     <div className="container-max py-8 space-y-6">
 
       <div className="flex items-center justify-between gap-4">
@@ -516,7 +517,9 @@ function OrderDetailContent(): JSX.Element {
                     </p>
 
                     <div className="mt-3 flex flex-col gap-2">
-                      {!design.approvalStatus && design.status === 'COMPLETED' && (
+                      {!design.approvalStatus &&
+                        design.status === 'COMPLETED' &&
+                        !approvedDesignId && (
                         <Button
                           variant="primary"
                           size="sm"
@@ -700,9 +703,6 @@ export default function OrderDetailPage(): JSX.Element {
   return <OrderDetailContent />;
 
 }
-
-
-
 
 
 

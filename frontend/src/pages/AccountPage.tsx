@@ -250,7 +250,6 @@ function AccountContent(): JSX.Element {
   );
 
   const renderPastCard = (order: Order) => {
-    const cloneCandidate = getCloneCandidate(order);
     return (
       <div
         key={order.id}
@@ -294,26 +293,37 @@ function AccountContent(): JSX.Element {
         {order.designs?.length > 0 && (
           <div className="mt-2">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {order.designs.map((design) => (
-                <div
-                  key={design.id}
-                  className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden bg-white dark:bg-gray-900 shadow-sm"
-                >
-                  <div className="bg-gray-100 dark:bg-gray-800 flex items-center justify-center h-32">
-                    {design.imageUrl ? (
-                      <img src={design.imageUrl} alt={design.prompt} className="max-h-28 object-contain" />
-                    ) : (
-                      <div className="text-xs text-gray-500 dark:text-gray-400">Design preview coming soon</div>
-                    )}
-                  </div>
-                  <p className="text-xs text-gray-700 dark:text-gray-300 line-clamp-2 px-3 py-2">
-                    {design.prompt}
-                  </p>
+            {order.designs.map((design) => (
+              <div
+                key={design.id}
+                className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden bg-white dark:bg-gray-900 shadow-sm"
+              >
+                <div className="bg-gray-100 dark:bg-gray-800 flex items-center justify-center h-32">
+                  {design.imageUrl ? (
+                    <img src={design.imageUrl} alt={design.prompt} className="max-h-28 object-contain" />
+                  ) : (
+                    <div className="text-xs text-gray-500 dark:text-gray-400">Design preview coming soon</div>
+                  )}
                 </div>
-              ))}
-            </div>
+                <p className="text-xs text-gray-700 dark:text-gray-300 line-clamp-2 px-3 py-2">
+                  {design.prompt}
+                </p>
+                <div className="px-3 pb-3 flex flex-col gap-2">
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    onClick={() => handleReorder(order, design)}
+                    isDisabled={reordering === order.id}
+                    isLoading={reordering === order.id}
+                  >
+                    Reorder this design
+                  </Button>
+                </div>
+              </div>
+            ))}
           </div>
-        )}
+        </div>
+      )}
 
         <div className="mt-4 flex gap-3 flex-wrap">
           <Link to={`/orders/${order.id}`}>
@@ -321,15 +331,6 @@ function AccountContent(): JSX.Element {
               View details
             </Button>
           </Link>
-          <Button
-            variant="secondary"
-            size="sm"
-            onClick={() => handleReorder(order, cloneCandidate)}
-            isDisabled={!cloneCandidate}
-            isLoading={reordering === order.id}
-          >
-            Reorder this design
-          </Button>
         </div>
       </div>
     );

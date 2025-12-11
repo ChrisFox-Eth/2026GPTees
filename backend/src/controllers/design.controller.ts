@@ -554,25 +554,44 @@ export const approveDesign = catchAsync(async (req: Request, res: Response) => {
     throw new AppError('Unauthorized access to this design', 403);
   }
 
+  const existingApproved = await prisma.design.findFirst({
+    where: {
+      orderId: design.orderId!,
+      approvalStatus: true,
+      id: { not: design.id },
+    },
+  });
+
+  if (existingApproved) {
+    throw new AppError('This order already has an approved design.', 400);
+  }
+
   if (design.order.status !== OrderStatus.PAID && design.order.status !== OrderStatus.DESIGN_APPROVED) {
     throw new AppError('Payment is required before approving a design. Please checkout first.', 400);
   }
 
   // Update design approval
-  await prisma.design.update({
-    where: { id },
-    data: {
-      approvalStatus: true,
-      approvedAt: new Date(),
-    },
-  });
+  await prisma.$transaction(async (tx: TransactionClient) => {
+    await tx.design.update({
+      where: { id },
+      data: {
+        approvalStatus: true,
+        approvedAt: new Date(),
+      },
+    });
 
-  // Update order status
-  await prisma.order.update({
-    where: { id: design.orderId! },
-    data: {
-      status: 'DESIGN_APPROVED',
-    },
+    await tx.order.update({
+      where: { id: design.orderId! },
+      data: {
+        status: 'DESIGN_APPROVED',
+        items: {
+          updateMany: {
+            where: { orderId: design.orderId! },
+            data: { designId: design.id },
+          },
+        },
+      },
+    });
   });
 
   // Send design approved email (non-blocking)
