@@ -14,6 +14,7 @@ import prisma from '../config/database.js';
 import { sendAnalyticsEvent } from '../services/analytics.service.js';
 import { OrderStatus } from '@prisma/client';
 import { getSupabaseServiceRoleClient } from '../services/supabase-admin.service.js';
+import { v4 as uuidv4 } from 'uuid';
 
 /**
  * Generate AI design
@@ -265,6 +266,85 @@ export const getDesignsByOrder = catchAsync(async (req: Request, res: Response) 
   res.json({
     success: true,
     data: designs,
+  });
+});
+
+/**
+ * Clone an existing design into a new preview order
+ * POST /api/designs/clone
+ */
+export const cloneDesign = catchAsync(async (req: Request, res: Response) => {
+  if (!req.user) {
+    res.status(401).json({ success: false, message: 'Authentication required' });
+    return;
+  }
+
+  const { sourceDesignId, targetOrderId } = req.body as { sourceDesignId?: string; targetOrderId?: string };
+
+  if (!sourceDesignId || !targetOrderId) {
+    res.status(400).json({ success: false, message: 'sourceDesignId and targetOrderId are required' });
+    return;
+  }
+
+  const sourceDesign = await prisma.design.findUnique({
+    where: { id: sourceDesignId },
+    include: { order: true },
+  });
+
+  if (!sourceDesign) {
+    throw new AppError('Source design not found', 404);
+  }
+
+  if (!sourceDesign.imageUrl || sourceDesign.imageUrl.toLowerCase().includes('oaidalle') || sourceDesign.imageUrl.toLowerCase().includes('openai')) {
+    throw new AppError('Source design image is not available in durable storage. Please regenerate.', 400);
+  }
+
+  const targetOrder = await prisma.order.findUnique({
+    where: { id: targetOrderId },
+    include: { items: true },
+  });
+
+  if (!targetOrder) {
+    throw new AppError('Target order not found', 404);
+  }
+
+  if (targetOrder.userId !== req.user.id) {
+    throw new AppError('Unauthorized access to target order', 403);
+  }
+
+  if (![OrderStatus.PENDING_PAYMENT, OrderStatus.DESIGN_PENDING].includes(targetOrder.status as OrderStatus)) {
+    throw new AppError('Target order must be an unpaid preview order', 400);
+  }
+
+  const cloned = await prisma.design.create({
+    data: {
+      id: uuidv4(),
+      userId: req.user.id,
+      orderId: targetOrderId,
+      prompt: sourceDesign.prompt,
+      revisedPrompt: sourceDesign.revisedPrompt,
+      aiModel: sourceDesign.aiModel,
+      imageUrl: sourceDesign.imageUrl,
+      thumbnailUrl: sourceDesign.thumbnailUrl || sourceDesign.imageUrl,
+      status: 'COMPLETED',
+      style: sourceDesign.style,
+      approvalStatus: false,
+    },
+  });
+
+  sendAnalyticsEvent({
+    event: 'design.clone.success',
+    properties: {
+      source_design_id: sourceDesignId,
+      target_order_id: targetOrderId,
+      user_id: req.user.id,
+    },
+  }).catch((err) => console.error('Failed to send design.clone.success analytics', err));
+
+  res.status(201).json({
+    success: true,
+    message: 'Design cloned successfully',
+    data: cloned,
   });
 });
 

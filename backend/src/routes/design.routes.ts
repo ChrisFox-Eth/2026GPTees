@@ -12,6 +12,7 @@ import {
   approveDesign,
   getRandomPrompt,
   getDesignGallery,
+  cloneDesign,
 } from '../controllers/design.controller.js';
 import { requireAuth } from '../middleware/auth.middleware.js';
 
@@ -34,6 +35,7 @@ router.post('/generate', requireAuth, createDesign);
  * Public gallery feed of recent designs
  */
 router.get('/gallery', getDesignGallery);
+router.post('/clone', requireAuth, cloneDesign);
 
 /**
  * GET /api/designs
