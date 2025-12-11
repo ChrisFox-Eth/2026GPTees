@@ -133,9 +133,6 @@ export default function Quickstart(): JSX.Element {
       try {
         const parsed = JSON.parse(stored) as PendingGuestPreview;
         setPendingGuest(parsed);
-        if (!isSignedIn) {
-          navigate('/auth?redirect=/');
-        }
       } catch (err) {
         console.error('Failed to parse pending guest preview', err);
         localStorage.removeItem(GUEST_PREVIEW_KEY);
