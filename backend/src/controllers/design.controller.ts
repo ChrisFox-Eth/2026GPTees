@@ -337,7 +337,11 @@ export const getDesign = catchAsync(async (req: Request, res: Response) => {
     throw new AppError('Design not found', 404);
   }
 
-  if (design.userId !== req.user.id) {
+  const belongsToUser =
+    design.userId === req.user.id ||
+    (design.order && design.order.userId === req.user.id);
+
+  if (!belongsToUser) {
     throw new AppError('Unauthorized access to this design', 403);
   }
 

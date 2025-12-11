@@ -415,7 +415,6 @@ export const claimPreviewOrder = catchAsync(async (req: Request, res: Response) 
   await prisma.design.updateMany({
     where: {
       orderId,
-      userId: previousUserId,
     },
     data: {
       userId: req.user.id,

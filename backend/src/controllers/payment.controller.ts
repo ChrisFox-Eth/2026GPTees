@@ -48,12 +48,16 @@ export const createCheckout = catchAsync(async (req: Request, res: Response) => 
 
   const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
 
+  const derivedCancelUrl = orderId
+    ? `${frontendUrl}/design?orderId=${orderId}`
+    : `${frontendUrl}/`;
+
   const checkoutData = {
     userId: req.user.id,
     items,
     shippingAddress,
     successUrl: `${frontendUrl}/checkout/success`,
-    cancelUrl: `${frontendUrl}/cart`,
+    cancelUrl: derivedCancelUrl,
     code: code ? String(code).trim() : undefined,
     orderId: orderId ? String(orderId) : undefined,
   };
