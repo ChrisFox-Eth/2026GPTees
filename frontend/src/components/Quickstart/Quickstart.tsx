@@ -14,6 +14,7 @@ import { QUICKSTART_PROMPT_KEY } from '@utils/quickstart';
 import { AnimatePresence, motion } from 'framer-motion';
 import type { Design } from '../../types/design';
 import type { PendingGuestPreview } from '../../types/preview';
+import type { ColorOption } from '../../types/product';
 // const STYLE_PRESETS = ['Retro surf', 'Minimal line art', 'Neon cyberpunk', 'Vintage anime', 'Bold typographic'];
 // const PROMPT_SUGGESTIONS = ['Birthday gift', 'Band tee', 'Inside joke', 'Sports drop', 'Team merch'];
 
@@ -30,12 +31,38 @@ const PROMPT_IDEAS: string[] = [
   'A soft pink smoke swirling around shiny chrome objects, creating a dreamy atmosphere.',
   'Loaf-shaped corgi surrounded by sparkles, cozy and whimsical setting',
   'Thunderclouds forming the shape of a giant sleeping cat, with dramatic lighting and a whimsical atmosphere.',
+  'Neon animal constellations floating in space.',
+  'A mirrored tiger face with geometric shards reflecting a colorful spectrum.',
+  'A 16-bit pixelated hero floating in space, with a dynamic and energetic atmosphere.',
 ];
 
 const GUEST_PREVIEW_KEY = 'gptees_preview_guest';
 const PREVIEW_CACHE_KEY = 'gptees_quickstart_preview_cache';
 const QUICKSTART_STYLE = 'trendy';
 const QUICKSTART_TIER = 'LIMITLESS';
+
+const FALLBACK_COLORS: ColorOption[] = [
+  { name: 'Black', hex: '#000000' },
+  { name: 'White', hex: '#ffffff' },
+  { name: 'Navy', hex: '#1b2a4f' },
+  { name: 'Heather Gray', hex: '#9ea3ab' },
+];
+
+const FALLBACK_PRODUCT: Product = {
+  id: 'fallback-basic-tee',
+  name: 'Limitless Tee',
+  slug: 'basic-tee',
+  description: 'Limitless design-first tee with free previews.',
+  basePrice: 54.99,
+  printfulId: 'fallback',
+  category: 'T_SHIRT',
+  sizes: ['S', 'M', 'L', 'XL', '2XL'],
+  colors: FALLBACK_COLORS,
+  imageUrl: null,
+  isActive: true,
+  createdAt: new Date(),
+  updatedAt: new Date(),
+};
 
 const isTemporaryUrl = (url?: string | null) => {
   if (!url) return true;
@@ -44,15 +71,13 @@ const isTemporaryUrl = (url?: string | null) => {
 };
 
 export default function Quickstart(): JSX.Element {
-  const [products, setProducts] = useState<Product[]>([]);
+  const [products, setProducts] = useState<Product[]>([FALLBACK_PRODUCT]);
   const [prompt, setPrompt] = useState<string>(
     localStorage.getItem(QUICKSTART_PROMPT_KEY) || ''
   );
   const [size, setSize] = useState<string>('');
   const [color, setColor] = useState<string>('');
   const [ideaIndex, setIdeaIndex] = useState<number>(0);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [isCreating, setIsCreating] = useState<boolean>(false);
   const [isGenerating, setIsGenerating] = useState<boolean>(false);
@@ -68,14 +93,10 @@ export default function Quickstart(): JSX.Element {
   useEffect(() => {
     const loadProducts = async () => {
       try {
-        setLoading(true);
         const response = await apiGet('/api/products');
         setProducts(response.data || []);
-        setError(null);
       } catch (err: any) {
-        setError(err.message || 'Unable to load quickstart');
-      } finally {
-        setLoading(false);
+        console.warn('Quickstart products fallback in use', err);
       }
     };
     loadProducts();
@@ -155,7 +176,7 @@ export default function Quickstart(): JSX.Element {
   useEffect(() => {
     if (!PROMPT_IDEAS.length) return;
     const id = setInterval(() => {
-      setIdeaIndex((prev) => (prev + 1) % PROMPT_IDEAS.length);
+      setIdeaIndex(Math.floor(Math.random() * PROMPT_IDEAS.length));
     }, 4000);
     return () => clearInterval(id);
   }, []);
@@ -399,22 +420,6 @@ export default function Quickstart(): JSX.Element {
       setIsCreating(false);
     }
   };
-
-  if (loading || !product) {
-    return (
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-4 sm:p-5 border border-gray-200 dark:border-gray-700">
-        <p className="text-gray-600 dark:text-gray-300">Loading quickstart...</p>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-4 sm:p-5 border border-red-200 dark:border-red-800">
-        <p className="text-red-700 dark:text-red-300 text-sm">{error}</p>
-      </div>
-    );
-  }
 
   return (
     <div className="bg-white dark:bg-gray-800 rounded-xl shadow border border-gray-200 dark:border-gray-700 p-5 sm:p-6 flex flex-col gap-6 items-start w-full max-w-full overflow-hidden">
