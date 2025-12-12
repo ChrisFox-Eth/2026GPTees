@@ -188,18 +188,6 @@ function AccountContent(): JSX.Element {
         <div className="flex items-center gap-2">{getStatusBadge(order.status)}</div>
       </div>
 
-      <div className="mb-3 flex flex-wrap items-center gap-3 text-sm text-gray-600 dark:text-gray-300">
-        <span>
-          {order.items.length} item{order.items.length !== 1 ? 's' : ''}
-        </span>
-        <span className="text-gray-400">•</span>
-        <span>{order.designTier} tier</span>
-        <span className="text-gray-400">•</span>
-        <span>
-          Designs: {order.designsGenerated}/{order.maxDesigns === 9999 ? '∞' : order.maxDesigns}
-        </span>
-      </div>
-
       {order.designs?.length > 0 && (
         <div className="mt-2">
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -262,11 +250,6 @@ function AccountContent(): JSX.Element {
         </div>
 
         <div className="mb-3 flex flex-wrap items-center gap-3 text-sm text-gray-600 dark:text-gray-300">
-          <span>
-            {order.items.length} item{order.items.length !== 1 ? 's' : ''}
-          </span>
-          <span className="text-gray-400">•</span>
-          <span>{order.designTier} tier</span>
           {order.trackingNumber && (
             <>
               <span className="text-gray-400">•</span>
