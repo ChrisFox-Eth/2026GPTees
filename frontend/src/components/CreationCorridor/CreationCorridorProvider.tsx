@@ -51,21 +51,21 @@ const STAGES: CreationCorridorStage[] = [
     key: 'corridor.prepare',
     title: 'Setting up your draft…',
     subtitle: 'We’re getting the canvas ready.',
-    minDurationMs: 900,
+    minDurationMs: 4900,
     isAuthPause: false,
   },
   {
     key: 'corridor.interpret',
     title: 'Interpreting your direction…',
     subtitle: 'Finding the strongest visual read.',
-    minDurationMs: 1200,
+    minDurationMs: 7200,
     isAuthPause: false,
   },
   {
     key: 'corridor.explore',
     title: 'Exploring visual directions…',
     subtitle: 'Balancing mood, shape, and contrast.',
-    minDurationMs: 1600,
+    minDurationMs: 5400,
     isAuthPause: false,
   },
   {
@@ -79,7 +79,7 @@ const STAGES: CreationCorridorStage[] = [
     key: 'corridor.finish',
     title: 'Finalizing your studio…',
     subtitle: 'Opening your draft in the design workspace.',
-    minDurationMs: 900,
+    minDurationMs: 1200,
     isAuthPause: false,
   },
 ];
