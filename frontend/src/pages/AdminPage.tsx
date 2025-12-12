@@ -1,23 +1,25 @@
+/**
+ * @module pages/AdminPage
+ * @description Admin operations dashboard for local development
+ * @since 2025-11-21
+ */
+
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { apiPost, apiGet } from '../utils/api';
-import { Button } from '@components/Button';
+import { Button } from '@components/ui/Button';
+import type { SyncResult, VariantResult } from '../types/admin';
 
-interface SyncResult {
-  total: number;
-  updated: number;
-  results: Array<{
-    orderId: string;
-    orderNumber: string;
-    printfulOrderId: string;
-    fromStatus: string;
-    toStatus: string;
-    fulfillmentStatus: string | null;
-    trackingNumber?: string;
-    error?: string;
-  }>;
-}
-
+/**
+ * @component
+ * @description Admin operations cockpit providing tools for promo/gift code management, fulfillment recovery, Printful variant lookup, and operational runbooks. Only visible in development mode.
+ *
+ * @returns {JSX.Element} The rendered admin page with operational tools
+ *
+ * @example
+ * // Used in App.tsx routing
+ * <Route path="/admin" element={<AdminPage />} />
+ */
 export default function AdminPage(): JSX.Element {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<SyncResult | null>(null);
@@ -26,12 +28,12 @@ export default function AdminPage(): JSX.Element {
   const [variantColor, setVariantColor] = useState<string>('');
   const [variantLoading, setVariantLoading] = useState(false);
   const [variantError, setVariantError] = useState<string | null>(null);
-  const [variantResults, setVariantResults] = useState<Array<{ id: number; color: string; size: string }>>([]);
+  const [variantResults, setVariantResults] = useState<VariantResult[]>([]);
 
   if (!import.meta.env.DEV) {
     return (
       <div className="container-max py-12">
-        <h1 className="text-2xl font-bold mb-3">Admin</h1>
+        <h1 className="mb-3 text-2xl font-bold">Admin</h1>
         <p className="text-gray-600 dark:text-gray-400">
           Admin tools are available in development only.
         </p>
@@ -57,10 +59,10 @@ export default function AdminPage(): JSX.Element {
   };
 
   return (
-    <div className="container-max py-12 space-y-8">
-      <div className="flex items-center justify-between gap-3 flex-wrap">
+    <div className="container-max space-y-8 py-12">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <p className="text-sm font-semibold uppercase tracking-wide text-primary-700 dark:text-primary-300">
+          <p className="text-primary-700 dark:text-primary-300 text-sm font-semibold tracking-wide uppercase">
             Admin Hub (Local Only)
           </p>
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Operations cockpit</h1>
@@ -73,9 +75,11 @@ export default function AdminPage(): JSX.Element {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-5 space-y-2">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Promo & Gift Codes</h2>
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+        <div className="space-y-2 rounded-lg border border-gray-200 bg-white p-5 dark:border-gray-700 dark:bg-gray-800">
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+            Promo & Gift Codes
+          </h2>
           <p className="text-sm text-gray-700 dark:text-gray-300">
             Create, disable, and monitor gift/promo codes with redemption metrics.
           </p>
@@ -86,17 +90,15 @@ export default function AdminPage(): JSX.Element {
           </Link>
         </div>
 
-        <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-5 space-y-2">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Fulfillment Recovery</h2>
+        <div className="space-y-2 rounded-lg border border-gray-200 bg-white p-5 dark:border-gray-700 dark:bg-gray-800">
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+            Fulfillment Recovery
+          </h2>
           <p className="text-sm text-gray-700 dark:text-gray-300">
             Pull latest Printful statuses or resubmit stuck orders.
           </p>
           <div className="flex flex-col gap-2">
-            <Button
-              onClick={handleSync}
-              disabled={loading}
-              variant="primary"
-            >
+            <Button onClick={handleSync} disabled={loading} variant="primary">
               {loading ? 'Syncing…' : 'Sync fulfillment'}
             </Button>
             {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
@@ -108,7 +110,7 @@ export default function AdminPage(): JSX.Element {
           </div>
         </div>
 
-        <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-5 space-y-2">
+        <div className="space-y-2 rounded-lg border border-gray-200 bg-white p-5 dark:border-gray-700 dark:bg-gray-800">
           <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Help & Runbooks</h2>
           <p className="text-sm text-gray-700 dark:text-gray-300">
             Step-by-step fixes for gift codes, orders, and webhooks while running locally.
@@ -120,27 +122,34 @@ export default function AdminPage(): JSX.Element {
           </Link>
         </div>
 
-        <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-5 space-y-3">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Printful Variant Lookup</h2>
+        <div className="space-y-3 rounded-lg border border-gray-200 bg-white p-5 dark:border-gray-700 dark:bg-gray-800">
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+            Printful Variant Lookup
+          </h2>
           <p className="text-sm text-gray-700 dark:text-gray-300">
-            Fetch live variant IDs by product ID (e.g., 71 for Bella+Canvas 3001). Optional color filter (case-insensitive).
+            Fetch live variant IDs by product ID (e.g., 71 for Bella+Canvas 3001). Optional color
+            filter (case-insensitive).
           </p>
-          <div className="flex flex-col sm:flex-row gap-3 sm:items-end">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
             <div className="flex-1">
-              <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">Product ID</label>
+              <label className="mb-1 block text-xs font-semibold text-gray-700 dark:text-gray-300">
+                Product ID
+              </label>
               <input
                 value={variantProductId}
                 onChange={(e) => setVariantProductId(e.target.value)}
-                className="w-full border border-gray-300 dark:border-gray-700 rounded px-3 py-2 bg-white dark:bg-gray-900 text-sm"
+                className="w-full rounded border border-gray-300 bg-white px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-900"
                 placeholder="e.g., 71"
               />
             </div>
             <div className="flex-1">
-              <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">Color (optional)</label>
+              <label className="mb-1 block text-xs font-semibold text-gray-700 dark:text-gray-300">
+                Color (optional)
+              </label>
               <input
                 value={variantColor}
                 onChange={(e) => setVariantColor(e.target.value)}
-                className="w-full border border-gray-300 dark:border-gray-700 rounded px-3 py-2 bg-white dark:bg-gray-900 text-sm"
+                className="w-full rounded border border-gray-300 bg-white px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-900"
                 placeholder="e.g., Navy"
               />
             </div>
@@ -153,7 +162,9 @@ export default function AdminPage(): JSX.Element {
                   const params = new URLSearchParams();
                   params.set('productId', variantProductId.trim());
                   if (variantColor.trim()) params.set('color', variantColor.trim());
-                  const response = await apiGet(`/api/admin/printful/variants?${params.toString()}`);
+                  const response = await apiGet(
+                    `/api/admin/printful/variants?${params.toString()}`
+                  );
                   const data = response.data || [];
                   setVariantResults(data);
                   if (!data.length) {
@@ -173,9 +184,9 @@ export default function AdminPage(): JSX.Element {
           </div>
           {variantError && <p className="text-sm text-red-600 dark:text-red-400">{variantError}</p>}
           {variantResults.length > 0 && (
-            <div className="border border-gray-200 dark:border-gray-700 rounded overflow-auto max-h-80">
+            <div className="max-h-80 overflow-auto rounded border border-gray-200 dark:border-gray-700">
               <table className="min-w-full text-sm">
-                <thead className="bg-gray-50 dark:bg-gray-900/40 text-left">
+                <thead className="bg-gray-50 text-left dark:bg-gray-900/40">
                   <tr>
                     <th className="px-3 py-2">Variant ID</th>
                     <th className="px-3 py-2">Color</th>
@@ -198,11 +209,13 @@ export default function AdminPage(): JSX.Element {
       </div>
 
       {result && (
-        <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6 space-y-4">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Latest sync results</h3>
-          <div className="max-h-64 overflow-auto border border-gray-200 dark:border-gray-700 rounded">
+        <div className="space-y-4 rounded-lg border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-gray-800">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+            Latest sync results
+          </h3>
+          <div className="max-h-64 overflow-auto rounded border border-gray-200 dark:border-gray-700">
             <table className="min-w-full text-sm">
-              <thead className="bg-gray-50 dark:bg-gray-900/40 text-left">
+              <thead className="bg-gray-50 text-left dark:bg-gray-900/40">
                 <tr>
                   <th className="px-3 py-2">Order</th>
                   <th className="px-3 py-2">Printful</th>
@@ -220,9 +233,7 @@ export default function AdminPage(): JSX.Element {
                     <td className="px-3 py-2">{row.fromStatus}</td>
                     <td className="px-3 py-2">{row.toStatus}</td>
                     <td className="px-3 py-2">{row.trackingNumber || '—'}</td>
-                    <td className="px-3 py-2 text-red-600 dark:text-red-400">
-                      {row.error || ''}
-                    </td>
+                    <td className="px-3 py-2 text-red-600 dark:text-red-400">{row.error || ''}</td>
                   </tr>
                 ))}
               </tbody>
@@ -231,14 +242,17 @@ export default function AdminPage(): JSX.Element {
         </div>
       )}
 
-      <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6 space-y-3">
-        <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Recovery quick commands</h2>
+      <div className="space-y-3 rounded-lg border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-gray-800">
+        <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+          Recovery quick commands
+        </h2>
         <p className="text-sm text-gray-700 dark:text-gray-300">
           Run from <code>backend/</code> while connected to your dev DB:
         </p>
-        <ul className="list-disc list-inside space-y-1 text-sm text-gray-700 dark:text-gray-300">
+        <ul className="list-inside list-disc space-y-1 text-sm text-gray-700 dark:text-gray-300">
           <li>
-            Inspect order + events: <code>npx tsx scripts/inspect-order.ts {'<orderId-or-number>'}</code>
+            Inspect order + events:{' '}
+            <code>npx tsx scripts/inspect-order.ts {'<orderId-or-number>'}</code>
           </li>
           <li>
             Attach an existing design and approve it:{' '}
@@ -249,11 +263,13 @@ export default function AdminPage(): JSX.Element {
             <code>npx tsx scripts/retry-printful.ts {'<orderId-or-number> [designId]'}</code>
           </li>
           <li>
-            Abandoned checkout reminders: <code>node --loader ts-node/esm scripts/send-abandoned-reminders.ts</code>
+            Abandoned checkout reminders:{' '}
+            <code>node --loader ts-node/esm scripts/send-abandoned-reminders.ts</code>
           </li>
         </ul>
         <p className="text-xs text-gray-600 dark:text-gray-400">
-          Tip: if Printful rejects a $0 item, ensure the order has an approved design and retry with an explicit design id.
+          Tip: if Printful rejects a $0 item, ensure the order has an approved design and retry with
+          an explicit design id.
         </p>
       </div>
     </div>

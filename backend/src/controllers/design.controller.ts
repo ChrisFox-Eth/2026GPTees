@@ -20,8 +20,21 @@ import { createPrintfulOrder } from '../services/printful.service.js';
 type TransactionClient = PrismaClient;
 
 /**
- * Generate AI design
- * POST /api/designs/generate
+ * @route POST /api/designs/generate
+ * @description Generates AI design using DALL-E 3 for authenticated users
+ * Validates tier limits and order status, uploads to Supabase storage
+ * @access Protected (requires authentication)
+ *
+ * @param {Request} req - Express request (body: orderId, prompt, style)
+ * @param {Response} res - Express response
+ *
+ * @returns {Object} Generated design with remainingDesigns count
+ * @throws {401} Authentication required
+ * @throws {400} Missing orderId or prompt
+ * @throws {404} Order not found
+ * @throws {403} Unauthorized access to order
+ * @throws {400} Order must be active or pending payment
+ * @throws {400} Design limit reached for tier
  */
 export const createDesign = catchAsync(async (req: Request, res: Response) => {
   if (!req.user) {
@@ -190,8 +203,19 @@ export const createDesign = catchAsync(async (req: Request, res: Response) => {
 });
 
 /**
- * Generate AI design for guest previews (guestToken auth)
- * POST /api/designs/generate/guest
+ * @route POST /api/designs/generate/guest
+ * @description Generates AI design for guest preview orders using guest token
+ * @access Public (guest token authentication)
+ *
+ * @param {Request} req - Express request (body: orderId, prompt, style, guestToken)
+ * @param {Response} res - Express response
+ *
+ * @returns {Object} Generated design for guest order
+ * @throws {400} Missing orderId, prompt, or guestToken
+ * @throws {404} Order not found
+ * @throws {403} Invalid guest token
+ * @throws {400} Order must be unpaid preview
+ * @throws {400} Design limit reached for tier
  */
 export const createDesignGuest = catchAsync(async (req: Request, res: Response) => {
   const { orderId, prompt, style, guestToken } = req.body;
@@ -312,8 +336,17 @@ export const createDesignGuest = catchAsync(async (req: Request, res: Response) 
 });
 
 /**
- * Get design by ID
- * GET /api/designs/:id
+ * @route GET /api/designs/:id
+ * @description Retrieves single design by ID
+ * @access Protected (requires authentication)
+ *
+ * @param {Request} req - Express request (params.id required)
+ * @param {Response} res - Express response
+ *
+ * @returns {Object} Design details with order information
+ * @throws {401} Authentication required
+ * @throws {404} Design not found
+ * @throws {403} Unauthorized access to design
  */
 export const getDesign = catchAsync(async (req: Request, res: Response) => {
   if (!req.user) {
@@ -352,8 +385,18 @@ export const getDesign = catchAsync(async (req: Request, res: Response) => {
 });
 
 /**
- * Get designs for an order
- * GET /api/designs?orderId=xxx
+ * @route GET /api/designs
+ * @description Retrieves all designs for a specific order
+ * @access Protected (requires authentication)
+ *
+ * @param {Request} req - Express request (query.orderId required)
+ * @param {Response} res - Express response
+ *
+ * @returns {Object} Array of designs for the order
+ * @throws {401} Authentication required
+ * @throws {400} Order ID is required
+ * @throws {404} Order not found
+ * @throws {403} Unauthorized access to order
  */
 export const getDesignsByOrder = catchAsync(async (req: Request, res: Response) => {
   if (!req.user) {
@@ -399,8 +442,21 @@ export const getDesignsByOrder = catchAsync(async (req: Request, res: Response) 
 });
 
 /**
- * Clone an existing design into a new preview order
- * POST /api/designs/clone
+ * @route POST /api/designs/clone
+ * @description Clones existing design into a new preview order
+ * @access Protected (requires authentication)
+ *
+ * @param {Request} req - Express request (body: sourceDesignId, targetOrderId)
+ * @param {Response} res - Express response
+ *
+ * @returns {Object} Cloned design details
+ * @throws {401} Authentication required
+ * @throws {400} Missing sourceDesignId or targetOrderId
+ * @throws {404} Source design not found
+ * @throws {400} Source design image not in durable storage
+ * @throws {404} Target order not found
+ * @throws {403} Unauthorized access to target order
+ * @throws {400} Target order must be unpaid preview
  */
 export const cloneDesign = catchAsync(async (req: Request, res: Response) => {
   if (!req.user) {
@@ -481,8 +537,15 @@ export const cloneDesign = catchAsync(async (req: Request, res: Response) => {
 });
 
 /**
- * Public design gallery feed (no auth)
- * GET /api/designs/gallery?limit=12
+ * @route GET /api/designs/gallery
+ * @description Retrieves public design gallery feed with random sampling
+ * @access Public
+ *
+ * @param {Request} req - Express request (query.limit optional, max 24)
+ * @param {Response} res - Express response
+ *
+ * @returns {Object} Array of randomized public designs
+ * @throws {500} Failed to load gallery from Supabase
  */
 export const getDesignGallery = catchAsync(async (req: Request, res: Response) => {
   const limit = Math.min(24, Math.max(1, Number(req.query.limit) || 12));
@@ -517,8 +580,21 @@ export const getDesignGallery = catchAsync(async (req: Request, res: Response) =
 });
 
 /**
- * Approve design
- * POST /api/designs/:id/approve
+ * @route POST /api/designs/:id/approve
+ * @description Approves design and auto-submits to Printful for fulfillment
+ * Sends approval email and updates order status
+ * @access Protected (requires authentication)
+ *
+ * @param {Request} req - Express request (params.id required)
+ * @param {Response} res - Express response
+ *
+ * @returns {Object} Success message
+ * @throws {401} Authentication required
+ * @throws {404} Design not found
+ * @throws {400} Design has no associated order
+ * @throws {403} Unauthorized access to design
+ * @throws {400} Order already has approved design
+ * @throws {400} Payment required before approval
  */
 export const approveDesign = catchAsync(async (req: Request, res: Response) => {
   if (!req.user) {
@@ -629,8 +705,14 @@ export const approveDesign = catchAsync(async (req: Request, res: Response) => {
 });
 
 /**
- * Get random prompt (Surprise Me feature)
- * GET /api/designs/random-prompt
+ * @route GET /api/designs/random-prompt
+ * @description Generates random prompt for "Surprise Me" feature
+ * @access Public
+ *
+ * @param {Request} _req - Express request (unused)
+ * @param {Response} res - Express response
+ *
+ * @returns {Object} Random prompt text
  */
 export const getRandomPrompt = catchAsync(async (_req: Request, res: Response) => {
   const prompt = generateRandomPrompt();

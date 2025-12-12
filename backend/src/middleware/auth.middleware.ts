@@ -10,11 +10,22 @@ import { AppError } from './error.middleware.js';
 import { getUserByClerkId, getClerkUser, syncUserToDatabase } from '../services/clerk.service.js';
 
 /**
- * Require authentication middleware
- * Verifies Clerk session token and attaches user to request
- * @param {Request} req - Express request
- * @param {Response} res - Express response
+ * @middleware requireAuth
+ * @description Verifies Clerk JWT session token and attaches user info to request
+ * Supports development bypass with SKIP_AUTH environment variable
+ * Auto-provisions users in database if missing
+ *
+ * @param {Request} req - Express request (mutated to add req.user)
+ * @param {Response} _res - Express response (unused)
  * @param {NextFunction} next - Express next function
+ *
+ * @throws {401} No authorization token provided
+ * @throws {401} Invalid authorization token
+ * @throws {500} Clerk secret key missing
+ * @throws {401} Invalid or expired token
+ * @throws {401} Authentication failed (generic error)
+ *
+ * @returns {Promise<void>}
  */
 export const requireAuth = async (
   req: Request,

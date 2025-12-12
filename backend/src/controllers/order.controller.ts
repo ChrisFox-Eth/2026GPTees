@@ -19,8 +19,15 @@ import { OrderStatus } from '@prisma/client';
 import crypto from 'crypto';
 
 /**
- * Get all orders for current user
- * GET /api/orders
+ * @route GET /api/orders
+ * @description Retrieves all orders for authenticated user with related data
+ * @access Protected (requires authentication)
+ *
+ * @param {Request} req - Express request (requires req.user)
+ * @param {Response} res - Express response
+ *
+ * @returns {Object} Array of user orders with items, designs, payment, address, promoCode
+ * @throws {401} Authentication required
  */
 export const getUserOrders = catchAsync(async (req: Request, res: Response) => {
   if (!req.user) {
@@ -54,8 +61,21 @@ export const getUserOrders = catchAsync(async (req: Request, res: Response) => {
 });
 
 /**
- * Create or reuse a preview order in PENDING_PAYMENT status
- * POST /api/orders/preview
+ * @route POST /api/orders/preview
+ * @description Creates or reuses a preview order in PENDING_PAYMENT status
+ * Allows users to test design generation before payment
+ * @access Protected (requires authentication)
+ *
+ * @param {Request} req - Express request (body: productId, color, size, quantity)
+ * @param {Response} res - Express response
+ *
+ * @returns {Object} Preview order with item details
+ * @throws {401} Authentication required
+ * @throws {400} Missing required fields (productId, color, size)
+ * @throws {400} Invalid quantity
+ * @throws {404} Product not found
+ * @throws {400} Invalid color or size
+ * @throws {400} Cannot downgrade tier below designs generated
  */
 export const createPreviewOrder = catchAsync(async (req: Request, res: Response) => {
   if (!req.user) {
@@ -226,8 +246,19 @@ export const createPreviewOrder = catchAsync(async (req: Request, res: Response)
 });
 
 /**
- * Create a preview order for unauthenticated users (guest), returning a claim token
- * POST /api/orders/preview/guest
+ * @route POST /api/orders/preview/guest
+ * @description Creates preview order for unauthenticated users with guest token
+ * Returns claim token for later authentication
+ * @access Public
+ *
+ * @param {Request} req - Express request (body: productId, color, size, quantity)
+ * @param {Response} res - Express response
+ *
+ * @returns {Object} Guest order details with guestToken for claiming
+ * @throws {400} Missing required fields (productId, color, size)
+ * @throws {400} Invalid quantity
+ * @throws {404} Product not found
+ * @throws {400} Invalid color or size
  */
 export const createGuestPreviewOrder = catchAsync(async (req: Request, res: Response) => {
   const { productId, color, size, quantity } = req.body;
@@ -356,8 +387,20 @@ export const createGuestPreviewOrder = catchAsync(async (req: Request, res: Resp
 });
 
 /**
- * Claim a guest preview order after authentication
- * POST /api/orders/preview/claim
+ * @route POST /api/orders/preview/claim
+ * @description Claims a guest preview order after user authentication
+ * Transfers order and designs to authenticated user
+ * @access Protected (requires authentication)
+ *
+ * @param {Request} req - Express request (body: orderId, guestToken)
+ * @param {Response} res - Express response
+ *
+ * @returns {Object} Claimed order with items
+ * @throws {401} Authentication required
+ * @throws {400} Missing orderId or guestToken
+ * @throws {404} Preview order not found or already claimed
+ * @throws {403} Invalid claim token
+ * @throws {400} Order already processed (paid/approved/shipped)
  */
 export const claimPreviewOrder = catchAsync(async (req: Request, res: Response) => {
   if (!req.user) {
@@ -451,8 +494,20 @@ export const claimPreviewOrder = catchAsync(async (req: Request, res: Response) 
 });
 
 /**
- * Update size/color for a preview order item (single-item preview orders)
- * PATCH /api/orders/:id/item
+ * @route PATCH /api/orders/:id/item
+ * @description Updates size/color for preview order (single-item orders only)
+ * @access Protected (requires authentication)
+ *
+ * @param {Request} req - Express request (params.id, body: color, size)
+ * @param {Response} res - Express response
+ *
+ * @returns {Object} Updated order with new variant details
+ * @throws {401} Authentication required
+ * @throws {400} Missing color or size
+ * @throws {404} Order not found
+ * @throws {403} Unauthorized access to order
+ * @throws {400} Cannot change variant after payment
+ * @throws {400} Invalid color or size
  */
 export const updatePreviewItemVariant = catchAsync(async (req: Request, res: Response) => {
   if (!req.user) {
@@ -570,8 +625,17 @@ export const updatePreviewItemVariant = catchAsync(async (req: Request, res: Res
 });
 
 /**
- * Get single order by ID
- * GET /api/orders/:id
+ * @route GET /api/orders/:id
+ * @description Retrieves single order with full details
+ * @access Protected (requires authentication)
+ *
+ * @param {Request} req - Express request (params.id required)
+ * @param {Response} res - Express response
+ *
+ * @returns {Object} Order with items, designs, payment, address, promoCode
+ * @throws {401} Authentication required
+ * @throws {404} Order not found
+ * @throws {403} Unauthorized access to order
  */
 export const getOrderById = catchAsync(async (req: Request, res: Response) => {
   if (!req.user) {
@@ -615,8 +679,21 @@ export const getOrderById = catchAsync(async (req: Request, res: Response) => {
 });
 
 /**
- * Submit an approved design to Printful for fulfillment
- * POST /api/orders/:id/submit-fulfillment
+ * @route POST /api/orders/:id/submit-fulfillment
+ * @description Submits approved design to Printful for fulfillment
+ * @access Protected (requires authentication)
+ *
+ * @param {Request} req - Express request (params.id required)
+ * @param {Response} res - Express response
+ *
+ * @returns {Object} Printful order ID
+ * @throws {401} Authentication required
+ * @throws {404} Order not found
+ * @throws {403} Unauthorized access to order
+ * @throws {400} Payment required before fulfillment
+ * @throws {400} Missing shipping address
+ * @throws {400} No approved design found
+ * @throws {400} Printful submission failed
  */
 export const submitFulfillment = catchAsync(async (req: Request, res: Response) => {
   if (!req.user) {
@@ -711,8 +788,17 @@ export const submitFulfillment = catchAsync(async (req: Request, res: Response) 
 });
 
 /**
- * Get fulfillment tracking/status for an order
- * GET /api/orders/:id/tracking
+ * @route GET /api/orders/:id/tracking
+ * @description Retrieves fulfillment tracking and status from Printful
+ * @access Protected (requires authentication)
+ *
+ * @param {Request} req - Express request (params.id required)
+ * @param {Response} res - Express response
+ *
+ * @returns {Object} Order status, tracking number, tracking URL
+ * @throws {401} Authentication required
+ * @throws {404} Order not found
+ * @throws {403} Unauthorized access to order
  */
 export const getOrderTracking = catchAsync(async (req: Request, res: Response) => {
   if (!req.user) {

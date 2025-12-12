@@ -1,72 +1,40 @@
 /**
  * @module pages/AdminPromoPage
  * @description Admin dashboard for promo/gift codes analytics and management
+ * @since 2025-11-21
  */
 
 import { useEffect, useMemo, useState } from 'react';
 import { useAuth, useUser } from '@clerk/clerk-react';
 import { apiGet, apiPost, apiRequest } from '../utils/api';
-import { Button } from '@components/Button';
+import { Button } from '@components/ui/Button';
 import ProtectedRoute from '../components/ProtectedRoute';
-
-type PromoType = 'FREE_PRODUCT' | 'PERCENT_OFF';
-type Tier = 'BASIC' | 'PREMIUM' | 'TEST';
-
-interface PromoCode {
-  id: string;
-  code: string;
-  type: PromoType;
-  productTier?: Tier | null;
-  percentOff?: number | null;
-  usageLimit?: number | null;
-  usageCount: number;
-  disabled: boolean;
-  createdAt: string;
-  createdBy?: { email: string | null } | null;
-}
-
-interface OrderSummary {
-  id: string;
-  orderNumber: string;
-  totalAmount: number;
-  paidAt?: string | null;
-}
-
-interface PromoDetail {
-  promo: PromoCode;
-  recentOrders: OrderSummary[];
-}
-
-interface MetricsSeriesPoint {
-  bucket: string;
-  redemptions: number;
-  revenue: number;
-}
-
-interface MetricsResponse {
-  totals: {
-    redemptions: number;
-    revenue: number;
-    activeCodes: number;
-    remaining?: number | null;
-  };
-  series: MetricsSeriesPoint[];
-}
-
-interface CreateFormState {
-  code: string;
-  type: PromoType;
-  productTier: Tier;
-  percentOff: number;
-  usageLimit: number | null;
-  disabled: boolean;
-}
+import type {
+  PromoType,
+  PromoTier,
+  PromoCode,
+  PromoDetail,
+  MetricsResponse,
+  CreatePromoFormState,
+} from '../types/promo';
 
 function useAdminToken() {
   const { getToken } = useAuth();
   return useMemo(() => getToken, [getToken]);
 }
 
+/**
+ * @function AdminPromoContent
+ * @description Protected admin content for managing promo and gift codes with metrics, filtering, and code creation
+ *
+ * @returns {JSX.Element} The admin promo page content with code management tools
+ *
+ * @example
+ * // Used within ProtectedRoute wrapper
+ * <ProtectedRoute>
+ *   <AdminPromoContent />
+ * </ProtectedRoute>
+ */
 function AdminPromoContent(): JSX.Element {
   const { isSignedIn } = useAuth();
   const { user } = useUser();
@@ -90,7 +58,7 @@ function AdminPromoContent(): JSX.Element {
   const [tierFilter, setTierFilter] = useState<string>('');
   const [disabledFilter, setDisabledFilter] = useState<string>('');
   const [bucket, setBucket] = useState<'day' | 'week'>('day');
-  const [createForm, setCreateForm] = useState<CreateFormState>({
+  const [createForm, setCreateForm] = useState<CreatePromoFormState>({
     code: '',
     type: 'PERCENT_OFF',
     productTier: 'BASIC',
@@ -152,7 +120,17 @@ function AdminPromoContent(): JSX.Element {
       void loadCodes();
       void loadMetrics();
     }
-  }, [isSignedIn, skipAuth, page, pageSize, search, typeFilter, tierFilter, disabledFilter, bucket]);
+  }, [
+    isSignedIn,
+    skipAuth,
+    page,
+    pageSize,
+    search,
+    typeFilter,
+    tierFilter,
+    disabledFilter,
+    bucket,
+  ]);
 
   const toggleDisabled = async (id: string, next: boolean) => {
     try {
@@ -180,13 +158,15 @@ function AdminPromoContent(): JSX.Element {
   }
 
   return (
-    <div className="container-max py-8 space-y-6">
+    <div className="container-max space-y-6 py-8">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <p className="text-sm text-primary-700 dark:text-primary-300 font-semibold uppercase tracking-wide">
+          <p className="text-primary-700 dark:text-primary-300 text-sm font-semibold tracking-wide uppercase">
             Admin
           </p>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Promo & Gift Dashboard</h1>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+            Promo & Gift Dashboard
+          </h1>
           <p className="text-gray-600 dark:text-gray-400">
             Manage codes, view redemptions, and track revenue impact.
           </p>
@@ -197,14 +177,14 @@ function AdminPromoContent(): JSX.Element {
       </div>
 
       {/* Metrics */}
-      <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
-        <div className="flex items-center justify-between mb-4">
+      <div className="rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800">
+        <div className="mb-4 flex items-center justify-between">
           <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Metrics</h2>
           <div className="flex items-center gap-2">
             <select
               value={bucket}
               onChange={(e) => setBucket(e.target.value as 'day' | 'week')}
-              className="rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-2 text-sm"
+              className="rounded-md border border-gray-300 bg-white px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-900"
             >
               <option value="day">Daily</option>
               <option value="week">Weekly</option>
@@ -214,41 +194,51 @@ function AdminPromoContent(): JSX.Element {
             </Button>
           </div>
         </div>
-        {metricsError && <p className="text-red-600 dark:text-red-400 text-sm">{metricsError}</p>}
+        {metricsError && <p className="text-sm text-red-600 dark:text-red-400">{metricsError}</p>}
         {metrics && (
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div className="p-3 rounded-lg bg-gray-50 dark:bg-gray-900/40 border border-gray-200 dark:border-gray-700">
-              <p className="text-xs text-gray-600 dark:text-gray-400 uppercase font-semibold">Redemptions</p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white">{metrics.totals.redemptions}</p>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+            <div className="rounded-lg border border-gray-200 bg-gray-50 p-3 dark:border-gray-700 dark:bg-gray-900/40">
+              <p className="text-xs font-semibold text-gray-600 uppercase dark:text-gray-400">
+                Redemptions
+              </p>
+              <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                {metrics.totals.redemptions}
+              </p>
             </div>
-            <div className="p-3 rounded-lg bg-gray-50 dark:bg-gray-900/40 border border-gray-200 dark:border-gray-700">
-              <p className="text-xs text-gray-600 dark:text-gray-400 uppercase font-semibold">Revenue (with code)</p>
+            <div className="rounded-lg border border-gray-200 bg-gray-50 p-3 dark:border-gray-700 dark:bg-gray-900/40">
+              <p className="text-xs font-semibold text-gray-600 uppercase dark:text-gray-400">
+                Revenue (with code)
+              </p>
               <p className="text-2xl font-bold text-gray-900 dark:text-white">
                 ${metrics.totals.revenue.toFixed(2)}
               </p>
             </div>
-            <div className="p-3 rounded-lg bg-gray-50 dark:bg-gray-900/40 border border-gray-200 dark:border-gray-700">
-              <p className="text-xs text-gray-600 dark:text-gray-400 uppercase font-semibold">Active Codes</p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white">{metrics.totals.activeCodes}</p>
+            <div className="rounded-lg border border-gray-200 bg-gray-50 p-3 dark:border-gray-700 dark:bg-gray-900/40">
+              <p className="text-xs font-semibold text-gray-600 uppercase dark:text-gray-400">
+                Active Codes
+              </p>
+              <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                {metrics.totals.activeCodes}
+              </p>
             </div>
           </div>
         )}
       </div>
 
       {/* Filters */}
-      <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4 space-y-3">
-        <div className="flex flex-col sm:flex-row gap-3">
+      <div className="space-y-3 rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800">
+        <div className="flex flex-col gap-3 sm:flex-row">
           <input
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search code"
-            className="flex-1 rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-2 text-sm"
+            className="flex-1 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-900"
           />
           <select
             value={typeFilter}
             onChange={(e) => setTypeFilter(e.target.value)}
-            className="rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-2 text-sm"
+            className="rounded-md border border-gray-300 bg-white px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-900"
           >
             <option value="">Type: All</option>
             <option value="FREE_PRODUCT">Gift</option>
@@ -257,7 +247,7 @@ function AdminPromoContent(): JSX.Element {
           <select
             value={tierFilter}
             onChange={(e) => setTierFilter(e.target.value)}
-            className="rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-2 text-sm"
+            className="rounded-md border border-gray-300 bg-white px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-900"
           >
             <option value="">Tier: All</option>
             <option value="BASIC">Basic</option>
@@ -267,7 +257,7 @@ function AdminPromoContent(): JSX.Element {
           <select
             value={disabledFilter}
             onChange={(e) => setDisabledFilter(e.target.value)}
-            className="rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-2 text-sm"
+            className="rounded-md border border-gray-300 bg-white px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-900"
           >
             <option value="">State: All</option>
             <option value="false">Active</option>
@@ -280,31 +270,33 @@ function AdminPromoContent(): JSX.Element {
       </div>
 
       {/* Create code */}
-      <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4 space-y-3">
+      <div className="space-y-3 rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800">
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Create Code</h2>
           {createError && <p className="text-sm text-red-600 dark:text-red-400">{createError}</p>}
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3">
           <input
             type="text"
             value={createForm.code}
             onChange={(e) => setCreateForm((f) => ({ ...f, code: e.target.value.toUpperCase() }))}
             placeholder="Code (blank = auto)"
-            className="rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-2 text-sm"
+            className="rounded-md border border-gray-300 bg-white px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-900"
           />
           <select
             value={createForm.type}
             onChange={(e) => setCreateForm((f) => ({ ...f, type: e.target.value as PromoType }))}
-            className="rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-2 text-sm"
+            className="rounded-md border border-gray-300 bg-white px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-900"
           >
             <option value="PERCENT_OFF">Percent off</option>
             <option value="FREE_PRODUCT">Free product</option>
           </select>
           <select
             value={createForm.productTier}
-            onChange={(e) => setCreateForm((f) => ({ ...f, productTier: e.target.value as Tier }))}
-            className="rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-2 text-sm"
+            onChange={(e) =>
+              setCreateForm((f) => ({ ...f, productTier: e.target.value as PromoTier }))
+            }
+            className="rounded-md border border-gray-300 bg-white px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-900"
           >
             <option value="BASIC">Basic</option>
             <option value="PREMIUM">Premium</option>
@@ -317,7 +309,7 @@ function AdminPromoContent(): JSX.Element {
               max={100}
               value={createForm.percentOff}
               onChange={(e) => setCreateForm((f) => ({ ...f, percentOff: Number(e.target.value) }))}
-              className="rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-2 text-sm"
+              className="rounded-md border border-gray-300 bg-white px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-900"
               placeholder="Percent off"
             />
           )}
@@ -336,7 +328,7 @@ function AdminPromoContent(): JSX.Element {
                 usageLimit: e.target.value === '' ? null : Math.max(1, Number(e.target.value)),
               }))
             }
-            className="rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-2 text-sm"
+            className="rounded-md border border-gray-300 bg-white px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-900"
             placeholder="Usage limit (blank = unlimited)"
           />
           <label className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
@@ -389,15 +381,15 @@ function AdminPromoContent(): JSX.Element {
       </div>
 
       {/* Table */}
-      <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
-        <div className="flex items-center justify-between mb-3">
+      <div className="rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800">
+        <div className="mb-3 flex items-center justify-between">
           <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Codes</h2>
           {loading && <p className="text-sm text-gray-500 dark:text-gray-400">Loading…</p>}
         </div>
-        {error && <p className="text-red-600 dark:text-red-400 text-sm mb-2">{error}</p>}
+        {error && <p className="mb-2 text-sm text-red-600 dark:text-red-400">{error}</p>}
         <div className="overflow-x-auto">
           <table className="min-w-full text-sm">
-            <thead className="text-left bg-gray-50 dark:bg-gray-900/40">
+            <thead className="bg-gray-50 text-left dark:bg-gray-900/40">
               <tr>
                 <th className="px-3 py-2">Code</th>
                 <th className="px-3 py-2">Type</th>
@@ -423,7 +415,7 @@ function AdminPromoContent(): JSX.Element {
                   </td>
                   <td className="px-3 py-2">
                     <span
-                      className={`px-2 py-1 rounded text-xs ${
+                      className={`rounded px-2 py-1 text-xs ${
                         c.disabled
                           ? 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-200'
                           : 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-200'
@@ -432,15 +424,9 @@ function AdminPromoContent(): JSX.Element {
                       {c.disabled ? 'Disabled' : 'Active'}
                     </span>
                   </td>
-                  <td className="px-3 py-2">
-                    {new Date(c.createdAt).toLocaleDateString()}
-                  </td>
-                  <td className="px-3 py-2 space-x-2">
-                    <Button
-                      variant="secondary"
-                      size="sm"
-                      onClick={() => loadDetail(c.id)}
-                    >
+                  <td className="px-3 py-2">{new Date(c.createdAt).toLocaleDateString()}</td>
+                  <td className="space-x-2 px-3 py-2">
+                    <Button variant="secondary" size="sm" onClick={() => loadDetail(c.id)}>
                       View
                     </Button>
                     <Button
@@ -456,8 +442,13 @@ function AdminPromoContent(): JSX.Element {
             </tbody>
           </table>
         </div>
-        <div className="flex items-center justify-between mt-3 text-sm">
-          <Button variant="secondary" size="sm" onClick={() => setPage(Math.max(1, page - 1))} disabled={page === 1}>
+        <div className="mt-3 flex items-center justify-between text-sm">
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={() => setPage(Math.max(1, page - 1))}
+            disabled={page === 1}
+          >
             Prev
           </Button>
           <span className="text-gray-600 dark:text-gray-400">Page {page}</span>
@@ -469,7 +460,7 @@ function AdminPromoContent(): JSX.Element {
 
       {/* Detail drawer (inline block) */}
       {detail && (
-        <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4 space-y-3">
+        <div className="space-y-3 rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800">
           <div className="flex items-center justify-between">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Code Detail</h3>
             <Button variant="secondary" size="sm" onClick={() => setDetail(null)}>
@@ -477,30 +468,54 @@ function AdminPromoContent(): JSX.Element {
             </Button>
           </div>
           <div className="grid grid-cols-2 gap-3 text-sm text-gray-700 dark:text-gray-300">
-            <div><strong>Code:</strong> {detail.promo.code}</div>
-            <div><strong>Type:</strong> {detail.promo.type}</div>
-            <div><strong>Tier:</strong> {detail.promo.productTier || '—'}</div>
-            <div><strong>Discount:</strong> {detail.promo.type === 'PERCENT_OFF' ? `${detail.promo.percentOff || 0}%` : 'Free product'}</div>
-            <div><strong>Usage:</strong> {detail.promo.usageCount}/{detail.promo.usageLimit ?? '∞'}</div>
-            <div><strong>State:</strong> {detail.promo.disabled ? 'Disabled' : 'Active'}</div>
-            <div><strong>Created:</strong> {new Date(detail.promo.createdAt).toLocaleString()}</div>
-            <div><strong>Created By:</strong> {detail.promo.createdBy?.email || '—'}</div>
+            <div>
+              <strong>Code:</strong> {detail.promo.code}
+            </div>
+            <div>
+              <strong>Type:</strong> {detail.promo.type}
+            </div>
+            <div>
+              <strong>Tier:</strong> {detail.promo.productTier || '—'}
+            </div>
+            <div>
+              <strong>Discount:</strong>{' '}
+              {detail.promo.type === 'PERCENT_OFF'
+                ? `${detail.promo.percentOff || 0}%`
+                : 'Free product'}
+            </div>
+            <div>
+              <strong>Usage:</strong> {detail.promo.usageCount}/{detail.promo.usageLimit ?? '∞'}
+            </div>
+            <div>
+              <strong>State:</strong> {detail.promo.disabled ? 'Disabled' : 'Active'}
+            </div>
+            <div>
+              <strong>Created:</strong> {new Date(detail.promo.createdAt).toLocaleString()}
+            </div>
+            <div>
+              <strong>Created By:</strong> {detail.promo.createdBy?.email || '—'}
+            </div>
           </div>
           <div>
-            <p className="font-semibold text-gray-900 dark:text-white mb-2">Recent Orders</p>
+            <p className="mb-2 font-semibold text-gray-900 dark:text-white">Recent Orders</p>
             {detail.recentOrders.length === 0 ? (
               <p className="text-sm text-gray-600 dark:text-gray-400">No orders yet.</p>
             ) : (
               <div className="space-y-2 text-sm">
                 {detail.recentOrders.map((o) => (
-                  <div key={o.id} className="flex justify-between border border-gray-200 dark:border-gray-700 rounded px-3 py-2">
+                  <div
+                    key={o.id}
+                    className="flex justify-between rounded border border-gray-200 px-3 py-2 dark:border-gray-700"
+                  >
                     <div>
                       <p className="font-semibold text-gray-900 dark:text-white">{o.orderNumber}</p>
                       <p className="text-gray-600 dark:text-gray-400">
                         Paid: {o.paidAt ? new Date(o.paidAt).toLocaleString() : 'Pending'}
                       </p>
                     </div>
-                    <p className="text-gray-900 dark:text-white font-semibold">${Number(o.totalAmount).toFixed(2)}</p>
+                    <p className="font-semibold text-gray-900 dark:text-white">
+                      ${Number(o.totalAmount).toFixed(2)}
+                    </p>
                   </div>
                 ))}
               </div>
@@ -512,6 +527,16 @@ function AdminPromoContent(): JSX.Element {
   );
 }
 
+/**
+ * @component
+ * @description Admin page for managing promo and gift codes with analytics, code creation, filtering, and redemption tracking. Protected by authentication.
+ *
+ * @returns {JSX.Element} The rendered admin promo page with protected content
+ *
+ * @example
+ * // Used in App.tsx routing
+ * <Route path="/admin/promo" element={<AdminPromoPage />} />
+ */
 export default function AdminPromoPage(): JSX.Element {
   return (
     <ProtectedRoute>

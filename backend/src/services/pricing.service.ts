@@ -1,24 +1,37 @@
 /**
  * @module services/pricing
- * @description Pricing lookup sourced from Supabase Settings with sane defaults.
- * Uses DB as source of truth so operators can hotfix pricing/max designs without code changes.
+ * @description Dynamic pricing service sourced from database settings with fallback to static defaults. Enables runtime pricing adjustments without code deployment. Uses database as source of truth so operators can hotfix pricing and design limits without requiring code changes.
+ * @since 2025-11-21
  */
 
 import prisma from '../config/database.js';
 import { TIERS, TierConfig, TierType } from '../config/pricing.js';
 
+/**
+ * Database setting keys for tier prices
+ */
 const PRICE_KEYS: Record<TierType, string> = {
   [TierType.LIMITLESS]: 'premium_tier_price',
 };
 
+/**
+ * Database setting keys for max designs per tier
+ */
 const MAX_DESIGNS_KEYS: Record<TierType, string> = {
   [TierType.LIMITLESS]: 'premium_tier_max_designs',
 };
 
 /**
- * Parse a numeric setting value.
- * @param {string | null | undefined} raw - Raw setting string from the DB.
- * @returns {number | null} Parsed number or null if invalid.
+ * @function parseNumberSetting
+ * @description Safely parses a numeric setting value from database string format. Returns null for invalid or missing values.
+ *
+ * @param {string | null | undefined} raw - Raw setting string from database
+ *
+ * @returns {number | null} Parsed number or null if invalid
+ *
+ * @example
+ * const price = parseNumberSetting('29.99'); // 29.99
+ * const invalid = parseNumberSetting('abc'); // null
  */
 function parseNumberSetting(raw: string | null | undefined): number | null {
   if (!raw) return null;
@@ -27,8 +40,19 @@ function parseNumberSetting(raw: string | null | undefined): number | null {
 }
 
 /**
- * Get tier pricing map from Supabase Settings, falling back to static defaults.
- * @returns {Promise<Record<TierType, TierConfig>>} Tier configuration keyed by tier.
+ * @function getTierPricingMap
+ * @description Retrieves complete tier pricing configuration from database settings, with fallback to static defaults. Merges database values with code defaults to ensure configuration is always valid.
+ *
+ * @returns {Promise<Record<TierType, TierConfig>>} Complete tier configuration map
+ * @returns {number} price - Price in dollars for the tier
+ * @returns {number} maxDesigns - Maximum design generations allowed (999999 for unlimited)
+ *
+ * @example
+ * const tiers = await getTierPricingMap();
+ * const limitlessPrice = tiers.LIMITLESS.price; // 25.00 (or DB override)
+ * const maxDesigns = tiers.LIMITLESS.maxDesigns; // 999999
+ *
+ * @async
  */
 export async function getTierPricingMap(): Promise<Record<TierType, TierConfig>> {
   const settingKeys = [
@@ -69,9 +93,18 @@ export async function getTierPricingMap(): Promise<Record<TierType, TierConfig>>
 }
 
 /**
- * Get a single tier configuration.
- * @param {TierType} tier - Tier identifier.
- * @returns {Promise<TierConfig>} Tier configuration for the requested tier.
+ * @function getTierPricing
+ * @description Retrieves pricing configuration for a specific tier. Convenience wrapper around getTierPricingMap.
+ *
+ * @param {TierType} tier - Tier identifier (e.g., TierType.LIMITLESS)
+ *
+ * @returns {Promise<TierConfig>} Tier configuration including price and maxDesigns
+ *
+ * @example
+ * const limitlessConfig = await getTierPricing(TierType.LIMITLESS);
+ * console.log(limitlessConfig.price); // 25.00
+ *
+ * @async
  */
 export async function getTierPricing(tier: TierType): Promise<TierConfig> {
   const map = await getTierPricingMap();

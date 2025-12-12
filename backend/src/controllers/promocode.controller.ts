@@ -1,6 +1,7 @@
 /**
  * @module controllers/promocode
- * @description Promo/gift code utilities (validation)
+ * @description Promo/gift code validation endpoints
+ * @since 2025-11-21
  */
 
 import { Request, Response } from 'express';
@@ -8,8 +9,17 @@ import { catchAsync, AppError } from '../middleware/error.middleware.js';
 import prisma from '../config/database.js';
 
 /**
- * Validate a promo/gift code (usage/count/type).
- * GET /api/promo/validate?code=ABC
+ * @route GET /api/promo/validate
+ * @description Validates a promo/gift code and checks usage limits
+ * @access Public
+ *
+ * @param {Request} req - Express request (query.code required)
+ * @param {Response} res - Express response
+ *
+ * @returns {Object} Promo code details (id, code, type, productTier, percentOff, usageLimit, usageCount)
+ * @throws {400} Promo code is required
+ * @throws {400} Invalid or unknown promo code
+ * @throws {400} Promo code usage limit exceeded
  */
 export const validatePromoCode = catchAsync(async (req: Request, res: Response) => {
   const code = (req.query.code as string | undefined)?.trim();

@@ -4,16 +4,27 @@
  * @since 2025-11-21
  */
 
+/**
+ * @component
+ * @description Privacy Policy page outlining data collection, usage, sharing, security practices, and user rights.
+ *
+ * @returns {JSX.Element} The rendered privacy policy page
+ *
+ * @example
+ * // Used in App.tsx routing
+ * <Route path="/privacy" element={<PrivacyPage />} />
+ */
 export default function PrivacyPage(): JSX.Element {
   return (
     <div className="container-max py-12">
-      <div className="max-w-4xl mx-auto prose prose-lg dark:prose-invert">
+      <div className="prose prose-lg dark:prose-invert mx-auto max-w-4xl">
         <h1>Privacy Policy</h1>
         <p className="text-gray-600 dark:text-gray-400">Last updated: November 2025</p>
 
         <h2>1. Information We Collect</h2>
         <p>
-          We collect information you provide directly to us when you create an account, place an order, or communicate with us. This includes:
+          We collect information you provide directly to us when you create an account, place an
+          order, or communicate with us. This includes:
         </p>
         <ul>
           <li>Name and email address</li>
@@ -37,18 +48,32 @@ export default function PrivacyPage(): JSX.Element {
         <h2>3. Information Sharing</h2>
         <p>We share your information with trusted third-party service providers:</p>
         <ul>
-          <li><strong>Clerk:</strong> Authentication and user management</li>
-          <li><strong>Stripe:</strong> Payment processing</li>
-          <li><strong>OpenAI:</strong> AI design generation (prompts only)</li>
-          <li><strong>Printful:</strong> Order fulfillment and shipping</li>
-          <li><strong>Supabase Storage:</strong> Secure image storage</li>
-          <li><strong>Resend:</strong> Transactional email delivery</li>
+          <li>
+            <strong>Clerk:</strong> Authentication and user management
+          </li>
+          <li>
+            <strong>Stripe:</strong> Payment processing
+          </li>
+          <li>
+            <strong>OpenAI:</strong> AI design generation (prompts only)
+          </li>
+          <li>
+            <strong>Printful:</strong> Order fulfillment and shipping
+          </li>
+          <li>
+            <strong>Supabase Storage:</strong> Secure image storage
+          </li>
+          <li>
+            <strong>Resend:</strong> Transactional email delivery
+          </li>
         </ul>
         <p>We do not sell your personal information to third parties.</p>
 
         <h2>4. Data Security</h2>
         <p>
-          We implement industry-standard security measures to protect your information, including encryption, secure servers, and regular security audits. Payment information is processed through PCI-compliant Stripe and never stored on our servers.
+          We implement industry-standard security measures to protect your information, including
+          encryption, secure servers, and regular security audits. Payment information is processed
+          through PCI-compliant Stripe and never stored on our servers.
         </p>
 
         <h2>5. Your Rights</h2>
@@ -63,22 +88,27 @@ export default function PrivacyPage(): JSX.Element {
 
         <h2>6. Cookies</h2>
         <p>
-          We use cookies and similar technologies to maintain your session, remember preferences, and analyze site usage. You can control cookies through your browser settings.
+          We use cookies and similar technologies to maintain your session, remember preferences,
+          and analyze site usage. You can control cookies through your browser settings.
         </p>
 
         <h2>7. AI-Generated Content</h2>
         <p>
-          Design prompts you provide are sent to OpenAI's DALL-E 3 API for image generation. Generated images are stored securely and associated with your account. We do not use your prompts or designs to train AI models.
+          Design prompts you provide are sent to OpenAI's DALL-E 3 API for image generation.
+          Generated images are stored securely and associated with your account. We do not use your
+          prompts or designs to train AI models.
         </p>
 
         <h2>8. Children's Privacy</h2>
         <p>
-          Our service is not intended for users under 13 years of age. We do not knowingly collect information from children.
+          Our service is not intended for users under 13 years of age. We do not knowingly collect
+          information from children.
         </p>
 
         <h2>9. Changes to This Policy</h2>
         <p>
-          We may update this Privacy Policy from time to time. We will notify you of material changes by email or through our website.
+          We may update this Privacy Policy from time to time. We will notify you of material
+          changes by email or through our website.
         </p>
 
         <h2>10. Contact Us</h2>

@@ -9,15 +9,25 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@clerk/clerk-react';
 import { apiPost, apiGet } from '@utils/api';
 import { useCart } from '../hooks/useCart';
-import { Button } from '@components/Button';
+import { Button } from '@components/ui/Button';
 import { trackEvent } from '@utils/analytics';
 import { calculateShipping } from '@utils/shipping';
-import { ExamplesGallery } from '@components/ExamplesGallery';
+import { ExamplesGallery } from '@components/sections/ExamplesGallery';
 import type { Order, OrderItem, ShippingAddress } from '../types/order';
 import type { AppliedCodeInfo } from '../types/promo';
 
 const SHIPPING_STORAGE_KEY = 'gptees_shipping_address';
 
+/**
+ * @component
+ * @description Checkout page capturing shipping details and initiating Stripe payment. Supports both cart checkout and preview order checkout with promo/gift code validation.
+ *
+ * @returns {JSX.Element} The rendered checkout page with shipping form and order summary
+ *
+ * @example
+ * // Used in App.tsx routing
+ * <Route path="/checkout" element={<CheckoutPage />} />
+ */
 export default function CheckoutPage(): JSX.Element {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -48,8 +58,9 @@ export default function CheckoutPage(): JSX.Element {
   const [codeError, setCodeError] = useState<string | null>(null);
   const [isApplyingCode, setIsApplyingCode] = useState(false);
 
-  const activeItems: Array<OrderItem | (typeof cart)[number]> =
-    isPreviewCheckout ? previewOrder?.items || [] : cart;
+  const activeItems: Array<OrderItem | (typeof cart)[number]> = isPreviewCheckout
+    ? previewOrder?.items || []
+    : cart;
   const subtotal = isPreviewCheckout
     ? previewOrder?.items.reduce(
         (total, item) => total + Number(item.unitPrice) * item.quantity,
@@ -67,10 +78,9 @@ export default function CheckoutPage(): JSX.Element {
       const itemTotal = firstItem
         ? isPreviewCheckout
           ? Number((firstItem as OrderItem).unitPrice) * (firstItem as OrderItem).quantity
-          : (
-              ((firstItem as any).unitPrice ?? ((firstItem as any).basePrice || 0) + ((firstItem as any).tierPrice || 0)) *
-              (firstItem as any).quantity
-            )
+          : ((firstItem as any).unitPrice ??
+              ((firstItem as any).basePrice || 0) + ((firstItem as any).tierPrice || 0)) *
+            (firstItem as any).quantity
         : subtotal;
       const discount = activeItems.length === 1 ? itemTotal : 0;
       return {
@@ -256,19 +266,19 @@ export default function CheckoutPage(): JSX.Element {
   };
 
   const handleRemoveCode = () => {
-      setAppliedCode(null);
-      setAppliedCodeInfo(null);
-      setCodeMessage(null);
-      setCodeError(null);
-      setCodeInput('');
-      trackEvent('checkout.code.removed', {});
-    };
+    setAppliedCode(null);
+    setAppliedCodeInfo(null);
+    setCodeMessage(null);
+    setCodeError(null);
+    setCodeInput('');
+    trackEvent('checkout.code.removed', {});
+  };
 
   if (isPreviewCheckout && isLoadingPreview) {
     return (
       <div className="container-max py-12">
         <div className="flex items-center justify-center py-12">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
+          <div className="border-primary-600 h-12 w-12 animate-spin rounded-full border-b-2"></div>
         </div>
       </div>
     );
@@ -277,9 +287,11 @@ export default function CheckoutPage(): JSX.Element {
   if (isPreviewCheckout && !previewOrder) {
     return (
       <div className="container-max py-12">
-        <div className="max-w-xl mx-auto bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-3">Preview order not found</h1>
-          <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+        <div className="mx-auto max-w-xl rounded-lg bg-white p-6 shadow dark:bg-gray-800">
+          <h1 className="mb-3 text-2xl font-bold text-gray-900 dark:text-white">
+            Preview order not found
+          </h1>
+          <p className="mb-4 text-sm text-gray-600 dark:text-gray-400">
             We could not load your preview order. Return to your designs and try again.
           </p>
           <Button variant="primary" onClick={() => navigate('/design')}>
@@ -291,43 +303,50 @@ export default function CheckoutPage(): JSX.Element {
   }
 
   return (
-    <div className="container-max py-6 sm:py-8 pb-24 lg:pb-8">
+    <div className="container-max py-6 pb-24 sm:py-8 lg:pb-8">
       <div className="mb-6 sm:mb-8">
-        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-2">Checkout</h1>
-        <p className="text-sm text-gray-600 dark:text-gray-400">Complete your order in just a few steps</p>
-        <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">
+        <h1 className="mb-2 text-2xl font-bold text-gray-900 sm:text-3xl dark:text-white">
+          Checkout
+        </h1>
+        <p className="text-sm text-gray-600 dark:text-gray-400">
+          Complete your order in just a few steps
+        </p>
+        <p className="mt-1 text-xs text-gray-500 dark:text-gray-500">
           Printed & fulfilled by Printful - Secure payments via Stripe - Ships in 5-8 business days
         </p>
         {isPreviewCheckout && previewOrder && (
-          <div className="hidden! mt-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
-            <p className="text-sm text-blue-900 dark:text-blue-100 font-semibold">
+          <div className="mt-3 hidden! rounded-lg border border-blue-200 bg-blue-50 p-3 dark:border-blue-800 dark:bg-blue-900/20">
+            <p className="text-sm font-semibold text-blue-900 dark:text-blue-100">
               Reusing preview order {previewOrder.orderNumber}
             </p>
             <p className="text-xs text-blue-800 dark:text-blue-200">
-              Your prompt and designs stay attached. Add shipping below and we will reuse this order for checkout.
+              Your prompt and designs stay attached. Add shipping below and we will reuse this order
+              for checkout.
             </p>
           </div>
         )}
       </div>
 
-      <div className="hidden! mb-6">
+      <div className="mb-6 hidden!">
         <ExamplesGallery />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3 lg:gap-8">
         {/* Shipping Form */}
-        <div className="lg:col-span-2 bg-white dark:bg-gray-800 rounded-lg shadow p-4 sm:p-6">
-          <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4 sm:mb-6">Shipping Details</h2>
+        <div className="rounded-lg bg-white p-4 shadow sm:p-6 lg:col-span-2 dark:bg-gray-800">
+          <h2 className="mb-4 text-xl font-bold text-gray-900 sm:mb-6 dark:text-white">
+            Shipping Details
+          </h2>
 
           {error && (
-            <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded p-4 mb-6">
+            <div className="mb-6 rounded border border-red-200 bg-red-50 p-4 dark:border-red-800 dark:bg-red-900/20">
               <p className="text-red-800 dark:text-red-300">{error}</p>
             </div>
           )}
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
                 Full Name
               </label>
               <input
@@ -337,13 +356,13 @@ export default function CheckoutPage(): JSX.Element {
                 name="name"
                 autoComplete="name"
                 placeholder="Jane Doe"
-                className="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 px-3 py-2 text-gray-900 dark:text-white placeholder:text-gray-500 dark:placeholder:text-gray-500"
+                className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-gray-900 placeholder:text-gray-500 dark:border-gray-600 dark:bg-gray-900 dark:text-white dark:placeholder:text-gray-500"
                 required
               />
             </div>
 
             <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
                 Address Line 1
               </label>
               <input
@@ -353,27 +372,27 @@ export default function CheckoutPage(): JSX.Element {
                 name="address1"
                 autoComplete="address-line1"
                 placeholder="123 Main St"
-                className="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 px-3 py-2 text-gray-900 dark:text-white placeholder:text-gray-500 dark:placeholder:text-gray-500"
+                className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-gray-900 placeholder:text-gray-500 dark:border-gray-600 dark:bg-gray-900 dark:text-white dark:placeholder:text-gray-500"
                 required
               />
             </div>
 
             <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
                 Address Line 2 (optional)
               </label>
               <input
                 type="text"
-                value={shipping.address2}
+                value={shipping.address2 || ''}
                 onChange={(e) => handleInputChange('address2', e.target.value)}
                 name="address2"
                 autoComplete="address-line2"
-                className="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 px-3 py-2 text-gray-900 dark:text-white placeholder:text-gray-500 dark:placeholder:text-gray-500"
+                className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-gray-900 placeholder:text-gray-500 dark:border-gray-600 dark:bg-gray-900 dark:text-white dark:placeholder:text-gray-500"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
                 City
               </label>
               <input
@@ -383,13 +402,13 @@ export default function CheckoutPage(): JSX.Element {
                 name="city"
                 autoComplete="address-level2"
                 placeholder="Austin"
-                className="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 px-3 py-2 text-gray-900 dark:text-white placeholder:text-gray-500 dark:placeholder:text-gray-500"
+                className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-gray-900 placeholder:text-gray-500 dark:border-gray-600 dark:bg-gray-900 dark:text-white dark:placeholder:text-gray-500"
                 required
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
                 State/Region
               </label>
               <input
@@ -399,12 +418,12 @@ export default function CheckoutPage(): JSX.Element {
                 name="state"
                 autoComplete="address-level1"
                 placeholder="TX"
-                className="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 px-3 py-2 text-gray-900 dark:text-white placeholder:text-gray-500 dark:placeholder:text-gray-500"
+                className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-gray-900 placeholder:text-gray-500 dark:border-gray-600 dark:bg-gray-900 dark:text-white dark:placeholder:text-gray-500"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
                 Postal Code
               </label>
               <input
@@ -415,13 +434,13 @@ export default function CheckoutPage(): JSX.Element {
                 autoComplete="postal-code"
                 inputMode="numeric"
                 placeholder="78701"
-                className="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 px-3 py-2 text-gray-900 dark:text-white placeholder:text-gray-500 dark:placeholder:text-gray-500"
+                className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-gray-900 placeholder:text-gray-500 dark:border-gray-600 dark:bg-gray-900 dark:text-white dark:placeholder:text-gray-500"
                 required
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
                 Country
               </label>
               <input
@@ -431,34 +450,34 @@ export default function CheckoutPage(): JSX.Element {
                 name="country"
                 autoComplete="country"
                 placeholder="US"
-                className="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 px-3 py-2 text-gray-900 dark:text-white placeholder:text-gray-500 dark:placeholder:text-gray-500"
+                className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-gray-900 placeholder:text-gray-500 dark:border-gray-600 dark:bg-gray-900 dark:text-white dark:placeholder:text-gray-500"
                 required
               />
             </div>
 
-            {(shipping.country !== 'US' && shipping.country !== 'CA') && (
+            {shipping.country !== 'US' && shipping.country !== 'CA' && (
               <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
                   Phone (recommended for international shipping)
                 </label>
                 <input
-                type="tel"
-                value={shipping.phone || ''}
-                onChange={(e) => handleInputChange('phone', e.target.value)}
-                name="phone"
-                autoComplete="tel"
-                inputMode="tel"
-                className="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 px-3 py-2 text-gray-900 dark:text-white placeholder:text-gray-500 dark:placeholder:text-gray-500"
-                placeholder="For delivery updates"
-              />
-            </div>
+                  type="tel"
+                  value={shipping.phone || ''}
+                  onChange={(e) => handleInputChange('phone', e.target.value)}
+                  name="phone"
+                  autoComplete="tel"
+                  inputMode="tel"
+                  className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-gray-900 placeholder:text-gray-500 dark:border-gray-600 dark:bg-gray-900 dark:text-white dark:placeholder:text-gray-500"
+                  placeholder="For delivery updates"
+                />
+              </div>
             )}
             {(shipping.country === 'US' || shipping.country === 'CA') && (
-              <div className="md:col-span-2 space-y-2">
+              <div className="space-y-2 md:col-span-2">
                 <button
                   type="button"
                   onClick={() => setShowPhone(!showPhone)}
-                  className="text-sm text-primary-600 dark:text-primary-300 hover:underline"
+                  className="text-primary-600 dark:text-primary-300 text-sm hover:underline"
                 >
                   {showPhone ? 'Hide phone' : 'Add phone for delivery updates (optional)'}
                 </button>
@@ -470,7 +489,7 @@ export default function CheckoutPage(): JSX.Element {
                     name="phone"
                     autoComplete="tel"
                     inputMode="tel"
-                    className="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 px-3 py-2 text-gray-900 dark:text-white placeholder:text-gray-500 dark:placeholder:text-gray-500"
+                    className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-gray-900 placeholder:text-gray-500 dark:border-gray-600 dark:bg-gray-900 dark:text-white dark:placeholder:text-gray-500"
                     placeholder="For delivery updates"
                   />
                 )}
@@ -478,21 +497,25 @@ export default function CheckoutPage(): JSX.Element {
             )}
 
             {/* Promo/Gift Code */}
-            <div className="md:col-span-2 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <div className="rounded-lg border border-gray-200 p-4 md:col-span-2 dark:border-gray-700">
+              <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
                 Have a gift or promo code?
               </label>
-              <div className="flex flex-col sm:flex-row gap-2">
+              <div className="flex flex-col gap-2 sm:flex-row">
                 <input
                   type="text"
                   value={codeInput}
                   onChange={(e) => setCodeInput(e.target.value)}
                   placeholder="Enter code"
-                  className="flex-1 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 px-3 py-2 text-gray-900 dark:text-white placeholder:text-gray-500 dark:placeholder:text-gray-500"
+                  className="flex-1 rounded-md border border-gray-300 bg-white px-3 py-2 text-gray-900 placeholder:text-gray-500 dark:border-gray-600 dark:bg-gray-900 dark:text-white dark:placeholder:text-gray-500"
                   disabled={Boolean(appliedCode)}
                 />
                 {appliedCode ? (
-                  <Button variant="secondary" onClick={handleRemoveCode} className="w-full sm:w-auto">
+                  <Button
+                    variant="secondary"
+                    onClick={handleRemoveCode}
+                    className="w-full sm:w-auto"
+                  >
                     Remove
                   </Button>
                 ) : (
@@ -507,17 +530,17 @@ export default function CheckoutPage(): JSX.Element {
                 )}
               </div>
               {codeMessage && (
-                <p className="text-sm text-green-700 dark:text-green-300 mt-2">{codeMessage}</p>
+                <p className="mt-2 text-sm text-green-700 dark:text-green-300">{codeMessage}</p>
               )}
               {codeError && (
-                <p className="text-sm text-red-600 dark:text-red-400 mt-2">{codeError}</p>
+                <p className="mt-2 text-sm text-red-600 dark:text-red-400">{codeError}</p>
               )}
             </div>
           </div>
 
           {/* Desktop Submit Button */}
           <div className="mt-6 hidden lg:block">
-            <div className="flex items-center gap-3 flex-wrap">
+            <div className="flex flex-wrap items-center gap-3">
               <Button
                 variant="primary"
                 onClick={handleCheckout}
@@ -526,7 +549,7 @@ export default function CheckoutPage(): JSX.Element {
                   (!isPreviewCheckout && cart.length === 0) ||
                   (isPreviewCheckout && !previewOrder)
                 }
-                className="w-full md:w-auto px-8"
+                className="w-full px-8 md:w-auto"
               >
                 {isSubmitting ? 'Processing...' : 'Proceed to Payment'}
               </Button>
@@ -538,27 +561,36 @@ export default function CheckoutPage(): JSX.Element {
         </div>
 
         {/* Order Summary - Desktop */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4 sm:p-6 hidden lg:block sticky top-20 self-start">
-          <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">Order Summary</h2>
-          <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-3 border border-gray-200 dark:border-gray-700 mb-4">
-            <p className="text-sm text-gray-800 dark:text-gray-200 font-semibold mb-1">What is included</p>
-            <ul className="text-xs text-gray-600 dark:text-gray-400 space-y-1">
+        <div className="sticky top-20 hidden self-start rounded-lg bg-white p-4 shadow sm:p-6 lg:block dark:bg-gray-800">
+          <h2 className="mb-4 text-xl font-bold text-gray-900 dark:text-white">Order Summary</h2>
+          <div className="mb-4 rounded-lg border border-gray-200 bg-gray-50 p-3 dark:border-gray-700 dark:bg-gray-900">
+            <p className="mb-1 text-sm font-semibold text-gray-800 dark:text-gray-200">
+              What is included
+            </p>
+            <ul className="space-y-1 text-xs text-gray-600 dark:text-gray-400">
               <li>• Super-soft GPTee</li>
               <li>• Artwork crafted from your words</li>
               <li>• Printful fulfillment & shipping</li>
             </ul>
-            <p className="text-xs text-gray-600 dark:text-gray-400 mt-2">Why go Limitless? We redraw until you love it.</p>
-            <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">Ships in 5-8 business days.</p>
+            <p className="mt-2 text-xs text-gray-600 dark:text-gray-400">
+              Why go Limitless? We redraw until you love it.
+            </p>
+            <p className="mt-1 text-xs text-gray-600 dark:text-gray-400">
+              Ships in 5-8 business days.
+            </p>
           </div>
 
-          <div className="space-y-4 mb-6">
+          <div className="mb-6 space-y-4">
             {activeItems.map((item, idx) => {
               const productName = isPreviewCheckout
-                ? ((item as OrderItem).product?.name || 'Custom GPTee')
+                ? (item as OrderItem).product?.name || 'Custom GPTee'
                 : (item as any).productName;
-               const unitPrice = isPreviewCheckout
-                 ? Number((item as OrderItem).unitPrice)
-                 : Number((item as any).unitPrice ?? ((item as any).basePrice || 0) + ((item as any).tierPrice || 0));
+              const unitPrice = isPreviewCheckout
+                ? Number((item as OrderItem).unitPrice)
+                : Number(
+                    (item as any).unitPrice ??
+                      ((item as any).basePrice || 0) + ((item as any).tierPrice || 0)
+                  );
 
               return (
                 <div key={`${item.productId}-${idx}`} className="flex justify-between">
@@ -571,10 +603,9 @@ export default function CheckoutPage(): JSX.Element {
                       Unlimited redraws until approval.
                     </p>
                     {!isPreviewCheckout && (item as any).bundle && (
-                      <p className="text-xs text-primary-700 dark:text-primary-300">
-                        Bundle: 2 tees • 10% off tier price (savings ${
-                          (((item as any).bundleDiscount ?? 0) * (item as any).quantity).toFixed(2)
-                        })
+                      <p className="text-primary-700 dark:text-primary-300 text-xs">
+                        Bundle: 2 tees • 10% off tier price (savings $
+                        {(((item as any).bundleDiscount ?? 0) * (item as any).quantity).toFixed(2)})
                       </p>
                     )}
                   </div>
@@ -586,7 +617,7 @@ export default function CheckoutPage(): JSX.Element {
             })}
           </div>
 
-          <div className="border-t border-gray-200 dark:border-gray-700 pt-4 space-y-2 text-sm">
+          <div className="space-y-2 border-t border-gray-200 pt-4 text-sm dark:border-gray-700">
             <div className="flex justify-between text-gray-600 dark:text-gray-400">
               <span>Items</span>
               <span>${subtotal.toFixed(2)}</span>
@@ -601,12 +632,12 @@ export default function CheckoutPage(): JSX.Element {
               <span>Shipping</span>
               <span>${shippingCost.toFixed(2)}</span>
             </div>
-            <div className="flex justify-between text-lg font-bold text-gray-900 dark:text-white border-t border-gray-200 dark:border-gray-700 pt-3">
+            <div className="flex justify-between border-t border-gray-200 pt-3 text-lg font-bold text-gray-900 dark:border-gray-700 dark:text-white">
               <span>Total</span>
               <span>${totalWithShipping.toFixed(2)}</span>
             </div>
             {totalWithShipping === 0 && (
-              <p className="text-xs text-primary-700 dark:text-primary-300">
+              <p className="text-primary-700 dark:text-primary-300 text-xs">
                 This order will complete without Stripe.
               </p>
             )}
@@ -614,9 +645,9 @@ export default function CheckoutPage(): JSX.Element {
         </div>
 
         {/* Mobile Sticky Checkout Button */}
-        <div className="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 p-4 lg:hidden z-30 shadow-lg">
+        <div className="fixed right-0 bottom-0 left-0 z-30 border-t border-gray-200 bg-white p-4 shadow-lg lg:hidden dark:border-gray-700 dark:bg-gray-800">
           <div className="container-max">
-            <p className="text-xs text-gray-600 dark:text-gray-400 mb-2 text-center">
+            <p className="mb-2 text-center text-xs text-gray-600 dark:text-gray-400">
               Ships in 5-8 business days • Unlimited redraws included
             </p>
             <Button

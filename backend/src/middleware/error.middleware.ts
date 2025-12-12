@@ -6,10 +6,23 @@
 
 import { Request, Response, NextFunction } from 'express';
 
+/**
+ * @class AppError
+ * @extends Error
+ * @description Custom application error class with status code support
+ *
+ * @property {number} statusCode - HTTP status code for the error
+ * @property {boolean} isOperational - Flag indicating if error is operational (vs programmer error)
+ */
 export class AppError extends Error {
   statusCode: number;
   isOperational: boolean;
 
+  /**
+   * @constructor
+   * @param {string} message - Error message
+   * @param {number} statusCode - HTTP status code
+   */
   constructor(message: string, statusCode: number) {
     super(message);
     this.statusCode = statusCode;
@@ -19,11 +32,16 @@ export class AppError extends Error {
 }
 
 /**
- * Global error handler middleware
- * @param {Error} err - Error object
+ * @middleware errorHandler
+ * @description Global error handler middleware that catches and formats all errors
+ * Logs error details and sends appropriate response to client
+ *
+ * @param {Error} err - Error object (may be AppError with statusCode or generic Error)
  * @param {Request} req - Express request
  * @param {Response} res - Express response
- * @param {NextFunction} _next - Express next function
+ * @param {NextFunction} _next - Express next function (unused)
+ *
+ * @returns {void}
  */
 export const errorHandler = (
   err: any,
@@ -56,9 +74,13 @@ export const errorHandler = (
 };
 
 /**
- * 404 Not Found handler
+ * @middleware notFoundHandler
+ * @description Handles 404 Not Found errors for undefined routes
+ *
  * @param {Request} req - Express request
  * @param {Response} res - Express response
+ *
+ * @returns {void}
  */
 export const notFoundHandler = (req: Request, res: Response): void => {
   res.status(404).json({
@@ -69,10 +91,12 @@ export const notFoundHandler = (req: Request, res: Response): void => {
 };
 
 /**
- * Async error wrapper
- * Wraps async route handlers to catch errors
- * @param {Function} fn - Async function to wrap
- * @returns {Function} Express middleware function
+ * @function catchAsync
+ * @description Wraps async route handlers to automatically catch and forward errors to error middleware
+ * Eliminates need for try-catch blocks in async route handlers
+ *
+ * @param {Function} fn - Async function to wrap (route handler)
+ * @returns {Function} Express middleware function that handles promise rejections
  */
 export const catchAsync = (fn: Function) => {
   return (req: Request, res: Response, next: NextFunction) => {

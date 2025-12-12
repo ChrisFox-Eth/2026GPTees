@@ -1,6 +1,6 @@
 /**
  * @module services/printful
- * @description Printful API service for order fulfillment
+ * @description Printful API v2 service for print-on-demand order fulfillment. Handles order creation, status synchronization, webhook processing, and variant mapping for apparel products.
  * @since 2025-11-21
  */
 
@@ -10,7 +10,8 @@ import prisma from '../config/database.js';
 import { sendOrderShipped } from './email.service.js';
 
 /**
- * Printful API client configuration (v2)
+ * Printful API client configuration (v2 API)
+ * Authenticated with Bearer token and optional store ID header
  */
 const printfulApi: AxiosInstance = axios.create({
   baseURL: 'https://api.printful.com',
@@ -22,10 +23,23 @@ const printfulApi: AxiosInstance = axios.create({
 
 const PRINTFUL_STORE_ID = process.env.PRINTFUL_STORE_ID;
 const STORE_HEADERS = PRINTFUL_STORE_ID ? { 'X-PF-Store-Id': PRINTFUL_STORE_ID } : {};
+
+/**
+ * @function sleep
+ * @description Helper function to pause execution for specified milliseconds
+ *
+ * @param {number} ms - Milliseconds to wait
+ * @returns {Promise<void>} Resolves after delay
+ */
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 /**
- * Interfaces
+ * Printful API interfaces
+ */
+
+/**
+ * Printful recipient (shipping address) interface
+ * @interface PrintfulRecipient
  */
 interface PrintfulRecipient {
   name: string;
@@ -88,6 +102,10 @@ interface PrintfulOrderResponse {
   };
 }
 
+/**
+ * Printful variant summary interface for admin lookup
+ * @interface PrintfulVariantSummary
+ */
 export interface PrintfulVariantSummary {
   id: number;
   name: string;
@@ -95,6 +113,22 @@ export interface PrintfulVariantSummary {
   size: string;
 }
 
+/**
+ * @function fetchPrintfulProductVariants
+ * @description Fetches all available variants for a Printful product by product ID. Used for administrative variant lookup and mapping.
+ *
+ * @param {string} productId - Printful product ID
+ *
+ * @returns {Promise<PrintfulVariantSummary[]>} Array of available variants with ID, name, color, and size
+ *
+ * @throws {Error} When Printful API request fails
+ *
+ * @example
+ * const variants = await fetchPrintfulProductVariants('71');
+ * // Returns: [{ id: 4011, name: 'White S', color: 'White', size: 'S' }, ...]
+ *
+ * @async
+ */
 export async function fetchPrintfulProductVariants(productId: string): Promise<PrintfulVariantSummary[]> {
   const response = await printfulApi.get(`/products/${productId}`, { headers: STORE_HEADERS });
   const variants = response.data?.result?.variants || response.data?.result?.items || [];
@@ -107,9 +141,15 @@ export async function fetchPrintfulProductVariants(productId: string): Promise<P
 }
 
 /**
- * Map product color names to Printful variant IDs
- * This is a simplified mapping - in production, you'd query Printful's variant API
- * or maintain a complete mapping table in your database
+ * Static color and size to Printful variant ID mapping
+ * Maps Printful product ID -> Color -> Size -> Variant ID
+ * Currently supports Bella+Canvas 3001 t-shirt (product ID 71)
+ *
+ * @constant
+ * @type {Record<string, Record<string, Record<string, number>>>}
+ *
+ * @example
+ * const variantId = COLOR_VARIANT_MAP['71']['Black']['M']; // 4017
  */
 const COLOR_VARIANT_MAP: Record<string, Record<string, Record<string, number>>> = {
   '71': {
@@ -145,6 +185,21 @@ const COLOR_VARIANT_MAP: Record<string, Record<string, Record<string, number>>> 
   },
 };
 
+/**
+ * @function logFulfillmentEvent
+ * @description Logs fulfillment events to database for auditing and debugging. Silently fails if logging errors occur to prevent disrupting fulfillment flow.
+ *
+ * @param {Object} params - Event logging parameters
+ * @param {string} [params.orderId] - Internal order ID
+ * @param {string} [params.printfulOrderId] - Printful order ID
+ * @param {string} params.type - Event type identifier
+ * @param {string} [params.status] - Event status
+ * @param {unknown} [params.payload] - Event payload data
+ *
+ * @returns {Promise<void>} Resolves when logged or silently on error
+ *
+ * @async
+ */
 async function logFulfillmentEvent(params: {
   orderId?: string;
   printfulOrderId?: string;
@@ -167,6 +222,10 @@ async function logFulfillmentEvent(params: {
   }
 }
 
+/**
+ * Country name to ISO 2-letter country code mapping
+ * @constant
+ */
 const COUNTRY_CODE_MAP: Record<string, string> = {
   'UNITED STATES': 'US',
   'UNITED STATES OF AMERICA': 'US',
@@ -180,6 +239,10 @@ const COUNTRY_CODE_MAP: Record<string, string> = {
   UK: 'GB',
 };
 
+/**
+ * US state name to 2-letter state code mapping
+ * @constant
+ */
 const STATE_CODE_MAP: Record<string, string> = {
   ALABAMA: 'AL',
   ALASKA: 'AK',
@@ -233,12 +296,36 @@ const STATE_CODE_MAP: Record<string, string> = {
   WYOMING: 'WY',
 };
 
+/**
+ * @function normalizeCountryCode
+ * @description Normalizes country name or code to ISO 2-letter country code for Printful API.
+ *
+ * @param {string | null | undefined} country - Country name or code
+ *
+ * @returns {string} Normalized 2-letter country code or empty string
+ *
+ * @example
+ * normalizeCountryCode('United States'); // 'US'
+ * normalizeCountryCode('US'); // 'US'
+ */
 function normalizeCountryCode(country: string | null | undefined): string {
   if (!country) return '';
   const normalized = country.trim().toUpperCase();
   return COUNTRY_CODE_MAP[normalized] || (normalized.length === 2 ? normalized : normalized.slice(0, 2));
 }
 
+/**
+ * @function normalizeStateCode
+ * @description Normalizes US state name to 2-letter state code for Printful API.
+ *
+ * @param {string | null | undefined} state - State name or code
+ *
+ * @returns {string} Normalized 2-letter state code or original value
+ *
+ * @example
+ * normalizeStateCode('California'); // 'CA'
+ * normalizeStateCode('CA'); // 'CA'
+ */
 function normalizeStateCode(state: string | null | undefined): string {
   if (!state) return '';
   const normalized = state.trim().toUpperCase();
@@ -246,7 +333,22 @@ function normalizeStateCode(state: string | null | undefined): string {
 }
 
 /**
- * Get Printful variant ID from product, color, and size
+ * @function getPrintfulVariantId
+ * @description Resolves Printful catalog variant ID from product ID, color, and size. Falls back to black/XL if exact match not found.
+ *
+ * @param {string} printfulId - Printful product ID (e.g., '71' for Bella+Canvas 3001)
+ * @param {string} color - Product color (case-insensitive)
+ * @param {string} size - Product size (case-insensitive)
+ *
+ * @returns {number | null} Printful variant ID or null if not found
+ *
+ * @example
+ * const variantId = getPrintfulVariantId('71', 'Black', 'M');
+ * // Returns: 4017
+ *
+ * @example
+ * const variantId = getPrintfulVariantId('71', 'Unknown Color', 'M');
+ * // Returns: null (logs error)
  */
 export function getPrintfulVariantId(
   printfulId: string,
@@ -288,10 +390,29 @@ export function getPrintfulVariantId(
 }
 
 /**
- * Create a Printful order from an approved design (v2 API)
- * @param orderId - Database order ID
- * @param designId - Approved design ID
- * @returns Printful order response
+ * @function createPrintfulOrder
+ * @description Creates and confirms a Printful order from an approved design using Printful API v2. Handles order submission, cost calculation, confirmation, and error recovery including duplicate order detection.
+ *
+ * @param {string} orderId - Internal database order ID
+ * @param {string} designId - Approved design ID to print
+ *
+ * @returns {Promise<{success: boolean, printfulOrderId?: number, error?: string}>} Order creation result
+ * @returns {boolean} success - Whether order was successfully created and confirmed
+ * @returns {number} [printfulOrderId] - Printful's order ID if successful
+ * @returns {string} [error] - Error message if failed
+ *
+ * @throws {Error} When order not found or in invalid state
+ * @throws {Error} When design not approved
+ * @throws {Error} When shipping address missing
+ * @throws {Error} When variant mapping fails
+ *
+ * @example
+ * const result = await createPrintfulOrder('order-123', 'design-456');
+ * if (result.success) {
+ *   console.log('Printful order ID:', result.printfulOrderId);
+ * }
+ *
+ * @async
  */
 export async function createPrintfulOrder(
   orderId: string,
@@ -549,6 +670,16 @@ export async function createPrintfulOrder(
   }
 }
 
+/**
+ * @function fetchPrintfulOrderByExternalId
+ * @description Fetches Printful order by external ID (our order number). Used for duplicate detection and order recovery.
+ *
+ * @param {string} externalId - External order ID (our order number)
+ *
+ * @returns {Promise<PrintfulOrderResponse | null>} Printful order or null if not found
+ *
+ * @async
+ */
 async function fetchPrintfulOrderByExternalId(
   externalId: string
 ): Promise<PrintfulOrderResponse | null> {
@@ -561,6 +692,18 @@ async function fetchPrintfulOrderByExternalId(
   }
 }
 
+/**
+ * @function waitForPrintfulOrderReady
+ * @description Polls Printful order status until cost calculations are complete. Waits for retail_costs.calculation_status to be 'done'.
+ *
+ * @param {string} printfulOrderId - Printful order ID to poll
+ * @param {number} [attempts=6] - Maximum polling attempts
+ * @param {number} [delayMs=3000] - Delay between polling attempts in milliseconds
+ *
+ * @returns {Promise<PrintfulOrderResponse | null>} Order when ready or null if timeout
+ *
+ * @async
+ */
 async function waitForPrintfulOrderReady(
   printfulOrderId: string,
   attempts = 6,
@@ -577,6 +720,21 @@ async function waitForPrintfulOrderReady(
   return null;
 }
 
+/**
+ * @function mapOrderStatusFromPrintful
+ * @description Maps Printful order status to internal OrderStatus enum and determines shipping/delivery timestamps.
+ *
+ * @param {string} [status] - Printful order status
+ *
+ * @returns {Object} Status mapping result
+ * @returns {OrderStatus} [orderStatus] - Mapped internal order status
+ * @returns {boolean} [markShipped] - Whether to set shippedAt timestamp
+ * @returns {boolean} [markDelivered] - Whether to set deliveredAt timestamp
+ *
+ * @example
+ * const mapping = mapOrderStatusFromPrintful('shipped');
+ * // Returns: { orderStatus: 'SHIPPED', markShipped: true }
+ */
 export function mapOrderStatusFromPrintful(status?: string): {
   orderStatus?: OrderStatus;
   markShipped?: boolean;
@@ -602,9 +760,20 @@ export function mapOrderStatusFromPrintful(status?: string): {
 }
 
 /**
- * Get Printful order status
- * @param printfulOrderId - Printful order ID
- * @returns Order status information
+ * @function getPrintfulOrderStatus
+ * @description Fetches current order status from Printful API v2.
+ *
+ * @param {string} printfulOrderId - Printful order ID
+ *
+ * @returns {Promise<any>} Printful order object with status and shipment data
+ *
+ * @throws {Error} When Printful API request fails
+ *
+ * @example
+ * const status = await getPrintfulOrderStatus('12345');
+ * console.log(status.status); // 'shipped'
+ *
+ * @async
  */
 export async function getPrintfulOrderStatus(printfulOrderId: string): Promise<any> {
   try {
@@ -617,7 +786,19 @@ export async function getPrintfulOrderStatus(printfulOrderId: string): Promise<a
 }
 
 /**
- * Sync all orders that have a Printful ID to ensure local status is current
+ * @function syncAllPrintfulOrders
+ * @description Synchronizes all orders with Printful IDs to ensure local database status matches Printful's current state. Used for admin sync operations and status reconciliation.
+ *
+ * @returns {Promise<Object>} Sync operation results
+ * @returns {number} total - Total number of orders synced
+ * @returns {number} updated - Number of orders that had status changes
+ * @returns {Array} results - Detailed results for each order including status transitions
+ *
+ * @example
+ * const result = await syncAllPrintfulOrders();
+ * console.log(`Synced ${result.total} orders, updated ${result.updated}`);
+ *
+ * @async
  */
 export async function syncAllPrintfulOrders(): Promise<{
   total: number;
@@ -719,9 +900,24 @@ export async function syncAllPrintfulOrders(): Promise<{
 }
 
 /**
- * Confirm Printful order for fulfillment
- * @param printfulOrderId - Printful order ID
- * @returns Confirmation result
+ * @function confirmPrintfulOrder
+ * @description Confirms a draft Printful order for production and fulfillment. Must be called after order creation and cost calculation completion.
+ *
+ * @param {string} printfulOrderId - Printful order ID to confirm
+ *
+ * @returns {Promise<{success: boolean, error?: string}>} Confirmation result
+ * @returns {boolean} success - Whether confirmation succeeded
+ * @returns {string} [error] - Error message if failed
+ *
+ * @throws {Error} When confirmation API call fails
+ *
+ * @example
+ * const result = await confirmPrintfulOrder('12345');
+ * if (!result.success) {
+ *   console.error('Confirmation failed:', result.error);
+ * }
+ *
+ * @async
  */
 export async function confirmPrintfulOrder(
   printfulOrderId: string
@@ -752,8 +948,26 @@ export async function confirmPrintfulOrder(
 }
 
 /**
- * Webhook handler for Printful status updates
- * @param webhookData - Webhook payload from Printful
+ * @function handlePrintfulWebhook
+ * @description Processes Printful webhook events for order status updates. Updates local order status, tracking information, and sends customer notification emails when appropriate.
+ *
+ * @param {any} webhookData - Webhook payload from Printful
+ * @param {string} webhookData.type - Event type (e.g., 'order_updated')
+ * @param {Object} webhookData.data - Event data containing order information
+ * @param {Object} webhookData.data.order - Printful order object
+ * @param {Array} [webhookData.data.order.shipments] - Shipment tracking data
+ *
+ * @returns {Promise<void>} Resolves when webhook is processed
+ *
+ * @throws {Error} When webhook processing fails
+ *
+ * @example
+ * await handlePrintfulWebhook({
+ *   type: 'order_updated',
+ *   data: { order: { id: 123, status: 'shipped' } }
+ * });
+ *
+ * @async
  */
 export async function handlePrintfulWebhook(webhookData: any): Promise<void> {
   try {

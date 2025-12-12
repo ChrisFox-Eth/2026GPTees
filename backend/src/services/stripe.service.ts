@@ -1,6 +1,6 @@
 /**
  * @module services/stripe
- * @description Stripe payment service
+ * @description Stripe payment service for checkout sessions, payment processing, webhooks, and gift code purchases. Handles order creation, payment confirmation, promo code validation, and automatic design approval after payment.
  * @since 2025-11-21
  */
 
@@ -17,11 +17,18 @@ import { sendPromptGuide } from './email.service.js';
 import { sendAnalyticsEvent } from './analytics.service.js';
 import { sendOrderConfirmation, sendGiftCodeEmail } from './email.service.js';
 
+/**
+ * Stripe client instance configured with API key and version
+ */
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
   // Use Stripe's default version to avoid invalid pin failures; set STRIPE_API_VERSION env if you need a specific one.
   apiVersion: process.env.STRIPE_API_VERSION as Stripe.LatestApiVersion | undefined,
 });
 
+/**
+ * Checkout item interface
+ * @interface CheckoutItem
+ */
 interface CheckoutItem {
   productId: string;
   size: string;
@@ -30,6 +37,10 @@ interface CheckoutItem {
   quantity: number;
 }
 
+/**
+ * Shipping address interface
+ * @interface ShippingAddress
+ */
 interface ShippingAddress {
   name: string;
   address1: string;
@@ -41,6 +52,10 @@ interface ShippingAddress {
   phone?: string;
 }
 
+/**
+ * Checkout session data interface
+ * @interface CheckoutSessionData
+ */
 interface CheckoutSessionData {
   userId: string;
   items?: CheckoutItem[];
@@ -50,6 +65,10 @@ interface CheckoutSessionData {
   code?: string;
 }
 
+/**
+ * Gift code session data interface
+ * @interface GiftCodeSessionData
+ */
 interface GiftCodeSessionData {
   userId: string;
   tier: TierType;
@@ -59,9 +78,39 @@ interface GiftCodeSessionData {
 }
 
 /**
- * Create Stripe checkout session
- * @param {CheckoutSessionData & { orderId?: string }} data - Checkout data
- * @returns {Promise<{sessionId: string, url: string, orderId: string}>} Checkout session + order id
+ * @function createCheckoutSession
+ * @description Creates Stripe checkout session for product purchase. Handles order creation/resumption, promo code validation, free order processing, and variant mapping. Supports $0 orders by bypassing Stripe and marking as paid immediately.
+ *
+ * @param {CheckoutSessionData & {orderId?: string}} data - Checkout session data
+ * @param {string} data.userId - User ID for the order
+ * @param {CheckoutItem[]} [data.items] - Cart items (required for new orders)
+ * @param {ShippingAddress} data.shippingAddress - Shipping address
+ * @param {string} data.successUrl - Success redirect URL
+ * @param {string} data.cancelUrl - Cancel redirect URL
+ * @param {string} [data.code] - Optional promo/gift code
+ * @param {string} [data.orderId] - Optional existing order ID to resume
+ *
+ * @returns {Promise<{sessionId: string, url: string, orderId: string, freeOrder?: boolean}>} Checkout session details
+ * @returns {string} sessionId - Stripe session ID (empty for free orders)
+ * @returns {string} url - Stripe checkout URL (empty for free orders)
+ * @returns {string} orderId - Internal order ID
+ * @returns {boolean} [freeOrder] - True if order was $0 and processed without Stripe
+ *
+ * @throws {AppError} When order not found, already processed, or validation fails
+ * @throws {AppError} When promo code is invalid or exhausted
+ * @throws {AppError} When product/variant is unavailable
+ *
+ * @example
+ * const session = await createCheckoutSession({
+ *   userId: 'user-123',
+ *   items: [{ productId: 'prod-1', size: 'L', color: 'Black', tier: 'LIMITLESS', quantity: 1 }],
+ *   shippingAddress: { name: 'John Doe', address1: '123 Main St', ... },
+ *   successUrl: 'https://example.com/success',
+ *   cancelUrl: 'https://example.com/cancel',
+ *   code: 'GIFT123'
+ * });
+ *
+ * @async
  */
 export async function createCheckoutSession(
   data: CheckoutSessionData & { orderId?: string }
@@ -532,7 +581,30 @@ export async function createCheckoutSession(
 }
 
 /**
- * Create Stripe checkout session for purchasing a gift code.
+ * @function createGiftCodeSession
+ * @description Creates Stripe checkout session for purchasing a gift code. Gift codes can be redeemed for free products up to the usage limit.
+ *
+ * @param {GiftCodeSessionData} data - Gift code session data
+ * @param {string} data.userId - User ID purchasing the gift code
+ * @param {TierType} data.tier - Product tier the gift code is valid for
+ * @param {number} [data.usageLimit=1] - Maximum number of times code can be used
+ * @param {string} data.successUrl - Success redirect URL
+ * @param {string} data.cancelUrl - Cancel redirect URL
+ *
+ * @returns {Promise<{sessionId: string, url: string}>} Stripe checkout session
+ * @returns {string} sessionId - Stripe session ID
+ * @returns {string} url - Stripe checkout URL
+ *
+ * @example
+ * const session = await createGiftCodeSession({
+ *   userId: 'user-123',
+ *   tier: 'LIMITLESS',
+ *   usageLimit: 1,
+ *   successUrl: 'https://example.com/success',
+ *   cancelUrl: 'https://example.com/cancel'
+ * });
+ *
+ * @async
  */
 export async function createGiftCodeSession(
   data: GiftCodeSessionData
@@ -572,7 +644,23 @@ export async function createGiftCodeSession(
 }
 
 /**
- * Handle successful gift code purchase webhook.
+ * @function handleGiftCodePurchase
+ * @description Processes successful gift code purchase from Stripe webhook. Creates promo code in database and sends email with code to purchaser. Ensures idempotency for duplicate webhook calls.
+ *
+ * @param {Stripe.Checkout.Session} session - Stripe checkout session from webhook
+ * @param {string} session.metadata.giftCodeType - Tier the gift code is valid for
+ * @param {string} session.metadata.giftCodeUses - Usage limit for the code
+ * @param {string} [session.metadata.userId] - User ID who purchased the code
+ *
+ * @returns {Promise<void>} Resolves when code is created and email sent
+ *
+ * @throws {Error} When payment not completed or metadata missing/invalid
+ * @throws {Error} When code creation fails (non-duplicate errors)
+ *
+ * @example
+ * await handleGiftCodePurchase(stripeSession);
+ *
+ * @async
  */
 export async function handleGiftCodePurchase(session: Stripe.Checkout.Session): Promise<void> {
   if (session.payment_status !== 'paid') {
@@ -639,8 +727,22 @@ export async function handleGiftCodePurchase(session: Stripe.Checkout.Session): 
 }
 
 /**
- * Handle successful payment
- * @param {string} sessionId - Stripe session ID
+ * @function handleSuccessfulPayment
+ * @description Processes successful payment from Stripe webhook. Marks order as paid, creates payment record, auto-approves latest design, increments promo usage, sends confirmation emails, and tracks analytics.
+ *
+ * @param {string} sessionId - Stripe checkout session ID
+ *
+ * @returns {Promise<void>} Resolves when payment is processed
+ *
+ * @throws {Error} When payment not completed
+ * @throws {Error} When order ID missing from session metadata
+ * @throws {Error} When order not found
+ * @throws {Error} When session/order validation fails (user mismatch, amount mismatch, etc.)
+ *
+ * @example
+ * await handleSuccessfulPayment('cs_test_123abc');
+ *
+ * @async
  */
 export async function handleSuccessfulPayment(sessionId: string): Promise<void> {
   const session = await stripe.checkout.sessions.retrieve(sessionId);
@@ -750,6 +852,16 @@ export async function handleSuccessfulPayment(sessionId: string): Promise<void> 
   });
 }
 
+/**
+ * @function autoApproveLatestDesign
+ * @description Automatically approves the latest completed design after payment and submits order to Printful. Prevents duplicate submissions and ensures only one design is approved at a time.
+ *
+ * @param {string} orderId - Order ID to auto-approve design for
+ *
+ * @returns {Promise<void>} Resolves when design approved and order submitted (or skipped)
+ *
+ * @async
+ */
 async function autoApproveLatestDesign(orderId: string): Promise<void> {
   const order = await prisma.order.findUnique({
     where: { id: orderId },
@@ -817,10 +929,25 @@ async function autoApproveLatestDesign(orderId: string): Promise<void> {
   }
 }
 
-
 /**
- * Manually confirm a checkout session and mark the order as paid
- * Useful when the Stripe webhook didn't fire
+ * @function confirmCheckoutSession
+ * @description Manually confirms checkout session and processes payment. Useful when Stripe webhook didn't fire or for manual order confirmation. Validates session ownership before processing.
+ *
+ * @param {string} sessionId - Stripe checkout session ID
+ * @param {string} orderId - Internal order ID
+ * @param {string} [requesterId] - User ID making the request (for authorization)
+ *
+ * @returns {Promise<void>} Resolves when session confirmed and payment processed
+ *
+ * @throws {Error} When order not found
+ * @throws {Error} When requester is not order owner
+ * @throws {Error} When session doesn't belong to order
+ * @throws {Error} When session/order validation fails
+ *
+ * @example
+ * await confirmCheckoutSession('cs_test_123', 'order-456', 'user-789');
+ *
+ * @async
  */
 export async function confirmCheckoutSession(
   sessionId: string,
@@ -857,10 +984,19 @@ export async function confirmCheckoutSession(
 }
 
 /**
- * Construct Stripe webhook event
- * @param {string | Buffer} payload - Webhook payload
- * @param {string} signature - Webhook signature
- * @returns {Stripe.Event} Stripe event
+ * @function constructWebhookEvent
+ * @description Constructs and verifies Stripe webhook event using signature. Ensures webhook authenticity and prevents replay attacks.
+ *
+ * @param {string | Buffer} payload - Raw webhook payload
+ * @param {string} signature - Stripe signature from headers
+ *
+ * @returns {Stripe.Event} Verified Stripe event
+ *
+ * @throws {Error} When STRIPE_WEBHOOK_SECRET not configured
+ * @throws {Error} When signature verification fails
+ *
+ * @example
+ * const event = constructWebhookEvent(req.body, req.headers['stripe-signature']);
  */
 export function constructWebhookEvent(
   payload: string | Buffer,
@@ -875,7 +1011,17 @@ export function constructWebhookEvent(
 }
 
 /**
- * Atomically increment promo usage, enforcing usageLimit when present.
+ * @function incrementPromoUsage
+ * @description Atomically increments promo code usage count with transaction safety. Enforces usage limit if present.
+ *
+ * @param {string} promoCodeId - Promo code ID to increment
+ *
+ * @returns {Promise<void>} Resolves when usage incremented
+ *
+ * @throws {Error} When promo code not found
+ * @throws {Error} When usage limit exceeded
+ *
+ * @async
  */
 async function incrementPromoUsage(promoCodeId: string): Promise<void> {
   await prisma.$transaction(async (tx: any) => {

@@ -1,13 +1,14 @@
 /**
  * @module App
- * @description Root application component for GPTees
+ * @description Root application component for GPTees. Configures routing, theme management,
+ * error boundaries, scroll behavior, and analytics tracking. Wraps all pages in a consistent
+ * layout with Header and Footer.
  * @since 2025-11-21
  */
 
 import { useState, useEffect } from 'react';
 import { Routes, Route, useLocation } from 'react-router-dom';
-import Header from '@components/Header/Header';
-import { Footer } from '@components/Footer';
+import { Header, Footer } from '@components/sections';
 import { ErrorBoundary } from '@components/ErrorBoundary';
 import { trackEvent, trackPageView } from '@utils/analytics';
 import HomePage from './pages/HomePage';
@@ -29,8 +30,13 @@ import AdminPromoPage from './pages/AdminPromoPage';
 import AdminHelpPage from './pages/AdminHelpPage';
 import NotFoundPage from './pages/NotFoundPage';
 import ProtectedRoute from './components/ProtectedRoute';
-import './App.css';
 
+/**
+ * @function PageViewTracker
+ * @description Invisible component that tracks page view analytics on route changes.
+ * Fires a page view event whenever the pathname or search query changes.
+ * @returns {JSX.Element | null} Returns null (renders nothing)
+ */
 function PageViewTracker(): JSX.Element | null {
   const location = useLocation();
 
@@ -46,6 +52,12 @@ function PageViewTracker(): JSX.Element | null {
   return null;
 }
 
+/**
+ * @function ScrollToTop
+ * @description Invisible component that scrolls the window to the top on route changes.
+ * Enables smooth scrolling behavior for better UX when navigating between pages.
+ * @returns {JSX.Element | null} Returns null (renders nothing)
+ */
 function ScrollToTop(): JSX.Element | null {
   const { pathname } = useLocation();
   useEffect(() => {
@@ -54,6 +66,12 @@ function ScrollToTop(): JSX.Element | null {
   return null;
 }
 
+/**
+ * @function ScrollToHash
+ * @description Invisible component that scrolls to elements targeted by URL hash fragments.
+ * When the URL contains a hash (e.g., /#quickstart), smoothly scrolls to the matching element.
+ * @returns {JSX.Element | null} Returns null (renders nothing)
+ */
 function ScrollToHash(): JSX.Element | null {
   const location = useLocation();
 
@@ -69,7 +87,25 @@ function ScrollToHash(): JSX.Element | null {
   return null;
 }
 
+/**
+ * @component App
+ * @description Root application component. Manages theme state (dark/light mode),
+ * configures React Router routes, and provides the application layout structure.
+ * All routes are wrapped in an ErrorBoundary with page view tracking.
+ *
+ * @returns {JSX.Element} The complete application UI with routing
+ *
+ * @example
+ * // Mounted in main.tsx within ClerkProvider and BrowserRouter
+ * <App />
+ */
 export default function App(): JSX.Element {
+  /**
+   * @function getInitialTheme
+   * @description Retrieves initial theme preference from localStorage.
+   * Defaults to dark theme if no preference is saved or on server-side.
+   * @returns {boolean} True for dark mode, false for light mode
+   */
   const getInitialTheme = () => {
     if (typeof window === 'undefined') {
       return true;
@@ -80,11 +116,14 @@ export default function App(): JSX.Element {
     return true; // default to dark for first load
   };
 
+  /** @type {boolean} Current dark mode state */
   const [isDark, setIsDark] = useState<boolean>(getInitialTheme);
+  /** @type {boolean} Whether theme initialization is complete */
   const [, setIsInitialized] = useState(false);
 
   /**
-   * Initialize theme from localStorage with dark as the default for first load
+   * @description Initialize theme from localStorage with dark as the default for first load.
+   * Applies the theme to the document and marks initialization complete.
    */
   useEffect(() => {
     const savedTheme = localStorage.getItem('theme');
@@ -96,7 +135,10 @@ export default function App(): JSX.Element {
   }, []);
 
   /**
-   * Apply theme to document root element
+   * @function applyTheme
+   * @description Applies the theme to the document root element by adding/removing
+   * the 'dark' class on the HTML element for Tailwind CSS dark mode.
+   * @param {boolean} isDarkMode - Whether to apply dark mode
    */
   const applyTheme = (isDarkMode: boolean) => {
     const html = document.documentElement;
@@ -108,7 +150,9 @@ export default function App(): JSX.Element {
   };
 
   /**
-   * Toggle between light and dark themes
+   * @function toggleTheme
+   * @description Toggles between light and dark themes. Persists the choice to
+   * localStorage and tracks the theme change event for analytics.
    */
   const toggleTheme = () => {
     const newIsDark = !isDark;
@@ -123,7 +167,7 @@ export default function App(): JSX.Element {
       <PageViewTracker />
       <ScrollToTop />
       <ScrollToHash />
-      <div className="min-h-screen bg-white dark:bg-gray-900 transition-colors duration-200 flex flex-col overflow-x-hidden pt-8 ">
+      <div className="flex min-h-screen flex-col overflow-x-hidden bg-white pt-8 transition-colors duration-200 dark:bg-gray-900">
         <Header isDark={isDark} onToggleTheme={toggleTheme} />
         <div className="flex-1">
           <Routes>

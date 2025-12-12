@@ -1,5 +1,15 @@
+/**
+ * @module types/prisma
+ * @description Minimal Prisma type declarations for build-time compatibility
+ * Provides type stubs when Prisma client is not yet generated
+ * @since 2025-11-21
+ */
+
 declare module '@prisma/client' {
-  // Minimal Prisma types/values for build-time only.
+  /**
+   * @class PrismaClient
+   * @description Minimal Prisma client stub for build-time
+   */
   export class PrismaClient {
     constructor(options?: any);
     [key: string]: any;
@@ -19,6 +29,11 @@ declare module '@prisma/client' {
     fulfillmentEvent: any;
   }
   export type Prisma = any;
+
+  /**
+   * @enum OrderStatus
+   * @description Order status enumeration
+   */
   export const OrderStatus: {
     PENDING_PAYMENT: 'PENDING_PAYMENT';
     PAID: 'PAID';
@@ -30,6 +45,11 @@ declare module '@prisma/client' {
     CANCELLED: 'CANCELLED';
     REFUNDED: 'REFUNDED';
   };
+
+  /**
+   * @type OrderStatus
+   * @description Order status type union
+   */
   export type OrderStatus =
     | 'PENDING_PAYMENT'
     | 'PAID'
@@ -40,5 +60,10 @@ declare module '@prisma/client' {
     | 'DELIVERED'
     | 'CANCELLED'
     | 'REFUNDED';
+
+  /**
+   * @type PromoCode
+   * @description Promo code type stub
+   */
   export type PromoCode = any;
 }

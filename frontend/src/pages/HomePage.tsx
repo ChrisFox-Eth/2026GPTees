@@ -4,17 +4,27 @@
  * @since 2025-11-21
  */
 
-import Hero from '@components/Hero/Hero';
-import { HowItWorks } from '@components/HowItWorks';
-import { Features } from '@components/Features';
-import { PricingSection } from '@components/PricingSection';
-import { CallToAction } from '@components/CallToAction';
-import { Quickstart } from '@components/Quickstart';
-import SocialProofStrip from '@components/SocialProofStrip/SocialProofStrip';
-import { ExamplesGallery } from '@components/ExamplesGallery';
-import { StickyCtaBar } from '@components/StickyCtaBar/StickyCtaBar';
+import Hero from '@components/sections/Hero/Hero';
+import { HowItWorks } from '@components/sections/HowItWorks';
+import { Features } from '@components/sections/Features';
+import { PricingSection } from '@components/sections/PricingSection';
+import { CallToAction } from '@components/sections/CallToAction';
+import { Quickstart } from '@components/sections/Quickstart';
+import SocialProofStrip from '@components/sections/SocialProofStrip/SocialProofStrip';
+import { ExamplesGallery } from '@components/sections/ExamplesGallery';
+import { StickyCtaBar } from '@components/sections/StickyCtaBar/StickyCtaBar';
 import { Link } from 'react-router-dom';
 
+/**
+ * @component
+ * @description Home page for GPTees featuring hero section, social proof, quickstart, how it works, examples gallery, features, pricing, and call-to-action sections.
+ *
+ * @returns {JSX.Element} The rendered home page
+ *
+ * @example
+ * // Used in App.tsx routing
+ * <Route path="/" element={<HomePage />} />
+ */
 export default function HomePage(): JSX.Element {
   return (
     <main>

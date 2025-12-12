@@ -12,10 +12,15 @@ import { handlePrintfulWebhook as processPrintfulWebhook } from '../services/pri
 import crypto from 'crypto';
 
 /**
- * Handle Clerk webhooks
- * POST /api/webhooks/clerk
- * @param {Request} req - Express request
+ * @route POST /api/webhooks/clerk
+ * @description Handles Clerk webhook events (user.created, user.updated)
+ * @access Public (webhook signature verified)
+ *
+ * @param {Request} req - Express request (raw body with Svix headers)
  * @param {Response} res - Express response
+ *
+ * @returns {Object} Success message
+ * @throws {400} Webhook verification failed
  */
 export const handleClerkWebhook = catchAsync(async (req: Request, res: Response) => {
   try {
@@ -52,10 +57,16 @@ export const handleClerkWebhook = catchAsync(async (req: Request, res: Response)
 });
 
 /**
- * Handle Stripe webhooks
- * POST /api/webhooks/stripe
- * @param {Request} req - Express request
+ * @route POST /api/webhooks/stripe
+ * @description Handles Stripe webhook events (checkout.session.completed, payment intents)
+ * @access Public (webhook signature verified)
+ *
+ * @param {Request} req - Express request (raw body with Stripe signature)
  * @param {Response} res - Express response
+ *
+ * @returns {Object} Success message
+ * @throws {400} Missing Stripe signature
+ * @throws {400} Webhook processing failed
  */
 export const handleStripeWebhook = catchAsync(async (req: Request, res: Response) => {
   try {
@@ -118,10 +129,16 @@ export const handleStripeWebhook = catchAsync(async (req: Request, res: Response
 });
 
 /**
- * Handle Printful webhooks
- * POST /api/webhooks/printful
- * @param {Request} req - Express request
+ * @route POST /api/webhooks/printful
+ * @description Handles Printful webhook events for order fulfillment updates
+ * @access Public (webhook signature verified if secret configured)
+ *
+ * @param {Request} req - Express request (raw body with optional X-Printful-Signature)
  * @param {Response} res - Express response
+ *
+ * @returns {Object} Success message
+ * @throws {400} Invalid Printful webhook signature
+ * @throws {400} Webhook processing failed
  */
 export const handlePrintfulWebhook = catchAsync(async (req: Request, res: Response) => {
   try {

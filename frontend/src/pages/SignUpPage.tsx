@@ -8,7 +8,7 @@ import { SignUp } from '@clerk/clerk-react';
 
 export default function SignUpPage(): JSX.Element {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4 py-12 sm:px-6 lg:px-8 dark:bg-gray-900">
       <SignUp
         path="/sign-up"
         routing="path"
@@ -16,7 +16,7 @@ export default function SignUpPage(): JSX.Element {
         fallbackRedirectUrl="/#quickstart"
         appearance={{
           elements: {
-            rootBox: "w-full max-w-md",
+            rootBox: 'w-full max-w-md',
           },
         }}
       />

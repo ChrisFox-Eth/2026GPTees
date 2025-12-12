@@ -1,0 +1,232 @@
+/**
+ * @module components/sections/Header
+ * @description Application header component with authentication, navigation, and mobile menu
+ * @since 2025-11-21
+ */
+
+/**
+ * @component
+ * @description Renders the fixed site header with logo, navigation links, authentication controls,
+ * and responsive mobile menu. Integrates with Clerk for user authentication, displays user info when
+ * signed in, and provides navigation to Start, Gallery, Gift, and My Designs sections. Includes theme
+ * support via isDark prop.
+ *
+ * @param {HeaderProps} props - Component props
+ * @param {boolean} props.isDark - Current theme state (dark mode enabled)
+ * @param {() => void} props.onToggleTheme - Theme toggle callback (currently unused/commented out)
+ *
+ * @returns {JSX.Element} Fixed header with navigation and mobile menu overlay
+ *
+ * @example
+ * <Header isDark={false} onToggleTheme={() => {}} />
+ */
+
+import { useState } from 'react';
+import { Link } from 'react-router-dom';
+import { useUser, useClerk, SignedIn, SignedOut } from '@clerk/clerk-react';
+import { HeaderProps } from './Header.types';
+import { Button } from '@components/ui/Button';
+import GPTeesIconDarkMode from '../../../assets/GPTeesIconDarkMode.png';
+import GPTeesIconLightMode from '../../../assets/GPTeesIconLightMode.png';
+
+export default function Header({ isDark }: HeaderProps): JSX.Element {
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { user } = useUser();
+  const { signOut } = useClerk();
+
+  const handleSignOut = () => {
+    signOut();
+    setIsMobileMenuOpen(false);
+  };
+
+  const toggleMobileMenu = () => {
+    setIsMobileMenuOpen(!isMobileMenuOpen);
+  };
+
+  const closeMobileMenu = () => {
+    setIsMobileMenuOpen(false);
+  };
+
+  return (
+    <>
+      <header className="fixed inset-x-0 top-0 z-50 w-full border-b border-gray-200 bg-white/95 shadow-sm backdrop-blur transition-colors duration-200 dark:border-gray-700 dark:bg-gray-900/90">
+        <div className="container-max flex items-center justify-between gap-2 px-4 py-2">
+          {/* Logo */}
+          <Link
+            to="/"
+            className="flex shrink-0 items-center gap-2 transition-opacity hover:opacity-80"
+          >
+            <div className="flex h-7 w-7 items-center justify-center rounded-md">
+              {isDark ? (
+                <img src={GPTeesIconDarkMode} alt="GPTees Logo" />
+              ) : (
+                <img src={GPTeesIconLightMode} alt="GPTees Logo" />
+              )}
+            </div>
+            <h1 className="text-lg font-bold text-gray-900 sm:text-xl dark:text-white">GPTees</h1>
+          </Link>
+
+          {/* Desktop Navigation */}
+          <div className="hidden items-center gap-3 md:flex lg:gap-4">
+            <nav className="flex items-center gap-4">
+              <Link
+                to="/#quickstart"
+                className="hover:text-primary-600 dark:hover:text-primary-400 text-gray-700 transition-colors dark:text-gray-300"
+              >
+                Start
+              </Link>
+              <Link
+                to="/#gallery"
+                className="hover:text-primary-600 dark:hover:text-primary-400 text-gray-700 transition-colors dark:text-gray-300"
+              >
+                Gallery
+              </Link>
+              <Link
+                to="/gift"
+                className="hover:text-primary-600 dark:hover:text-primary-400 text-gray-700 transition-colors dark:text-gray-300"
+              >
+                Gift a GPTee
+              </Link>
+            </nav>
+
+            <SignedOut>
+              <Link to="/auth">
+                <Button variant="primary" size="sm">
+                  Sign In
+                </Button>
+              </Link>
+            </SignedOut>
+
+            <SignedIn>
+              <Link
+                to="/account"
+                className="hover:text-primary-600 dark:hover:text-primary-400 hidden text-gray-700 transition-colors lg:block dark:text-gray-300"
+              >
+                My Designs
+              </Link>
+              <div className="flex items-center gap-2">
+                <span className="hidden text-sm text-gray-700 lg:inline dark:text-gray-300">
+                  {user?.firstName || user?.emailAddresses[0]?.emailAddress}
+                </span>
+                <Button variant="secondary" size="sm" onClick={handleSignOut}>
+                  Sign Out
+                </Button>
+              </div>
+            </SignedIn>
+            {/* 
+            <Button
+              style={{ display: 'none' }}
+              variant="secondary"
+              size="sm"
+              onClick={onToggleTheme}
+              ariaLabel={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
+            >
+              {isDark ? 'Light' : 'Dark'}
+            </Button> */}
+          </div>
+
+          {/* Mobile Controls */}
+          <div className="flex items-center gap-2 md:hidden">
+            <Button
+              variant="primary"
+              size="sm"
+              className="px-3 py-1.5 text-sm"
+              onClick={toggleMobileMenu}
+              ariaLabel="Toggle menu"
+            >
+              {isMobileMenuOpen ? 'Close' : 'Menu'}
+            </Button>
+          </div>
+        </div>
+      </header>
+
+      {/* Mobile Menu Overlay */}
+      {isMobileMenuOpen && (
+        <>
+          <div
+            className="bg-opacity-50 fixed inset-0 z-40 bg-black md:hidden"
+            onClick={closeMobileMenu}
+          />
+          <div className="fixed top-[52px] right-0 bottom-0 z-50 w-full transform bg-white shadow-lg transition-transform duration-300 md:hidden dark:bg-gray-800">
+            <nav className="flex h-full flex-col gap-4 p-4">
+              <Link
+                to="/"
+                onClick={closeMobileMenu}
+                className="hover:text-primary-600 dark:hover:text-primary-400 rounded-md px-3 py-2 text-gray-700 transition-colors hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700"
+              >
+                Home
+              </Link>
+              <Link
+                to="/#quickstart"
+                onClick={closeMobileMenu}
+                className="hover:text-primary-600 dark:hover:text-primary-400 rounded-md px-3 py-2 text-gray-700 transition-colors hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700"
+              >
+                Start
+              </Link>
+              <Link
+                to="/#gallery"
+                onClick={closeMobileMenu}
+                className="hover:text-primary-600 dark:hover:text-primary-400 rounded-md px-3 py-2 text-gray-700 transition-colors hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700"
+              >
+                Gallery
+              </Link>
+              <Link
+                to="/gift"
+                onClick={closeMobileMenu}
+                className="hover:text-primary-600 dark:hover:text-primary-400 rounded-md px-3 py-2 text-gray-700 transition-colors hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700"
+              >
+                Gift a GPTee
+              </Link>
+
+              <div className="my-2 border-t border-gray-200 dark:border-gray-700" />
+
+              <SignedOut>
+                <Link to="/auth" onClick={closeMobileMenu}>
+                  <Button variant="primary" size="sm" className="w-full">
+                    Sign In / Sign Up
+                  </Button>
+                </Link>
+              </SignedOut>
+
+              <SignedIn>
+                <Link
+                  to="/account"
+                  onClick={closeMobileMenu}
+                  className="hover:text-primary-600 dark:hover:text-primary-400 rounded-md px-3 py-2 text-gray-700 transition-colors hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700"
+                >
+                  My Designs
+                </Link>
+                <div className="flex flex-col gap-2">
+                  <span className="px-3 py-2 text-sm text-gray-700 dark:text-gray-300">
+                    {user?.firstName || user?.emailAddresses[0]?.emailAddress}
+                  </span>
+                  <Button variant="secondary" size="sm" onClick={handleSignOut} className="w-full">
+                    Sign Out
+                  </Button>
+                </div>
+              </SignedIn>
+
+              <div className="my-2 border-t border-gray-200 dark:border-gray-700" />
+
+              {/* <Button
+                variant="secondary"
+                size="sm"
+                onClick={() => {
+                  onToggleTheme();
+                  closeMobileMenu();
+                }}
+                className="w-full"
+              >
+                {isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+              </Button> */}
+
+              <div className="mt-auto border-t border-gray-200 pt-3 text-xs text-gray-500 dark:border-gray-700 dark:text-gray-400">
+                <div className="flex items-center justify-between"></div>
+              </div>
+            </nav>
+          </div>
+        </>
+      )}
+    </>
+  );
+}

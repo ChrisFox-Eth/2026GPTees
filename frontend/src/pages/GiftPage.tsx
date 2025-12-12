@@ -1,22 +1,32 @@
 /**
  * @module pages/GiftPage
  * @description Gift code purchase flow
+ * @since 2025-11-21
  */
 
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@clerk/clerk-react';
-import { Button } from '@components/Button';
+import { Button } from '@components/ui/Button';
 import { apiPost } from '@utils/api';
 import { trackEvent } from '@utils/analytics';
+import type { GiftTierOption } from '../types/promo';
 
-type TierOption = 'PREMIUM';
-
+/**
+ * @component
+ * @description Gift code purchase page allowing users to buy redeemable codes for Limitless GPTees. Redirects to Stripe checkout and handles authentication.
+ *
+ * @returns {JSX.Element} The rendered gift purchase page
+ *
+ * @example
+ * // Used in App.tsx routing
+ * <Route path="/gift" element={<GiftPage />} />
+ */
 export default function GiftPage(): JSX.Element {
   const { isSignedIn, isLoaded, getToken } = useAuth();
   const navigate = useNavigate();
-  const [tier] = useState<TierOption>('PREMIUM');
-  const [usageLimit, ] = useState(1);
+  const [tier] = useState<GiftTierOption>('PREMIUM');
+  const [usageLimit] = useState(1);
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -36,11 +46,7 @@ export default function GiftPage(): JSX.Element {
         return;
       }
       trackEvent('gift.purchase.start', { tier, usage_limit: usageLimit });
-      const res = await apiPost(
-        '/api/gift-codes/purchase',
-        { tier, usageLimit },
-        token
-      );
+      const res = await apiPost('/api/gift-codes/purchase', { tier, usageLimit }, token);
       const url = res?.data?.url;
       if (url) {
         window.location.href = url;
@@ -57,21 +63,26 @@ export default function GiftPage(): JSX.Element {
 
   return (
     <div className="container-max py-8">
-      <div className="max-w-3xl mx-auto bg-white dark:bg-gray-800 rounded-lg shadow p-6 space-y-6">
+      <div className="mx-auto max-w-3xl space-y-6 rounded-lg bg-white p-6 shadow dark:bg-gray-800">
         <div className="space-y-2">
-          <p className="text-sm text-primary-700 dark:text-primary-200 font-semibold uppercase tracking-wide">
+          <p className="text-primary-700 dark:text-primary-200 text-sm font-semibold tracking-wide uppercase">
             Gifting
           </p>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Gift a one-of-one GPTee</h1>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+            Gift a one-of-one GPTee
+          </h1>
           <p className="text-gray-600 dark:text-gray-400">
-            Send someone a redeemable code so they can design their own tee. Limitless includes unlimited redraws until they love it.
+            Send someone a redeemable code so they can design their own tee. Limitless includes
+            unlimited redraws until they love it.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div className="p-4 border rounded-lg text-left border-primary-500 bg-primary-50 dark:bg-primary-900/20">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div className="border-primary-500 bg-primary-50 dark:bg-primary-900/20 rounded-lg border p-4 text-left">
             <p className="font-semibold text-gray-900 dark:text-white">Limitless Tee</p>
-            <p className="text-sm text-gray-600 dark:text-gray-400">Unlimited redraws until they say &ldquo;perfect&rdquo;</p>
+            <p className="text-sm text-gray-600 dark:text-gray-400">
+              Unlimited redraws until they say &ldquo;perfect&rdquo;
+            </p>
           </div>
         </div>
 
@@ -92,12 +103,12 @@ export default function GiftPage(): JSX.Element {
         </div> */}
 
         {error && (
-          <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded p-3 text-sm text-red-700 dark:text-red-300">
+          <div className="rounded border border-red-200 bg-red-50 p-3 text-sm text-red-700 dark:border-red-800 dark:bg-red-900/20 dark:text-red-300">
             {error}
           </div>
         )}
 
-        <div className="flex flex-col sm:flex-row gap-3">
+        <div className="flex flex-col gap-3 sm:flex-row">
           <Button variant="primary" onClick={handlePurchase} disabled={isSubmitting}>
             {isSubmitting ? 'Starting checkout...' : 'Gift this GPTee'}
           </Button>
@@ -106,12 +117,14 @@ export default function GiftPage(): JSX.Element {
           </Button>
         </div>
 
-        <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-4 text-sm text-gray-700 dark:text-gray-300">
-          <p className="font-semibold mb-1">How gifting works</p>
-          <ol className="list-decimal list-inside space-y-1">
+        <div className="rounded-lg bg-gray-50 p-4 text-sm text-gray-700 dark:bg-gray-900 dark:text-gray-300">
+          <p className="mb-1 font-semibold">How gifting works</p>
+          <ol className="list-inside list-decimal space-y-1">
             <li>You check out now via Stripe.</li>
             <li>We email you the gift code instantly.</li>
-            <li>Your friend redeems it for a Limitless tee and designs to their heart&apos;s content.</li>
+            <li>
+              Your friend redeems it for a Limitless tee and designs to their heart&apos;s content.
+            </li>
           </ol>
         </div>
       </div>

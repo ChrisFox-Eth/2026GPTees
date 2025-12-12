@@ -1,56 +1,17 @@
 /**
  * @module pages/AccountPage
  * @description User account page with design-first focus and past orders
+ * @since 2025-11-21
  */
 
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth, useUser } from '@clerk/clerk-react';
-import { Button } from '@components/Button';
+import { Button } from '@components/ui/Button';
 import ProtectedRoute from '../components/ProtectedRoute';
 import { apiGet, apiPost } from '../utils/api';
 import { trackEvent } from '@utils/analytics';
-
-interface OrderItem {
-  id: string;
-  size: string;
-  color: string;
-  quantity: number;
-  unitPrice: number;
-  product: {
-    id?: string;
-    name: string;
-    imageUrl?: string | null;
-  };
-}
-
-interface DesignPreview {
-  id: string;
-  imageUrl: string;
-  prompt: string;
-  approvalStatus?: boolean;
-}
-
-interface Order {
-  id: string;
-  orderNumber: string;
-  status: string;
-  totalAmount: number;
-  designTier: string;
-  designsGenerated: number;
-  maxDesigns: number;
-  createdAt: string;
-  items: OrderItem[];
-  designs: DesignPreview[];
-  fulfillmentStatus?: string | null;
-  trackingNumber?: string | null;
-  promoCode?: {
-    code: string;
-    type: string;
-    percentOff?: number | null;
-    productTier?: string | null;
-  } | null;
-}
+import type { Order, DesignPreview } from '../types/order';
 
 const statusStyles: Record<string, string> = {
   PENDING_PAYMENT: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
@@ -65,13 +26,23 @@ const statusStyles: Record<string, string> = {
 };
 
 const getStatusBadge = (status: string) => (
-  <span className={`px-2 py-1 rounded text-xs font-semibold ${statusStyles[status] || 'bg-gray-100 text-gray-800'}`}>
+  <span
+    className={`rounded px-2 py-1 text-xs font-semibold ${statusStyles[status] || 'bg-gray-100 text-gray-800'}`}
+  >
     {status.replace(/_/g, ' ')}
   </span>
 );
 
 const previewStatuses = ['PENDING_PAYMENT', 'DESIGN_PENDING'];
-const pastOrderStatuses = ['PAID', 'DESIGN_APPROVED', 'SUBMITTED', 'SHIPPED', 'DELIVERED', 'CANCELLED', 'REFUNDED'];
+const pastOrderStatuses = [
+  'PAID',
+  'DESIGN_APPROVED',
+  'SUBMITTED',
+  'SHIPPED',
+  'DELIVERED',
+  'CANCELLED',
+  'REFUNDED',
+];
 
 const isDurableUrl = (url?: string | null) => {
   if (!url) return false;
@@ -86,6 +57,18 @@ const getCloneCandidate = (order: Order): DesignPreview | null => {
   return completed || null;
 };
 
+/**
+ * @function AccountContent
+ * @description Protected content component displaying user's designs and past orders with reorder functionality
+ *
+ * @returns {JSX.Element} The account page content with designs and orders tabs
+ *
+ * @example
+ * // Used within ProtectedRoute wrapper
+ * <ProtectedRoute>
+ *   <AccountContent />
+ * </ProtectedRoute>
+ */
 function AccountContent(): JSX.Element {
   const { user } = useUser();
   const { getToken, isSignedIn, isLoaded } = useAuth();
@@ -193,44 +176,52 @@ function AccountContent(): JSX.Element {
   const renderDesignCard = (order: Order) => (
     <div
       key={order.id}
-      className="border border-gray-200 dark:border-gray-700 rounded-xl p-4 hover:border-primary-400/80 hover:shadow transition bg-gray-50 dark:bg-gray-900/60"
+      className="hover:border-primary-400/80 rounded-xl border border-gray-200 bg-gray-50 p-4 transition hover:shadow dark:border-gray-700 dark:bg-gray-900/60"
     >
-      <div className="flex flex-wrap items-start justify-between gap-4 mb-3">
+      <div className="mb-3 flex flex-wrap items-start justify-between gap-4">
         <div>
           <p className="font-semibold text-gray-900 dark:text-white">Design preview</p>
           <p className="text-sm text-gray-500 dark:text-gray-400">
             {new Date(order.createdAt).toLocaleDateString()}
           </p>
         </div>
-        <div className="flex items-center gap-2">
-          {getStatusBadge(order.status)}
-        </div>
+        <div className="flex items-center gap-2">{getStatusBadge(order.status)}</div>
       </div>
 
-      <div className="flex flex-wrap items-center gap-3 text-sm text-gray-600 dark:text-gray-300 mb-3">
-        <span>{order.items.length} item{order.items.length !== 1 ? 's' : ''}</span>
+      <div className="mb-3 flex flex-wrap items-center gap-3 text-sm text-gray-600 dark:text-gray-300">
+        <span>
+          {order.items.length} item{order.items.length !== 1 ? 's' : ''}
+        </span>
         <span className="text-gray-400">•</span>
         <span>{order.designTier} tier</span>
         <span className="text-gray-400">•</span>
-        <span>Designs: {order.designsGenerated}/{order.maxDesigns === 9999 ? '∞' : order.maxDesigns}</span>
+        <span>
+          Designs: {order.designsGenerated}/{order.maxDesigns === 9999 ? '∞' : order.maxDesigns}
+        </span>
       </div>
 
       {order.designs?.length > 0 && (
         <div className="mt-2">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             {order.designs.map((design) => (
               <div
                 key={design.id}
-                className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden bg-white dark:bg-gray-900 shadow-sm"
+                className="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-900"
               >
-                <div className="bg-gray-100 dark:bg-gray-800 flex items-center justify-center h-40">
+                <div className="flex h-40 items-center justify-center bg-gray-100 dark:bg-gray-800">
                   {design.imageUrl ? (
-                    <img src={design.imageUrl} alt={design.prompt} className="max-h-36 object-contain" />
+                    <img
+                      src={design.imageUrl}
+                      alt={design.prompt}
+                      className="max-h-36 object-contain"
+                    />
                   ) : (
-                    <div className="text-xs text-gray-500 dark:text-gray-400">Design preview coming soon</div>
+                    <div className="text-xs text-gray-500 dark:text-gray-400">
+                      Design preview coming soon
+                    </div>
                   )}
                 </div>
-                <p className="text-xs text-gray-700 dark:text-gray-300 line-clamp-3 px-3 py-2">
+                <p className="line-clamp-3 px-3 py-2 text-xs text-gray-700 dark:text-gray-300">
                   {design.prompt}
                 </p>
               </div>
@@ -239,7 +230,7 @@ function AccountContent(): JSX.Element {
         </div>
       )}
 
-      <div className="mt-4 flex gap-3 flex-wrap">
+      <div className="mt-4 flex flex-wrap gap-3">
         <Link to={`/design?orderId=${order.id}`}>
           <Button variant="primary" size="sm">
             Open design
@@ -253,25 +244,27 @@ function AccountContent(): JSX.Element {
     return (
       <div
         key={order.id}
-        className="border border-gray-200 dark:border-gray-700 rounded-xl p-4 hover:border-primary-400/80 hover:shadow transition bg-gray-50 dark:bg-gray-900/60"
+        className="hover:border-primary-400/80 rounded-xl border border-gray-200 bg-gray-50 p-4 transition hover:shadow dark:border-gray-700 dark:bg-gray-900/60"
       >
-        <div className="flex flex-wrap items-start justify-between gap-4 mb-3">
+        <div className="mb-3 flex flex-wrap items-start justify-between gap-4">
           <div>
             <p className="font-semibold text-gray-900 dark:text-white">Past order</p>
             <p className="text-sm text-gray-500 dark:text-gray-400">
               {new Date(order.createdAt).toLocaleDateString()}
             </p>
           </div>
-          <div className="text-right space-y-1">
+          <div className="space-y-1 text-right">
             {getStatusBadge(order.status)}
-            <p className="text-lg font-bold text-gray-900 dark:text-white mt-1">
+            <p className="mt-1 text-lg font-bold text-gray-900 dark:text-white">
               ${Number(order.totalAmount).toFixed(2)}
             </p>
           </div>
         </div>
 
-        <div className="flex flex-wrap items-center gap-3 text-sm text-gray-600 dark:text-gray-300 mb-3">
-          <span>{order.items.length} item{order.items.length !== 1 ? 's' : ''}</span>
+        <div className="mb-3 flex flex-wrap items-center gap-3 text-sm text-gray-600 dark:text-gray-300">
+          <span>
+            {order.items.length} item{order.items.length !== 1 ? 's' : ''}
+          </span>
           <span className="text-gray-400">•</span>
           <span>{order.designTier} tier</span>
           {order.trackingNumber && (
@@ -292,40 +285,46 @@ function AccountContent(): JSX.Element {
 
         {order.designs?.length > 0 && (
           <div className="mt-2">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {order.designs.map((design) => (
-              <div
-                key={design.id}
-                className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden bg-white dark:bg-gray-900 shadow-sm"
-              >
-                <div className="bg-gray-100 dark:bg-gray-800 flex items-center justify-center h-32">
-                  {design.imageUrl ? (
-                    <img src={design.imageUrl} alt={design.prompt} className="max-h-28 object-contain" />
-                  ) : (
-                    <div className="text-xs text-gray-500 dark:text-gray-400">Design preview coming soon</div>
-                  )}
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              {order.designs.map((design) => (
+                <div
+                  key={design.id}
+                  className="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-900"
+                >
+                  <div className="flex h-32 items-center justify-center bg-gray-100 dark:bg-gray-800">
+                    {design.imageUrl ? (
+                      <img
+                        src={design.imageUrl}
+                        alt={design.prompt}
+                        className="max-h-28 object-contain"
+                      />
+                    ) : (
+                      <div className="text-xs text-gray-500 dark:text-gray-400">
+                        Design preview coming soon
+                      </div>
+                    )}
+                  </div>
+                  <p className="line-clamp-2 px-3 py-2 text-xs text-gray-700 dark:text-gray-300">
+                    {design.prompt}
+                  </p>
+                  <div className="flex flex-col gap-2 px-3 pb-3">
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      onClick={() => handleReorder(order, design)}
+                      isDisabled={reordering === order.id}
+                      isLoading={reordering === order.id}
+                    >
+                      Reorder this design
+                    </Button>
+                  </div>
                 </div>
-                <p className="text-xs text-gray-700 dark:text-gray-300 line-clamp-2 px-3 py-2">
-                  {design.prompt}
-                </p>
-                <div className="px-3 pb-3 flex flex-col gap-2">
-                  <Button
-                    variant="secondary"
-                    size="sm"
-                    onClick={() => handleReorder(order, design)}
-                    isDisabled={reordering === order.id}
-                    isLoading={reordering === order.id}
-                  >
-                    Reorder this design
-                  </Button>
-                </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
-        </div>
-      )}
+        )}
 
-        <div className="mt-4 flex gap-3 flex-wrap">
+        <div className="mt-4 flex flex-wrap gap-3">
           <Link to={`/orders/${order.id}`}>
             <Button variant="primary" size="sm">
               View details
@@ -337,16 +336,19 @@ function AccountContent(): JSX.Element {
   };
 
   return (
-    <div className="container-max py-8 space-y-6">
+    <div className="container-max space-y-6 py-8">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">My Designs</h1>
+          <h1 className="mb-2 text-3xl font-bold text-gray-900 dark:text-white">My Designs</h1>
           <p className="text-gray-600 dark:text-gray-400">
-            {user?.firstName ? `Welcome back, ${user.firstName}.` : 'Welcome back.'} Open your latest design to choose color/fit and checkout from the design page.
+            {user?.firstName ? `Welcome back, ${user.firstName}.` : 'Welcome back.'} Open your
+            latest design to choose color/fit and checkout from the design page.
           </p>
         </div>
         <Link to="/#quickstart">
-          <Button variant="primary" size="sm">Start a new design</Button>
+          <Button variant="primary" size="sm">
+            Start a new design
+          </Button>
         </Link>
       </div>
 
@@ -367,17 +369,20 @@ function AccountContent(): JSX.Element {
         </Button>
       </div>
 
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 p-6">
+      <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-lg dark:border-gray-700 dark:bg-gray-800">
         {loading && (
           <div className="flex items-center justify-center py-12">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
+            <div className="border-primary-600 h-12 w-12 animate-spin rounded-full border-b-2"></div>
           </div>
         )}
 
         {error && (
-          <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4 mb-6">
+          <div className="mb-6 rounded-lg border border-red-200 bg-red-50 p-4 dark:border-red-800 dark:bg-red-900/20">
             <p className="text-red-800 dark:text-red-400">{error}</p>
-            <button onClick={fetchOrders} className="mt-2 text-sm text-red-600 dark:text-red-400 hover:underline">
+            <button
+              onClick={fetchOrders}
+              className="mt-2 text-sm text-red-600 hover:underline dark:text-red-400"
+            >
               Try again
             </button>
           </div>
@@ -386,10 +391,12 @@ function AccountContent(): JSX.Element {
         {!loading && !error && activeTab === 'designs' && (
           <>
             {designsList.length === 0 ? (
-              <div className="text-center py-12">
-                <div className="text-5xl mb-4">🛍️</div>
-                <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">No designs yet</h3>
-                <p className="text-gray-600 dark:text-gray-400 mb-6">
+              <div className="py-12 text-center">
+                <div className="mb-4 text-5xl">🛍️</div>
+                <h3 className="mb-2 text-xl font-semibold text-gray-900 dark:text-white">
+                  No designs yet
+                </h3>
+                <p className="mb-6 text-gray-600 dark:text-gray-400">
                   Start a new preview to create your first one-of-one GPTee.
                 </p>
                 <Link to="/#quickstart">
@@ -397,9 +404,7 @@ function AccountContent(): JSX.Element {
                 </Link>
               </div>
             ) : (
-              <div className="space-y-4">
-                {designsList.map(renderDesignCard)}
-              </div>
+              <div className="space-y-4">{designsList.map(renderDesignCard)}</div>
             )}
           </>
         )}
@@ -407,17 +412,17 @@ function AccountContent(): JSX.Element {
         {!loading && !error && activeTab === 'past' && (
           <>
             {pastList.length === 0 ? (
-              <div className="text-center py-12">
-                <div className="text-5xl mb-4">📦</div>
-                <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">No past orders yet</h3>
-                <p className="text-gray-600 dark:text-gray-400 mb-6">
+              <div className="py-12 text-center">
+                <div className="mb-4 text-5xl">📦</div>
+                <h3 className="mb-2 text-xl font-semibold text-gray-900 dark:text-white">
+                  No past orders yet
+                </h3>
+                <p className="mb-6 text-gray-600 dark:text-gray-400">
                   Once your tees ship, they will show here with tracking.
                 </p>
               </div>
             ) : (
-              <div className="space-y-4">
-                {pastList.map(renderPastCard)}
-              </div>
+              <div className="space-y-4">{pastList.map(renderPastCard)}</div>
             )}
           </>
         )}
@@ -426,6 +431,16 @@ function AccountContent(): JSX.Element {
   );
 }
 
+/**
+ * @component
+ * @description Main account page component that wraps AccountContent with authentication protection. Displays user designs, past orders, and reorder functionality.
+ *
+ * @returns {JSX.Element} The rendered account page with protected content
+ *
+ * @example
+ * // Used in App.tsx routing
+ * <Route path="/account" element={<AccountPage />} />
+ */
 export default function AccountPage(): JSX.Element {
   return (
     <ProtectedRoute>

@@ -1,11 +1,33 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * @module utils/pixels
- * @description Lightweight loaders for Meta Pixel and GA4.
+ * @description Lightweight script loaders for third-party analytics pixels.
+ * Provides functions to dynamically load Meta (Facebook) Pixel and Google Analytics 4.
+ * All loaders are no-ops on the server side and prevent duplicate loading.
+ * @since 2025-11-21
  */
 
+/**
+ * @constant {boolean} isClient
+ * @description Whether code is running in browser environment
+ * @private
+ */
 const isClient = typeof window !== 'undefined';
 
+/**
+ * @function loadMetaPixel
+ * @description Loads the Meta (Facebook) Pixel tracking script. Safe to call multiple times;
+ * subsequent calls are no-ops if already loaded. Initializes the pixel with the provided ID.
+ *
+ * @param {string} [pixelId] - Meta Pixel ID (e.g., '123456789'). If not provided, function is no-op.
+ * @returns {void}
+ *
+ * @example
+ * // Load pixel at app startup
+ * loadMetaPixel(import.meta.env.VITE_META_PIXEL_ID);
+ *
+ * @see {@link https://developers.facebook.com/docs/meta-pixel/} Meta Pixel documentation
+ */
 export function loadMetaPixel(pixelId?: string): void {
   if (!isClient || !pixelId) return;
   if ((window as any).fbq) return;
@@ -13,13 +35,13 @@ export function loadMetaPixel(pixelId?: string): void {
   // Meta Pixel bootstrap
   (function (f: any, b) {
     if ((f as any).fbq) return;
-    const n: any = (f as any).fbq = function (...args: any[]) {
+    const n: any = ((f as any).fbq = function (...args: any[]) {
       if (n.callMethod) {
         n.callMethod(...args);
       } else {
         n.queue.push(args);
       }
-    };
+    });
     if (!(f as any)._fbq) (f as any)._fbq = n;
     n.push = n;
     n.loaded = true;
@@ -35,6 +57,20 @@ export function loadMetaPixel(pixelId?: string): void {
   (window as any).fbq('init', pixelId);
 }
 
+/**
+ * @function loadGA4
+ * @description Loads Google Analytics 4 (GA4) tracking script. Safe to call multiple times;
+ * subsequent calls are no-ops if already loaded. Configures gtag with the provided measurement ID.
+ *
+ * @param {string} [measurementId] - GA4 Measurement ID (e.g., 'G-XXXXXXXXXX'). If not provided, function is no-op.
+ * @returns {void}
+ *
+ * @example
+ * // Load GA4 at app startup
+ * loadGA4(import.meta.env.VITE_GA4_ID);
+ *
+ * @see {@link https://developers.google.com/analytics/devguides/collection/ga4} GA4 documentation
+ */
 export function loadGA4(measurementId?: string): void {
   if (!isClient || !measurementId) return;
   if ((window as any).dataLayer && (window as any).gtag) return;

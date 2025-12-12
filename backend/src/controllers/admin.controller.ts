@@ -11,8 +11,14 @@ import prisma from '../config/database.js';
 import crypto from 'crypto';
 
 /**
- * Sync all Printful orders into local DB (dev-only)
- * POST /api/admin/sync-fulfillment
+ * @route POST /api/admin/sync-fulfillment
+ * @description Syncs all Printful order statuses to local database (development only)
+ * @access Admin only
+ *
+ * @param {Request} _req - Express request (unused)
+ * @param {Response} res - Express response
+ *
+ * @returns {Object} Sync results (total, updated count)
  */
 export const syncFulfillmentStatuses = catchAsync(async (_req: Request, res: Response) => {
   const result = await syncAllPrintfulOrders();
@@ -25,8 +31,18 @@ export const syncFulfillmentStatuses = catchAsync(async (_req: Request, res: Res
 });
 
 /**
- * Dev/admin: create a promo/gift code.
- * POST /api/admin/promo-codes
+ * @route POST /api/admin/promo-codes
+ * @description Creates a new promo or gift code
+ * @access Admin only
+ *
+ * @param {Request} req - Express request (body: code, type, productTier, percentOff, usageLimit, disabled)
+ * @param {Response} res - Express response
+ *
+ * @returns {Object} Created promo code details
+ * @throws {401} Authentication required
+ * @throws {400} Invalid type (must be FREE_PRODUCT or PERCENT_OFF)
+ * @throws {400} Invalid percentOff for PERCENT_OFF codes
+ * @throws {400} Invalid productTier for FREE_PRODUCT codes
  */
 export const createPromoCode = catchAsync(async (req: Request, res: Response) => {
   if (!req.user) {
@@ -72,8 +88,15 @@ export const createPromoCode = catchAsync(async (req: Request, res: Response) =>
 });
 
 /**
- * Fetch Printful variants for a product (admin utility)
- * GET /api/admin/printful/variants?productId=71&color=Navy
+ * @route GET /api/admin/printful/variants
+ * @description Fetches Printful product variants (admin utility for debugging)
+ * @access Admin only
+ *
+ * @param {Request} req - Express request (query: productId, color optional)
+ * @param {Response} res - Express response
+ *
+ * @returns {Object} Array of Printful variants with metadata
+ * @throws {400} productId is required
  */
 export const getPrintfulVariants = catchAsync(async (req: Request, res: Response) => {
   const productId = (req.query.productId as string | undefined)?.trim();
@@ -101,7 +124,14 @@ export const getPrintfulVariants = catchAsync(async (req: Request, res: Response
 });
 
 /**
- * List promo/gift codes with filters and pagination.
+ * @route GET /api/admin/promo-codes
+ * @description Lists promo/gift codes with filters and pagination
+ * @access Admin only
+ *
+ * @param {Request} req - Express request (query: page, pageSize, search, type, tier, disabled, createdBy, from, to)
+ * @param {Response} res - Express response
+ *
+ * @returns {Object} Paginated list of promo codes with metadata
  */
 export const listPromoCodes = catchAsync(async (req: Request, res: Response) => {
   const page = Math.max(1, parseInt(String(req.query.page || '1'), 10) || 1);
@@ -163,7 +193,15 @@ export const listPromoCodes = catchAsync(async (req: Request, res: Response) => 
 });
 
 /**
- * Get single promo/gift code with recent orders.
+ * @route GET /api/admin/promo-codes/:id
+ * @description Gets single promo/gift code with recent order history
+ * @access Admin only
+ *
+ * @param {Request} req - Express request (params.id required)
+ * @param {Response} res - Express response
+ *
+ * @returns {Object} Promo code details and recent orders
+ * @throws {404} Promo code not found
  */
 export const getPromoCodeDetail = catchAsync(async (req: Request, res: Response) => {
   const { id } = req.params;
@@ -197,7 +235,14 @@ export const getPromoCodeDetail = catchAsync(async (req: Request, res: Response)
 });
 
 /**
- * Aggregate metrics across promo/gift codes.
+ * @route GET /api/admin/promo-codes/metrics
+ * @description Aggregates metrics across all promo/gift codes
+ * @access Admin only
+ *
+ * @param {Request} req - Express request (query: bucket, from, to)
+ * @param {Response} res - Express response
+ *
+ * @returns {Object} Aggregate metrics (redemptions, revenue, time series)
  */
 export const getPromoCodesMetrics = catchAsync(async (req: Request, res: Response) => {
   const bucket = (req.query.bucket as string) === 'week' ? 'week' : 'day';
@@ -259,7 +304,15 @@ export const getPromoCodesMetrics = catchAsync(async (req: Request, res: Respons
 });
 
 /**
- * Metrics for a single promo/gift code.
+ * @route GET /api/admin/promo-codes/:id/metrics
+ * @description Gets metrics for a single promo/gift code
+ * @access Admin only
+ *
+ * @param {Request} req - Express request (params.id, query: bucket, from, to)
+ * @param {Response} res - Express response
+ *
+ * @returns {Object} Promo code metrics (redemptions, revenue, time series, remaining uses)
+ * @throws {404} Promo code not found
  */
 export const getPromoCodeMetricsById = catchAsync(async (req: Request, res: Response) => {
   const { id } = req.params;
@@ -326,7 +379,14 @@ export const getPromoCodeMetricsById = catchAsync(async (req: Request, res: Resp
 });
 
 /**
- * Soft-disable a promo code.
+ * @route PATCH /api/admin/promo-codes/:id/disable
+ * @description Soft-disables a promo code (prevents further use)
+ * @access Admin only
+ *
+ * @param {Request} req - Express request (params.id required)
+ * @param {Response} res - Express response
+ *
+ * @returns {Object} Updated promo code
  */
 export const disablePromoCode = catchAsync(async (req: Request, res: Response) => {
   const { id } = req.params;
@@ -338,7 +398,14 @@ export const disablePromoCode = catchAsync(async (req: Request, res: Response) =
 });
 
 /**
- * Re-enable a promo code.
+ * @route PATCH /api/admin/promo-codes/:id/enable
+ * @description Re-enables a disabled promo code
+ * @access Admin only
+ *
+ * @param {Request} req - Express request (params.id required)
+ * @param {Response} res - Express response
+ *
+ * @returns {Object} Updated promo code
  */
 export const enablePromoCode = catchAsync(async (req: Request, res: Response) => {
   const { id } = req.params;

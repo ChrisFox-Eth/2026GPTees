@@ -1,135 +1,33 @@
 /**
-
  * @module pages/OrderDetailPage
-
  * @description Order detail page with designs and shipping info
-
  * @since 2025-11-22
-
  */
 
-
-
 import { useEffect, useState } from 'react';
-
 import { Link, useParams } from 'react-router-dom';
-
 import { useAuth } from '@clerk/clerk-react';
-
 import { apiGet, apiPost } from '../utils/api';
-
-import { Button } from '@components/Button';
-
+import { Button } from '@components/ui/Button';
 import { trackEvent } from '@utils/analytics';
+import type { Order, DesignPreview } from '../types/order';
 
-
-
-interface OrderItem {
-
-  id: string;
-
-  size: string;
-
-  color: string;
-
-  quantity: number;
-
-  unitPrice: number;
-
-  product: {
-
-    name: string;
-
-  };
-
-}
-
-
-
-interface Design {
-
-  id: string;
-
-  imageUrl: string;
-
-  prompt: string;
-
-  approvalStatus: boolean;
-
-  status: string;
-
-}
-
-
-
-interface Address {
-
-  name: string;
-
-  address1: string;
-
-  address2?: string | null;
-
-  city: string;
-
-  state?: string | null;
-
-  zip: string;
-
-  country: string;
-
-  phone?: string | null;
-
-}
-
-
-
-interface Order {
-
-  id: string;
-
-  orderNumber: string;
-
-  status: string;
-
-  fulfillmentStatus?: string | null;
-
-  totalAmount: number;
-
-  designTier: string;
-
-  designsGenerated: number;
-
-  maxDesigns: number;
-
-  createdAt: string;
-
-  items: OrderItem[];
-
-  designs: Design[];
-
-  address?: Address | null;
-
-  trackingNumber?: string | null;
-
-  promoCode?: {
-    code: string;
-    type: string;
-    percentOff?: number | null;
-    productTier?: string | null;
-  } | null;
-
-}
-
-
-
+/**
+ * @function OrderDetailContent
+ * @description Order detail content component displaying order items, designs, shipping info, and approval controls
+ *
+ * @returns {JSX.Element} The order detail content
+ *
+ * @example
+ * // Used as main component export
+ * export default function OrderDetailPage() {
+ *   return <OrderDetailContent />;
+ * }
+ */
 function OrderDetailContent(): JSX.Element {
-
   const { id } = useParams<{ id: string }>();
 
   const { getToken, isLoaded, isSignedIn } = useAuth();
-
-
 
   const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
@@ -137,40 +35,25 @@ function OrderDetailContent(): JSX.Element {
   const [isApproving, setIsApproving] = useState<string | null>(null);
   const [shareFeedback, setShareFeedback] = useState<string | null>(null);
 
-
-
   const formatStatus = (status?: string | null) =>
-
     status ? status.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()) : 'Unknown';
 
-
-
   useEffect(() => {
-
     if (id && isLoaded && isSignedIn) {
-
       fetchOrder();
-
     }
-
   }, [id, isLoaded, isSignedIn]);
 
-
-
   const fetchOrder = async () => {
-
     try {
-
       setLoading(true);
 
       const token = await getToken();
 
       if (!token) {
-
         setError('Authentication required. Please sign in again.');
 
         return;
-
       }
 
       const response = await apiGet(`/api/orders/${id}`, token);
@@ -180,37 +63,26 @@ function OrderDetailContent(): JSX.Element {
       setError(null);
 
       trackEvent('account.order_detail.loaded', {
-
         order_id: id,
 
         status: response.data?.status,
 
         design_count: response.data?.designs?.length ?? 0,
-
       });
-
     } catch (err: any) {
-
       console.error('Error loading order', err);
 
       setError(err.message || 'Failed to load order');
 
       trackEvent('account.order_detail.error', {
-
         order_id: id,
 
         message: err?.message || 'unknown',
-
       });
-
     } finally {
-
       setLoading(false);
-
     }
-
   };
-
 
   const handleApproveDesign = async (designId: string) => {
     if (!order) return;
@@ -226,9 +98,7 @@ function OrderDetailContent(): JSX.Element {
       setOrder({
         ...order,
         status: 'DESIGN_APPROVED',
-        designs: order.designs.map((d) =>
-          d.id === designId ? { ...d, approvalStatus: true } : d
-        ),
+        designs: order.designs.map((d) => (d.id === designId ? { ...d, approvalStatus: true } : d)),
       });
       trackEvent('design.approval.submit', {
         order_id: order.id,
@@ -249,14 +119,16 @@ function OrderDetailContent(): JSX.Element {
     }
   };
 
-  const handleShareDesign = async (design: Design) => {
-    const landingUrl = 'https://gptees.app/?utm_source=customer_share&utm_medium=design&utm_campaign=ugc';
+  const handleShareDesign = async (design: DesignPreview) => {
+    const landingUrl =
+      'https://gptees.app/?utm_source=customer_share&utm_medium=design&utm_campaign=ugc';
     const shareTarget = design.imageUrl || landingUrl;
     const shareText = `I just designed this one-of-one tee on GPTees. What do you think? Start yours here: ${landingUrl}`;
 
     try {
       setShareFeedback(null);
-      const supportsNativeShare = typeof navigator !== 'undefined' && typeof navigator.share === 'function';
+      const supportsNativeShare =
+        typeof navigator !== 'undefined' && typeof navigator.share === 'function';
 
       if (supportsNativeShare) {
         await navigator.share({
@@ -296,7 +168,9 @@ function OrderDetailContent(): JSX.Element {
       });
     } catch (err: any) {
       console.error('Error sharing design:', err);
-      setShareFeedback('Could not share right now. Copy the preview link manually and keep creating.');
+      setShareFeedback(
+        'Could not share right now. Copy the preview link manually and keep creating.'
+      );
       trackEvent('design.share.error', {
         order_id: order?.id ?? id,
         design_id: design.id,
@@ -306,72 +180,41 @@ function OrderDetailContent(): JSX.Element {
     }
   };
 
-
   if (!id) {
-
     return (
-
       <div className="container-max py-12">
-
         <p className="text-gray-700 dark:text-gray-200">Order ID is missing.</p>
-
       </div>
-
     );
-
   }
-
-
 
   if (loading) {
-
     return (
-
-      <div className="container-max py-12 flex justify-center">
-
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
-
+      <div className="container-max flex justify-center py-12">
+        <div className="border-primary-600 h-12 w-12 animate-spin rounded-full border-b-2"></div>
       </div>
-
     );
-
   }
-
-
 
   if (error || !order) {
-
     return (
-
       <div className="container-max py-12">
-
-        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded p-4">
-
+        <div className="rounded border border-red-200 bg-red-50 p-4 dark:border-red-800 dark:bg-red-900/20">
           <p className="text-red-800 dark:text-red-300">{error || 'Order not found'}</p>
-
         </div>
-
       </div>
-
     );
-
   }
-
-
 
   const approvedDesignId = order.designs.find((d) => d.approvalStatus)?.id;
 
   return (
-    <div className="container-max py-8 space-y-6">
-
+    <div className="container-max space-y-6 py-8">
       <div className="flex items-center justify-between gap-4">
-
         <div>
-
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">{order.orderNumber}</h1>
 
-          <div className="text-sm text-gray-600 dark:text-gray-400 space-x-2">
-
+          <div className="space-x-2 text-sm text-gray-600 dark:text-gray-400">
             <span>{new Date(order.createdAt).toLocaleString()}</span>
 
             <span>|</span>
@@ -379,156 +222,107 @@ function OrderDetailContent(): JSX.Element {
             <span>Order: {formatStatus(order.status)}</span>
 
             {order.fulfillmentStatus && (
-
               <>
-
                 <span>|</span>
 
                 <span>Fulfillment: {formatStatus(order.fulfillmentStatus)}</span>
-
               </>
-
             )}
-
           </div>
-
         </div>
 
         <div className="flex gap-3">
-
           <Link to="/account">
-
             <Button variant="secondary" size="sm">
-
               Back to Orders
-
             </Button>
-
           </Link>
 
           {order.status === 'PAID' && order.designsGenerated < order.maxDesigns && (
-
             <Link to={`/design?orderId=${order.id}`}>
-
               <Button variant="primary" size="sm">
-
                 Generate Design
-
               </Button>
-
             </Link>
-
           )}
-
         </div>
-
       </div>
 
-
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-
-        <div className="lg:col-span-2 space-y-4">
-
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-5">
-
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">Items</h2>
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+        <div className="space-y-4 lg:col-span-2">
+          <div className="rounded-lg bg-white p-5 shadow dark:bg-gray-800">
+            <h2 className="mb-3 text-lg font-semibold text-gray-900 dark:text-white">Items</h2>
 
             <div className="space-y-3">
-
               {order.items.map((item) => (
-
                 <div key={item.id} className="flex justify-between">
-
                   <div className="text-gray-800 dark:text-gray-200">
-
-                    <p className="font-semibold">{item.product.name}</p>
+                    <p className="font-semibold">{item.product?.name || 'Product'}</p>
 
                     <p className="text-sm text-gray-600 dark:text-gray-400">
-
                       {item.size} | {item.color} | Qty {item.quantity}
-
                     </p>
-
                   </div>
 
-                  <div className="text-gray-900 dark:text-white font-semibold">
-
+                  <div className="font-semibold text-gray-900 dark:text-white">
                     ${(Number(item.unitPrice) * item.quantity).toFixed(2)}
-
                   </div>
-
                 </div>
-
               ))}
-
             </div>
-
           </div>
 
-
-
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-5">
-
-            <div className="flex items-center justify-between mb-3">
-
+          <div className="rounded-lg bg-white p-5 shadow dark:bg-gray-800">
+            <div className="mb-3 flex items-center justify-between">
               <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Designs</h2>
 
               {order.designs.length === 0 && (
-
                 <span className="text-sm text-gray-600 dark:text-gray-400">No designs yet</span>
-
               )}
-
             </div>
 
             {shareFeedback && (
-              <div className="bg-primary-50 dark:bg-primary-900/20 border border-primary-100 dark:border-primary-800 rounded-lg p-3 text-sm text-primary-800 dark:text-primary-200 mb-3">
+              <div className="bg-primary-50 dark:bg-primary-900/20 border-primary-100 dark:border-primary-800 text-primary-800 dark:text-primary-200 mb-3 rounded-lg border p-3 text-sm">
                 {shareFeedback}
               </div>
             )}
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-
+            <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
               {order.designs.map((design) => (
-
                 <div
-
                   key={design.id}
-
-                  className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden"
-
+                  className="overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700"
                 >
-
                   <div className="bg-gray-100 dark:bg-gray-900">
-
-                    <img src={design.imageUrl} alt={design.prompt} className="w-full h-48 object-contain" />
-
+                    <img
+                      src={design.imageUrl}
+                      alt={design.prompt}
+                      className="h-48 w-full object-contain"
+                    />
                   </div>
 
-                  <div className="p-3 space-y-1">
-
-                    <p className="text-sm text-gray-700 dark:text-gray-300 line-clamp-2">{design.prompt}</p>
+                  <div className="space-y-1 p-3">
+                    <p className="line-clamp-2 text-sm text-gray-700 dark:text-gray-300">
+                      {design.prompt}
+                    </p>
 
                     <p className="text-xs text-gray-500 dark:text-gray-500">
-
                       {design.approvalStatus ? 'Approved' : design.status}
-
                     </p>
 
                     <div className="mt-3 flex flex-col gap-2">
                       {!design.approvalStatus &&
                         design.status === 'COMPLETED' &&
                         !approvedDesignId && (
-                        <Button
-                          variant="primary"
-                          size="sm"
-                          onClick={() => handleApproveDesign(design.id)}
-                          isDisabled={isApproving === design.id}
-                        >
-                          {isApproving === design.id ? 'Approving...' : 'Approve This Design'}
-                        </Button>
-                      )}
+                          <Button
+                            variant="primary"
+                            size="sm"
+                            onClick={() => handleApproveDesign(design.id)}
+                            isDisabled={isApproving === design.id}
+                          >
+                            {isApproving === design.id ? 'Approving...' : 'Approve This Design'}
+                          </Button>
+                        )}
 
                       <Button
                         variant="secondary"
@@ -540,94 +334,62 @@ function OrderDetailContent(): JSX.Element {
                       </Button>
 
                       <p className="text-[11px] text-gray-500 dark:text-gray-500">
-                        Sharing uses your device share sheet when available; otherwise we copy a link.
+                        Sharing uses your device share sheet when available; otherwise we copy a
+                        link.
                       </p>
                     </div>
-
                   </div>
-
                 </div>
-
               ))}
-
             </div>
-
           </div>
-
         </div>
 
-
-
         <div className="space-y-4">
+          <div className="rounded-lg bg-white p-5 shadow dark:bg-gray-800">
+            <h2 className="mb-3 text-lg font-semibold text-gray-900 dark:text-white">Summary</h2>
 
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-5">
-
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">Summary</h2>
-
-            <div className="flex justify-between text-sm text-gray-700 dark:text-gray-300 mb-1">
-
+            <div className="mb-1 flex justify-between text-sm text-gray-700 dark:text-gray-300">
               <span>Tier</span>
 
               <span>{order.designTier}</span>
-
             </div>
 
-            <div className="flex justify-between text-sm text-gray-700 dark:text-gray-300 mb-1">
-
+            <div className="mb-1 flex justify-between text-sm text-gray-700 dark:text-gray-300">
               <span>Designs</span>
 
               <span>
-
-                {order.designsGenerated}/{order.maxDesigns === 9999 ? 'unlimited' : order.maxDesigns}
-
+                {order.designsGenerated}/
+                {order.maxDesigns === 9999 ? 'unlimited' : order.maxDesigns}
               </span>
-
             </div>
 
             {order.promoCode && (
-
-              <div className="flex justify-between text-sm text-gray-700 dark:text-gray-300 mb-1">
-
+              <div className="mb-1 flex justify-between text-sm text-gray-700 dark:text-gray-300">
                 <span>Code</span>
 
                 <span>
-
                   {order.promoCode.code} (
-
                   {order.promoCode.type === 'FREE_PRODUCT'
-
                     ? `Free ${order.promoCode.productTier || 'tee'}`
-
                     : `${order.promoCode.percentOff || 0}% off`}
-
                   )
-
                 </span>
-
               </div>
-
             )}
 
-            <div className="flex justify-between text-lg font-bold text-gray-900 dark:text-white border-t border-gray-200 dark:border-gray-700 pt-3 mt-3">
-
+            <div className="mt-3 flex justify-between border-t border-gray-200 pt-3 text-lg font-bold text-gray-900 dark:border-gray-700 dark:text-white">
               <span>Total</span>
 
               <span>${Number(order.totalAmount).toFixed(2)}</span>
-
             </div>
-
           </div>
 
-
-
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-5">
-
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">Shipping</h2>
+          <div className="rounded-lg bg-white p-5 shadow dark:bg-gray-800">
+            <h2 className="mb-3 text-lg font-semibold text-gray-900 dark:text-white">Shipping</h2>
 
             {order.address ? (
-
-              <div className="text-sm text-gray-700 dark:text-gray-300 space-y-1">
-
+              <div className="space-y-1 text-sm text-gray-700 dark:text-gray-300">
                 <p>{order.address.name}</p>
 
                 <p>{order.address.address1}</p>
@@ -635,37 +397,27 @@ function OrderDetailContent(): JSX.Element {
                 {order.address.address2 && <p>{order.address.address2}</p>}
 
                 <p>
-
                   {order.address.city}, {order.address.state} {order.address.zip}
-
                 </p>
 
                 <p>{order.address.country}</p>
 
                 {order.address.phone && <p>Phone: {order.address.phone}</p>}
-
               </div>
-
             ) : (
-
-              <p className="text-sm text-gray-600 dark:text-gray-400">No shipping address on file.</p>
-
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                No shipping address on file.
+              </p>
             )}
-
           </div>
 
+          <div className="rounded-lg bg-white p-5 shadow dark:bg-gray-800">
+            <h2 className="mb-3 text-lg font-semibold text-gray-900 dark:text-white">Tracking</h2>
 
-
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-5">
-
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">Tracking</h2>
-
-            <div className="text-sm text-gray-700 dark:text-gray-300 space-y-1">
-
+            <div className="space-y-1 text-sm text-gray-700 dark:text-gray-300">
               <p>Status: {formatStatus(order.fulfillmentStatus || order.status)}</p>
 
               {order.trackingNumber ? (
-
                 <p>
                   Tracking #:{' '}
                   <a
@@ -677,32 +429,27 @@ function OrderDetailContent(): JSX.Element {
                     {order.trackingNumber}
                   </a>
                 </p>
-
               ) : (
                 <p>Tracking #: Not yet available</p>
               )}
-
             </div>
-
           </div>
-
         </div>
-
       </div>
-
     </div>
-
   );
-
 }
 
-
-
+/**
+ * @component
+ * @description Order detail page displaying comprehensive order information including items, designs, shipping address, tracking, and design approval/sharing controls.
+ *
+ * @returns {JSX.Element} The rendered order detail page
+ *
+ * @example
+ * // Used in App.tsx routing
+ * <Route path="/orders/:id" element={<OrderDetailPage />} />
+ */
 export default function OrderDetailPage(): JSX.Element {
-
   return <OrderDetailContent />;
-
 }
-
-
-

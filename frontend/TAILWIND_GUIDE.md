@@ -292,3 +292,31 @@ colors: {
 - **Color Picker**: https://tailwindcss.com/docs/customizing-colors
 
 Happy styling! 🎨
+
+---
+
+## 📜 CSS Policy (Global Only)
+
+**All CSS must live in `src/index.css`**. No component-level CSS files.
+
+### What belongs in `index.css`
+
+| Section | Purpose | Examples |
+|---------|---------|----------|
+| `@layer base` | HTML element resets & defaults | `html`, `body`, `:focus-visible` |
+| `@layer components` | Reusable global utilities | `container-max`, `transition-smooth`, `btn-pulse-gradient` |
+| `@utility` | Custom Tailwind utilities | `sr-only`, `flex-center` |
+| `@keyframes` | Animations used by global styles | `wigglePulse` |
+
+### Rules
+
+1. **No component-specific CSS files** - Use Tailwind classes or CVA variants
+2. **No `@apply` in components** - Compose classes in JSX via `cn()`
+3. **New utilities go in `index.css`** - Add with justification in a comment
+4. **Complex animations stay global** - Define keyframes once, reference via class
+
+### When to add to `index.css`
+
+- A utility is used in 3+ unrelated components
+- An animation/keyframe is complex enough to warrant named abstraction
+- A base style needs to apply globally (e.g., focus rings)

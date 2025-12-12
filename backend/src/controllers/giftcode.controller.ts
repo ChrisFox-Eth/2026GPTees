@@ -1,6 +1,7 @@
 /**
  * @module controllers/giftcode
- * @description Gift code purchase controller
+ * @description Gift code purchase endpoints
+ * @since 2025-11-21
  */
 
 import { Request, Response } from 'express';
@@ -9,8 +10,17 @@ import { TierType } from '../config/pricing.js';
 import { createGiftCodeSession } from '../services/stripe.service.js';
 
 /**
- * Create Stripe checkout session for purchasing a gift code.
- * POST /api/gift-codes/purchase
+ * @route POST /api/gift-codes/purchase
+ * @description Creates Stripe checkout session for purchasing gift codes
+ * @access Protected (requires authentication)
+ *
+ * @param {Request} req - Express request (body: tier, usageLimit)
+ * @param {Response} res - Express response
+ *
+ * @returns {Object} Stripe session details (sessionId, url)
+ * @throws {401} Authentication required
+ * @throws {400} Invalid tier (must be LIMITLESS)
+ * @throws {400} Invalid percentOff for PERCENT_OFF codes
  */
 export const purchaseGiftCode = catchAsync(async (req: Request, res: Response) => {
   if (!req.user) {

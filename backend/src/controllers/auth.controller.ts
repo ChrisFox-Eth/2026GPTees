@@ -9,10 +9,15 @@ import { catchAsync } from '../middleware/error.middleware.js';
 import { getUserByClerkId } from '../services/clerk.service.js';
 
 /**
- * Get current user
- * GET /api/auth/me
- * @param {Request} req - Express request
+ * @route GET /api/auth/me
+ * @description Retrieves authenticated user's profile information
+ * @access Protected (requires authentication)
+ *
+ * @param {Request} req - Express request (requires req.user)
  * @param {Response} res - Express response
+ *
+ * @returns {Object} User profile data (id, email, firstName, lastName, createdAt)
+ * @throws {401} Not authenticated
  */
 export const getCurrentUser = catchAsync(async (req: Request, res: Response) => {
   if (!req.user) {

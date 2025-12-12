@@ -1,0 +1,50 @@
+/**
+ * @module components/ui/Button
+ * @description Type definitions for the Button component
+ * @since 2025-11-21
+ */
+
+/**
+ * Supported button variants for different use cases
+ * @typedef {('primary' | 'secondary' | 'danger' | 'success' | 'warning' | 'pulse-gradient')} ButtonVariant
+ */
+export type ButtonVariant =
+  | 'primary'
+  | 'secondary'
+  | 'danger'
+  | 'success'
+  | 'warning'
+  | 'pulse-gradient';
+
+/**
+ * Supported button sizes
+ * @typedef {('sm' | 'md' | 'lg')} ButtonSize
+ */
+export type ButtonSize = 'sm' | 'md' | 'lg';
+
+/**
+ * Props for the Button component
+ * @interface ButtonProps
+ * @extends {React.ButtonHTMLAttributes<HTMLButtonElement>}
+ *
+ * @property {React.ReactNode} children - Content to display inside the button
+ * @property {ButtonVariant} [variant='primary'] - Button variant/style
+ * @property {ButtonSize} [size='md'] - Button size preset
+ * @property {boolean} [isDisabled=false] - Whether the button is disabled
+ * @property {boolean} [isLoading=false] - Whether the button is in a loading state
+ * @property {string} [className] - Additional CSS classes to apply
+ * @property {() => void} [onClick] - Callback function when button is clicked
+ * @property {'button' | 'submit' | 'reset'} [type='button'] - HTML button type
+ * @property {string} [ariaLabel] - ARIA label for accessibility
+ */
+export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+  children: React.ReactNode;
+  variant?: ButtonVariant;
+  size?: ButtonSize;
+  isDisabled?: boolean;
+  isLoading?: boolean;
+  className?: string;
+  onClick?: () => void;
+  type?: 'button' | 'submit' | 'reset';
+  ariaLabel?: string;
+}

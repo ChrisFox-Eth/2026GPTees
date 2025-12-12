@@ -42,5 +42,30 @@
     "react": {
       "version": "detect"
     }
-  }
+  },
+  "overrides": [
+    {
+      "files": ["src/**/*.tsx"],
+      "excludedFiles": ["**/*.d.ts"],
+      "rules": {
+        "no-restricted-syntax": [
+          "error",
+          {
+            "selector": "TSInterfaceDeclaration",
+            "message": "Inline interface declarations are not allowed in .tsx files. Move to adjacent *.types.ts or src/types/."
+          },
+          {
+            "selector": "TSTypeAliasDeclaration",
+            "message": "Inline type declarations are not allowed in .tsx files. Move to adjacent *.types.ts or src/types/."
+          }
+        ]
+      }
+    },
+    {
+      "files": ["src/types/**/*.ts", "**/*.types.ts", "**/*.d.ts"],
+      "rules": {
+        "no-restricted-syntax": "off"
+      }
+    }
+  ]
 }

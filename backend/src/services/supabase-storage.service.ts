@@ -1,6 +1,6 @@
 /**
  * @module services/supabase-storage
- * @description Supabase Storage service for design asset upload
+ * @description Supabase Storage service for design asset upload and optimization. Handles image downloading from OpenAI, optimization with Sharp, thumbnail generation, and upload to Supabase Storage bucket.
  * @since 2025-11-24
  */
 
@@ -18,7 +18,16 @@ const supabase: SupabaseClient | null =
     : null;
 
 /**
- * Download image from a remote URL
+ * @function downloadImage
+ * @description Downloads image from remote URL using HTTPS. Used to fetch AI-generated images from OpenAI.
+ *
+ * @param {string} url - Image URL to download
+ *
+ * @returns {Promise<Buffer>} Downloaded image as buffer
+ *
+ * @throws {Error} When download fails or connection error occurs
+ *
+ * @async
  */
 async function downloadImage(url: string): Promise<Buffer> {
   return new Promise((resolve, reject) => {
@@ -41,7 +50,20 @@ async function downloadImage(url: string): Promise<Buffer> {
 }
 
 /**
- * Upload a buffer to Supabase Storage and return its public URL
+ * @function uploadBuffer
+ * @description Uploads buffer to Supabase Storage bucket and returns public URL. Uses upsert to allow overwriting existing files.
+ *
+ * @param {string} path - Storage path within bucket (e.g., 'designId/image.png')
+ * @param {Buffer} buffer - Image buffer to upload
+ * @param {string} contentType - MIME type (e.g., 'image/png')
+ *
+ * @returns {Promise<string>} Public URL to uploaded file
+ *
+ * @throws {Error} When Supabase Storage is not configured
+ * @throws {Error} When upload fails
+ * @throws {Error} When public URL generation fails
+ *
+ * @async
  */
 async function uploadBuffer(path: string, buffer: Buffer, contentType: string): Promise<string> {
   if (!supabase) {
@@ -67,8 +89,22 @@ async function uploadBuffer(path: string, buffer: Buffer, contentType: string): 
 }
 
 /**
- * Upload design image (and thumbnail) to Supabase Storage
- * Falls back to returning the original URL if Supabase is not configured.
+ * @function uploadImage
+ * @description Downloads AI-generated design from OpenAI, optimizes it with Sharp, generates thumbnail, and uploads both to Supabase Storage. Falls back to returning original URL if Supabase not configured.
+ *
+ * @param {string} imageUrl - OpenAI image URL to download and upload
+ * @param {string} designId - Design ID for storage path organization
+ *
+ * @returns {Promise<{imageUrl: string, thumbnailUrl: string}>} Uploaded image URLs
+ * @returns {string} imageUrl - Public URL to full-size optimized image (or original if Supabase not configured)
+ * @returns {string} thumbnailUrl - Public URL to 400x400 thumbnail (or original if Supabase not configured)
+ *
+ * @example
+ * const urls = await uploadImage('https://openai.com/temp/image.png', 'design-123');
+ * console.log(urls.imageUrl); // 'https://storage.supabase.com/.../design-123/image-1234.png'
+ * console.log(urls.thumbnailUrl); // 'https://storage.supabase.com/.../design-123/thumbnail-1234.png'
+ *
+ * @async
  */
 export async function uploadImage(
   imageUrl: string,
@@ -105,25 +141,6 @@ export async function uploadImage(
     imageUrl: uploadedImageUrl,
     thumbnailUrl: uploadedThumbnailUrl,
   };
-}
-
-/**
- * Upload a raw buffer directly to Supabase Storage at a generated key.
- * @param {string} keyPrefix - Folder/prefix (e.g., designId or video id)
- * @param {Buffer} buffer - File contents
- * @param {string} extension - File extension without dot (e.g., png, mp4)
- * @param {string} contentType - MIME type
- * @returns {Promise<string>} Public URL of the uploaded asset
- */
-export async function uploadBufferDirect(
-  keyPrefix: string,
-  buffer: Buffer,
-  extension: string,
-  contentType: string
-): Promise<string> {
-  const filename = `${Date.now()}.${extension}`;
-  const path = `${keyPrefix}/${filename}`;
-  return uploadBuffer(path, buffer, contentType);
 }
 
 export default supabase;

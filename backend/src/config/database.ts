@@ -6,14 +6,22 @@
 
 import { PrismaClient } from '@prisma/client';
 
-// Initialize Prisma Client with logging in development
+/**
+ * @constant prisma
+ * @description Singleton Prisma client instance with environment-based logging
+ * Development: logs all queries, info, warnings, and errors
+ * Production: logs errors only
+ */
 const prisma = new PrismaClient({
   log: process.env.NODE_ENV === 'development' ? ['query', 'info', 'warn', 'error'] : ['error'],
 });
 
 /**
- * Connect to the database
+ * @function connectDatabase
+ * @description Establishes connection to PostgreSQL database via Prisma
+ *
  * @returns {Promise<void>}
+ * @throws {Error} Database connection failed
  */
 export async function connectDatabase(): Promise<void> {
   try {
@@ -26,7 +34,9 @@ export async function connectDatabase(): Promise<void> {
 }
 
 /**
- * Disconnect from the database
+ * @function disconnectDatabase
+ * @description Gracefully disconnects from PostgreSQL database
+ *
  * @returns {Promise<void>}
  */
 export async function disconnectDatabase(): Promise<void> {
@@ -35,8 +45,10 @@ export async function disconnectDatabase(): Promise<void> {
 }
 
 /**
- * Get Prisma client instance
- * @returns {PrismaClient}
+ * @function getPrismaClient
+ * @description Returns singleton Prisma client instance
+ *
+ * @returns {PrismaClient} Prisma client instance
  */
 export function getPrismaClient(): PrismaClient {
   return prisma;

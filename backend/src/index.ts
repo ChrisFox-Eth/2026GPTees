@@ -1,6 +1,7 @@
 /**
- * @module backend/index
- * @description Express server entry point for 2026GPTees
+ * @module index
+ * @description Express server entry point for 2026GPTees backend API
+ * Configures middleware, routes, error handling, and database connection
  * @since 2025-11-21
  */
 
@@ -24,7 +25,16 @@ import adminRoutes from './routes/admin.routes.js';
 import giftCodeRoutes from './routes/giftcode.routes.js';
 import promoCodeRoutes from './routes/promocode.routes.js';
 
+/**
+ * @constant app
+ * @description Express application instance
+ */
 const app = express();
+
+/**
+ * @constant PORT
+ * @description Server port from environment or default 5000
+ */
 const PORT = process.env.PORT || 5000;
 
 /**
@@ -33,7 +43,8 @@ const PORT = process.env.PORT || 5000;
 app.use(helmet());
 
 /**
- * CORS configuration
+ * @constant allowedOrigins
+ * @description Allowed CORS origins for frontend applications
  */
 const allowedOrigins = [
   process.env.FRONTEND_URL || 'http://localhost:5173',
@@ -93,7 +104,11 @@ app.use(notFoundHandler);
 app.use(errorHandler);
 
 /**
- * Connect to database and start server
+ * @function startServer
+ * @description Initializes database connection and starts Express server
+ * Handles graceful error handling and process exit on failure
+ *
+ * @returns {Promise<void>}
  */
 const startServer = async () => {
   try {
@@ -116,7 +131,10 @@ const startServer = async () => {
   }
 };
 
-// Handle unhandled promise rejections
+/**
+ * @event unhandledRejection
+ * @description Handles unhandled promise rejections and exits process
+ */
 process.on('unhandledRejection', (err: Error) => {
   console.error('❌ Unhandled Rejection:', err);
   process.exit(1);

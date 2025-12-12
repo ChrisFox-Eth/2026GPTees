@@ -9,8 +9,17 @@ import { catchAsync } from '../middleware/error.middleware.js';
 import { createCheckoutSession, confirmCheckoutSession } from '../services/stripe.service.js';
 
 /**
- * Create Stripe checkout session
- * POST /api/payments/create-checkout-session
+ * @route POST /api/payments/create-checkout-session
+ * @description Creates Stripe checkout session for order payment
+ * @access Protected (requires authentication)
+ *
+ * @param {Request} req - Express request (body: items, shippingAddress, code, orderId)
+ * @param {Response} res - Express response
+ *
+ * @returns {Object} Stripe session details (sessionId, url, orderId, freeOrder)
+ * @throws {401} Authentication required
+ * @throws {400} Shipping address is required
+ * @throws {400} Cart items are required (when no orderId)
  */
 export const createCheckout = catchAsync(async (req: Request, res: Response) => {
   if (!req.user) {
@@ -76,8 +85,16 @@ export const createCheckout = catchAsync(async (req: Request, res: Response) => 
 });
 
 /**
- * Manually confirm a Stripe checkout session (fallback when webhook is missing)
- * POST /api/payments/confirm-session
+ * @route POST /api/payments/confirm-session
+ * @description Manually confirms Stripe checkout session (fallback for missed webhooks)
+ * @access Protected (requires authentication)
+ *
+ * @param {Request} req - Express request (body: orderId, sessionId)
+ * @param {Response} res - Express response
+ *
+ * @returns {Object} Success message
+ * @throws {400} orderId and sessionId are required
+ * @throws {401} Authentication required
  */
 export const confirmSession = catchAsync(async (req: Request, res: Response) => {
   const { orderId, sessionId } = req.body;

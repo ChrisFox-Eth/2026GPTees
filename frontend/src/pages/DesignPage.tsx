@@ -8,7 +8,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '@clerk/clerk-react';
 import { apiGet, apiPost, apiPatch } from '../utils/api';
-import { Button } from '@components/Button';
+import { Button } from '@components/ui/Button';
 import ProtectedRoute from '../components/ProtectedRoute';
 import { trackEvent } from '@utils/analytics';
 import { QUICKSTART_PROMPT_KEY } from '@utils/quickstart';
@@ -38,6 +38,18 @@ const PRESET_PROMPTS = [
   'Streetwear graffiti tag, neon accents, no background',
 ];
 
+/**
+ * @function DesignContent
+ * @description Protected design studio content for creating and approving AI-generated artwork with real-time polling
+ *
+ * @returns {JSX.Element} The design studio content with generation and approval tools
+ *
+ * @example
+ * // Used within ProtectedRoute wrapper
+ * <ProtectedRoute>
+ *   <DesignContent />
+ * </ProtectedRoute>
+ */
 function DesignContent(): JSX.Element {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
@@ -191,7 +203,9 @@ function DesignContent(): JSX.Element {
 
       if (!firstItem?.product) {
         const productsResponse = await apiGet('/api/products');
-        const match = (productsResponse.data || []).find((p: Product) => p.id === firstItem?.productId);
+        const match = (productsResponse.data || []).find(
+          (p: Product) => p.id === firstItem?.productId
+        );
         if (match) {
           setProduct(match);
         }
@@ -259,8 +273,8 @@ function DesignContent(): JSX.Element {
         order?.maxDesigns === 9999
           ? 'unlimited'
           : order
-          ? order.maxDesigns - order.designsGenerated
-          : null;
+            ? order.maxDesigns - order.designsGenerated
+            : null;
 
       trackEvent('design.generate.submit', {
         order_id: orderId,
@@ -276,11 +290,15 @@ function DesignContent(): JSX.Element {
         style: selectedStyle,
       });
 
-      const response = await apiPost('/api/designs/generate', {
-        orderId,
-        prompt: promptText,
-        style: selectedStyle,
-      }, token);
+      const response = await apiPost(
+        '/api/designs/generate',
+        {
+          orderId,
+          prompt: promptText,
+          style: selectedStyle,
+        },
+        token
+      );
 
       // Add new design to the list
       setDesigns((prev) => [response.data, ...prev]);
@@ -333,9 +351,7 @@ function DesignContent(): JSX.Element {
 
       // Update design in list
       setDesigns((prev) =>
-        prev.map((d) =>
-          d.id === designId ? { ...d, approvalStatus: true } : d
-        )
+        prev.map((d) => (d.id === designId ? { ...d, approvalStatus: true } : d))
       );
 
       // Update order status
@@ -396,13 +412,15 @@ function DesignContent(): JSX.Element {
   };
 
   const handleShareDesign = async (design: Design) => {
-    const landingUrl = 'https://gptees.app/?utm_source=customer_share&utm_medium=design&utm_campaign=ugc';
+    const landingUrl =
+      'https://gptees.app/?utm_source=customer_share&utm_medium=design&utm_campaign=ugc';
     const shareTarget = design.imageUrl || landingUrl;
     const shareText = `I just designed this one-of-one tee on GPTees. What do you think? Start yours here: ${landingUrl}`;
 
     try {
       setShareFeedback(null);
-      const supportsNativeShare = typeof navigator !== 'undefined' && typeof navigator.share === 'function';
+      const supportsNativeShare =
+        typeof navigator !== 'undefined' && typeof navigator.share === 'function';
 
       if (supportsNativeShare) {
         await navigator.share({
@@ -410,7 +428,9 @@ function DesignContent(): JSX.Element {
           text: shareText,
           url: shareTarget,
         });
-        setShareFeedback('Shared! Thanks for spreading the word. Post it anywhere else by copying the link below.');
+        setShareFeedback(
+          'Shared! Thanks for spreading the word. Post it anywhere else by copying the link below.'
+        );
         trackEvent('design.share.success', {
           order_id: order?.id ?? orderId,
           design_id: design.id,
@@ -439,7 +459,9 @@ function DesignContent(): JSX.Element {
       });
     } catch (err: any) {
       console.error('Error sharing design:', err);
-      setShareFeedback('Could not share right now. Copy the preview link manually and keep creating.');
+      setShareFeedback(
+        'Could not share right now. Copy the preview link manually and keep creating.'
+      );
       trackEvent('design.share.error', {
         order_id: order?.id ?? orderId,
         design_id: design.id,
@@ -463,9 +485,9 @@ function DesignContent(): JSX.Element {
   if (!orderId) {
     return (
       <div className="container-max py-12">
-        <div className="max-w-2xl mx-auto text-center">
-          <h1 className="text-2xl font-bold text-red-600 mb-4">Missing Order ID</h1>
-          <p className="text-gray-600 dark:text-gray-400 mb-6">
+        <div className="mx-auto max-w-2xl text-center">
+          <h1 className="mb-4 text-2xl font-bold text-red-600">Missing Order ID</h1>
+          <p className="mb-6 text-gray-600 dark:text-gray-400">
             Please provide an order ID to generate designs.
           </p>
           <Button variant="primary" onClick={() => navigate('/account')}>
@@ -480,7 +502,7 @@ function DesignContent(): JSX.Element {
     return (
       <div className="container-max py-12">
         <div className="flex items-center justify-center py-12">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
+          <div className="border-primary-600 h-12 w-12 animate-spin rounded-full border-b-2"></div>
         </div>
       </div>
     );
@@ -489,9 +511,9 @@ function DesignContent(): JSX.Element {
   if (!order) {
     return (
       <div className="container-max py-12">
-        <div className="max-w-2xl mx-auto text-center">
-          <h1 className="text-2xl font-bold text-red-600 mb-4">Order Not Found</h1>
-          <p className="text-gray-600 dark:text-gray-400 mb-6">
+        <div className="mx-auto max-w-2xl text-center">
+          <h1 className="mb-4 text-2xl font-bold text-red-600">Order Not Found</h1>
+          <p className="mb-6 text-gray-600 dark:text-gray-400">
             The order you're looking for doesn't exist or you don't have access to it.
           </p>
           <Button variant="primary" onClick={() => navigate('/account')}>
@@ -503,11 +525,8 @@ function DesignContent(): JSX.Element {
   }
 
   const remainingDesigns =
-    order.maxDesigns === 9999
-      ? 'unlimited'
-      : order.maxDesigns - order.designsGenerated;
-  const isPreviewOrder =
-    order.status === 'PENDING_PAYMENT' || order.status === 'DESIGN_PENDING';
+    order.maxDesigns === 9999 ? 'unlimited' : order.maxDesigns - order.designsGenerated;
+  const isPreviewOrder = order.status === 'PENDING_PAYMENT' || order.status === 'DESIGN_PENDING';
   const isPaidOrFulfillment =
     order.status === 'PAID' ||
     order.status === 'DESIGN_APPROVED' ||
@@ -518,12 +537,9 @@ function DesignContent(): JSX.Element {
     order.status === 'PAID' ||
     order.status === 'DESIGN_PENDING' ||
     order.status === 'PENDING_PAYMENT';
-  const hasReachedLimit =
-    order.maxDesigns !== 9999 && order.designsGenerated >= order.maxDesigns;
+  const hasReachedLimit = order.maxDesigns !== 9999 && order.designsGenerated >= order.maxDesigns;
   const generationBlockedMessage =
-    order.status === 'SUBMITTED' ||
-    order.status === 'SHIPPED' ||
-    order.status === 'DELIVERED'
+    order.status === 'SUBMITTED' || order.status === 'SHIPPED' || order.status === 'DELIVERED'
       ? 'Fulfillment has started for this order. Create a new preview to keep designing.'
       : 'This order is not eligible for new designs. Start a new preview order to continue.';
 
@@ -533,30 +549,28 @@ function DesignContent(): JSX.Element {
     <div className="container-max py-8">
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-          Design Studio
-        </h1>
+        <h1 className="mb-2 text-3xl font-bold text-gray-900 dark:text-white">Design Studio</h1>
         <p className="text-gray-600 dark:text-gray-400">
           Describe your idea and we will craft the artwork for your GPTee
         </p>
       </div>
 
       {/* Order Info Bar */}
-      <div className="hidden! bg-primary-50 dark:bg-primary-900/20 rounded-lg p-4 mb-6 flex-wrap items-center justify-between gap-4">
+      <div className="bg-primary-50 dark:bg-primary-900/20 mb-6 hidden! flex-wrap items-center justify-between gap-4 rounded-lg p-4">
         <div>
-          <p className="text-sm text-primary-800 dark:text-primary-200">
+          <p className="text-primary-800 dark:text-primary-200 text-sm">
             <strong>Order:</strong> {order.orderNumber}
           </p>
-          <p className="text-sm text-primary-800 dark:text-primary-200">
+          <p className="text-primary-800 dark:text-primary-200 text-sm">
             <strong>Tier:</strong> {order.designTier}
           </p>
         </div>
         <div className="text-right">
-          <p className="text-sm text-primary-800 dark:text-primary-200">
+          <p className="text-primary-800 dark:text-primary-200 text-sm">
             <strong>Designs Generated:</strong> {order.designsGenerated}/{' '}
             {order.maxDesigns === 9999 ? 'unlimited' : order.maxDesigns}
           </p>
-          <p className="text-sm text-primary-800 dark:text-primary-200">
+          <p className="text-primary-800 dark:text-primary-200 text-sm">
             <strong>Remaining:</strong>{' '}
             {typeof remainingDesigns === 'number' ? remainingDesigns : 'unlimited'}
           </p>
@@ -564,13 +578,14 @@ function DesignContent(): JSX.Element {
       </div>
 
       {isPreviewOrder && (
-        <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 mb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+        <div className="mb-6 flex flex-col gap-3 rounded-lg border border-blue-200 bg-blue-50 p-4 md:flex-row md:items-center md:justify-between dark:border-blue-800 dark:bg-blue-900/20">
           <div>
             <p className="text-sm font-semibold text-blue-900 dark:text-blue-100">
               Design first, pay when you’re ready.
             </p>
-            <p className="text-xs text-blue-800 dark:text-blue-200 mt-1">
-              Checkout saves your art, size, and color. You’ll see your tee exactly as you approved it.
+            <p className="mt-1 text-xs text-blue-800 dark:text-blue-200">
+              Checkout saves your art, size, and color. You’ll see your tee exactly as you approved
+              it.
             </p>
           </div>
           <Button
@@ -585,8 +600,8 @@ function DesignContent(): JSX.Element {
       )}
 
       {product && (
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4 mb-6 border border-gray-200 dark:border-gray-700">
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-4">
+        <div className="mb-6 rounded-lg border border-gray-200 bg-white p-4 shadow dark:border-gray-700 dark:bg-gray-800">
+          <div className="mb-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
             <div>
               <p className="text-sm font-semibold text-gray-900 dark:text-white">Choose your fit</p>
               <p className="text-xs text-gray-600 dark:text-gray-400">
@@ -601,14 +616,14 @@ function DesignContent(): JSX.Element {
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-4">
               <div>
-                <p className="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-2">Color</p>
-                <div className="flex gap-2 flex-wrap">
+                <p className="mb-2 text-xs font-semibold text-gray-700 dark:text-gray-300">Color</p>
+                <div className="flex flex-wrap gap-2">
                   {product.colors.map((c) => (
                     <button
                       key={c.name}
                       type="button"
                       onClick={() => handleVariantSelect(c.name, selectedSize || product.sizes[0])}
-                      className={`w-10 h-10 rounded-full border-2 transition-all cursor-pointer ${
+                      className={`h-10 w-10 cursor-pointer rounded-full border-2 transition-all ${
                         selectedColor === c.name
                           ? 'border-primary-600 scale-110'
                           : 'border-gray-300 dark:border-gray-600'
@@ -620,22 +635,19 @@ function DesignContent(): JSX.Element {
                 </div>
               </div>
               <div>
-                <p className="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-2">Size</p>
-                <div className="flex gap-2 flex-wrap text-xs">
+                <p className="mb-2 text-xs font-semibold text-gray-700 dark:text-gray-300">Size</p>
+                <div className="flex flex-wrap gap-2 text-xs">
                   {product.sizes.map((s) => (
                     <button
                       key={s}
                       type="button"
                       onClick={() =>
-                        handleVariantSelect(
-                          selectedColor || product.colors[0]?.name || 'Black',
-                          s
-                        )
+                        handleVariantSelect(selectedColor || product.colors[0]?.name || 'Black', s)
                       }
-                      className={`px-3 py-2 rounded-full border transition-colors cursor-pointer ${
+                      className={`cursor-pointer rounded-full border px-3 py-2 transition-colors ${
                         selectedSize === s
                           ? 'border-primary-600 bg-primary-50 dark:bg-primary-900/20 text-primary-700 dark:text-primary-200'
-                          : 'border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200'
+                          : 'border-gray-300 text-gray-700 dark:border-gray-600 dark:text-gray-200'
                       }`}
                       aria-label={`Select size ${s}`}
                     >
@@ -651,7 +663,9 @@ function DesignContent(): JSX.Element {
 
             {designs.length > 0 && (
               <div className="space-y-2">
-                <p className="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-2">See it on all colors</p>
+                <p className="mb-2 text-xs font-semibold text-gray-700 dark:text-gray-300">
+                  See it on all colors
+                </p>
                 <div className="grid grid-cols-2 gap-3">
                   {product.colors.slice(0, 4).map((c) => {
                     const mockKey = c.name.toLowerCase();
@@ -659,19 +673,27 @@ function DesignContent(): JSX.Element {
                     return (
                       <div
                         key={c.name}
-                        className="rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden bg-gray-50 dark:bg-gray-900"
+                        className="overflow-hidden rounded-lg border border-gray-200 bg-gray-50 dark:border-gray-700 dark:bg-gray-900"
                       >
                         <div
-                          className="relative h-36 flex items-center justify-center"
-                          style={mockSrc ? { backgroundImage: `url(${mockSrc})`, backgroundSize: 'cover', backgroundPosition: 'center' } : { backgroundColor: c.hex }}
+                          className="relative flex h-36 items-center justify-center"
+                          style={
+                            mockSrc
+                              ? {
+                                  backgroundImage: `url(${mockSrc})`,
+                                  backgroundSize: 'cover',
+                                  backgroundPosition: 'center',
+                                }
+                              : { backgroundColor: c.hex }
+                          }
                         >
                           <img
                             src={designs[0].thumbnailUrl || designs[0].imageUrl}
                             alt={designs[0].prompt}
-                            className="max-h-24 max-w-[70%] object-contain absolute inset-0 m-auto"
+                            className="absolute inset-0 m-auto max-h-24 max-w-[70%] object-contain"
                           />
                         </div>
-                        <p className="text-center text-[11px] text-gray-800 dark:text-gray-100 py-1">
+                        <p className="py-1 text-center text-[11px] text-gray-800 dark:text-gray-100">
                           {c.name}
                         </p>
                       </div>
@@ -681,58 +703,56 @@ function DesignContent(): JSX.Element {
               </div>
             )}
           </div>
-
         </div>
       )}
 
       {typeof remainingDesigns === 'number' && remainingDesigns <= 1 && (
-        <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-3 mb-6">
-            <p className="text-yellow-800 dark:text-yellow-300 text-sm">
-              Only {remainingDesigns} design left on this tier. Make it count or consider Premium for unlimited redraws.
-            </p>
+        <div className="mb-6 rounded-lg border border-yellow-200 bg-yellow-50 p-3 dark:border-yellow-800 dark:bg-yellow-900/20">
+          <p className="text-sm text-yellow-800 dark:text-yellow-300">
+            Only {remainingDesigns} design left on this tier. Make it count or consider Premium for
+            unlimited redraws.
+          </p>
         </div>
       )}
 
       {/* Error Display */}
       {error && (
-        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4 mb-6">
+        <div className="mb-6 rounded-lg border border-red-200 bg-red-50 p-4 dark:border-red-800 dark:bg-red-900/20">
           <p className="text-red-800 dark:text-red-400">{error}</p>
           <button
             onClick={() => setError(null)}
-            className="mt-2 text-sm text-red-600 dark:text-red-400 hover:underline"
+            className="mt-2 text-sm text-red-600 hover:underline dark:text-red-400"
           >
             Dismiss
           </button>
         </div>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
         {/* Design Generator Form */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-          <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
-            Try a new idea
-          </h2>
+        <div className="rounded-lg bg-white p-6 shadow dark:bg-gray-800">
+          <h2 className="mb-4 text-xl font-bold text-gray-900 dark:text-white">Try a new idea</h2>
 
           {!canGenerate && (
-            <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4 mb-4">
-              <p className="text-yellow-800 dark:text-yellow-400 text-sm">
+            <div className="mb-4 rounded-lg border border-yellow-200 bg-yellow-50 p-4 dark:border-yellow-800 dark:bg-yellow-900/20">
+              <p className="text-sm text-yellow-800 dark:text-yellow-400">
                 {generationBlockedMessage}
               </p>
             </div>
           )}
 
           {hasReachedLimit && (
-            <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4 mb-4">
-              <p className="text-yellow-800 dark:text-yellow-400 text-sm">
-                You've reached your design limit for the {order.designTier} tier.
-                Upgrade to Premium for unlimited designs!
+            <div className="mb-4 rounded-lg border border-yellow-200 bg-yellow-50 p-4 dark:border-yellow-800 dark:bg-yellow-900/20">
+              <p className="text-sm text-yellow-800 dark:text-yellow-400">
+                You've reached your design limit for the {order.designTier} tier. Upgrade to Premium
+                for unlimited designs!
               </p>
             </div>
           )}
 
           {(isGenerating || hasGeneratingDesign) && (
-            <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 mb-4">
-              <p className="text-blue-800 dark:text-blue-300 text-sm">
+            <div className="mb-4 rounded-lg border border-blue-200 bg-blue-50 p-4 dark:border-blue-800 dark:bg-blue-900/20">
+              <p className="text-sm text-blue-800 dark:text-blue-300">
                 {isGenerating
                   ? 'Generating your design... this can take 10–30 seconds.'
                   : 'Uploading to storage... image will refresh automatically.'}
@@ -744,7 +764,7 @@ function DesignContent(): JSX.Element {
           <div className="mb-4">
             <label
               htmlFor="prompt"
-              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+              className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
             >
               Describe your design
             </label>
@@ -755,19 +775,19 @@ function DesignContent(): JSX.Element {
               onChange={(e) => setPrompt(e.target.value)}
               placeholder="Short and clear wins: e.g., retro surf wave badge"
               disabled={!canGenerate || hasReachedLimit}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white disabled:opacity-50 disabled:cursor-not-allowed"
+              className="focus:ring-primary-500 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 focus:border-transparent focus:ring-2 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
             />
           </div>
 
           {/* Preset Prompts */}
-          <div className="hidden! mb-6">
-            <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Quick start</p>
+          <div className="mb-6 hidden!">
+            <p className="mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">Quick start</p>
             <div className="flex flex-wrap gap-2">
               {PRESET_PROMPTS.map((preset) => (
                 <button
                   key={preset}
                   onClick={() => handlePresetSelect(preset)}
-                  className="text-xs border border-gray-300 dark:border-gray-600 rounded-full px-3 py-2 hover:border-primary-400 hover:text-primary-600 dark:hover:text-primary-400 transition-colors"
+                  className="hover:border-primary-400 hover:text-primary-600 dark:hover:text-primary-400 rounded-full border border-gray-300 px-3 py-2 text-xs transition-colors dark:border-gray-600"
                   type="button"
                 >
                   {preset}
@@ -776,9 +796,11 @@ function DesignContent(): JSX.Element {
               <button
                 onClick={() => {
                   setSelectedStyle('trendy');
-                  handlePresetSelect('Best-selling combo: streetwear illustration, bold outline, no background');
+                  handlePresetSelect(
+                    'Best-selling combo: streetwear illustration, bold outline, no background'
+                  );
                 }}
-                className="text-xs border border-primary-400 text-primary-600 dark:text-primary-300 rounded-full px-3 py-2 bg-primary-50 dark:bg-primary-900/20"
+                className="border-primary-400 text-primary-600 dark:text-primary-300 bg-primary-50 dark:bg-primary-900/20 rounded-full border px-3 py-2 text-xs"
                 type="button"
               >
                 Use best-selling combo
@@ -787,8 +809,8 @@ function DesignContent(): JSX.Element {
           </div>
 
           {/* Style Selector */}
-          <div className="hidden! mb-6">
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+          <div className="mb-6 hidden!">
+            <label className="mb-3 block text-sm font-medium text-gray-700 dark:text-gray-300">
               Choose Style
             </label>
             <div className="grid grid-cols-2 gap-3">
@@ -797,16 +819,16 @@ function DesignContent(): JSX.Element {
                   key={style.value}
                   onClick={() => setSelectedStyle(style.value)}
                   disabled={!canGenerate || hasReachedLimit}
-                  className={`p-3 rounded-lg border-2 text-left transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
+                  className={`rounded-lg border-2 p-3 text-left transition-all disabled:cursor-not-allowed disabled:opacity-50 ${
                     selectedStyle === style.value
                       ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20'
-                      : 'border-gray-200 dark:border-gray-700 hover:border-primary-300'
+                      : 'hover:border-primary-300 border-gray-200 dark:border-gray-700'
                   }`}
                 >
-                  <div className="font-semibold text-gray-900 dark:text-white text-sm">
+                  <div className="text-sm font-semibold text-gray-900 dark:text-white">
                     {style.label}
                   </div>
-                  <div className="text-xs text-gray-600 dark:text-gray-400 mt-1">
+                  <div className="mt-1 text-xs text-gray-600 dark:text-gray-400">
                     {style.description}
                   </div>
                 </button>
@@ -819,11 +841,11 @@ function DesignContent(): JSX.Element {
             variant="primary"
             onClick={handleGenerateDesign}
             disabled={!canGenerate || hasReachedLimit || isGenerating || !prompt.trim()}
-            className="w-full mb-3"
+            className="mb-3 w-full"
           >
             {isGenerating ? (
               <span className="flex items-center justify-center gap-2">
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                <div className="h-4 w-4 animate-spin rounded-full border-b-2 border-white"></div>
                 Generating Design...
               </span>
             ) : (
@@ -836,62 +858,62 @@ function DesignContent(): JSX.Element {
             variant="secondary"
             onClick={handleSurpriseMe}
             disabled={!canGenerate || hasReachedLimit || isLoadingSurprise}
-            className="w-full mb-3"
+            className="mb-3 w-full"
           >
             {isLoadingSurprise ? 'Loading...' : 'Surprise Me'}
           </Button>
 
-          <p className="text-xs text-gray-500 dark:text-gray-400 mt-3 text-center">
+          <p className="mt-3 text-center text-xs text-gray-500 dark:text-gray-400">
             Generation takes 10-30 seconds
           </p>
         </div>
 
         {/* Generated Designs Display */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-          <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
+        <div className="rounded-lg bg-white p-6 shadow dark:bg-gray-800">
+          <h2 className="mb-4 text-xl font-bold text-gray-900 dark:text-white">
             Your Designs ({designs.length})
           </h2>
-          <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
+          <p className="mb-3 text-sm text-gray-600 dark:text-gray-400">
             Show off your favorite version and then print it.
           </p>
           {shareFeedback && (
-            <div className="bg-primary-50 dark:bg-primary-900/20 border border-primary-100 dark:border-primary-800 rounded-lg p-3 text-sm text-primary-800 dark:text-primary-200 mb-4">
+            <div className="bg-primary-50 dark:bg-primary-900/20 border-primary-100 dark:border-primary-800 text-primary-800 dark:text-primary-200 mb-4 rounded-lg border p-3 text-sm">
               {shareFeedback}
             </div>
           )}
 
           {designs.length === 0 && (
-            <div className="text-center py-12">
-              <div className="text-6xl mb-4">🎨</div>
+            <div className="py-12 text-center">
+              <div className="mb-4 text-6xl">🎨</div>
               <p className="text-gray-600 dark:text-gray-400">
                 No designs yet. Generate your first design!
               </p>
             </div>
           )}
 
-          <div className="space-y-4 max-h-[600px] overflow-y-auto">
+          <div className="max-h-[600px] space-y-4 overflow-y-auto">
             {designs.map((design) => (
               <div
                 key={design.id}
-                className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden"
+                className="overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700"
               >
                 {/* Design Image */}
                 <div className="relative bg-gray-100 dark:bg-gray-900">
                   <img
                     src={design.thumbnailUrl || design.imageUrl}
                     alt={design.prompt}
-                    className="w-full h-64 object-contain"
+                    className="h-64 w-full object-contain"
                   />
                   {design.status === 'GENERATING' && (
-                    <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-                      <div className="text-white text-center">
-                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white mx-auto mb-2"></div>
+                    <div className="bg-opacity-50 absolute inset-0 flex items-center justify-center bg-black">
+                      <div className="text-center text-white">
+                        <div className="mx-auto mb-2 h-8 w-8 animate-spin rounded-full border-b-2 border-white"></div>
                         <p className="text-sm">Uploading to storage...</p>
                       </div>
                     </div>
                   )}
                   {design.approvalStatus && (
-                    <div className="absolute top-2 right-2 bg-green-500 text-white px-3 py-1 rounded-full text-xs font-semibold">
+                    <div className="absolute top-2 right-2 rounded-full bg-green-500 px-3 py-1 text-xs font-semibold text-white">
                       Approved
                     </div>
                   )}
@@ -909,24 +931,25 @@ function DesignContent(): JSX.Element {
                       <button
                         type="button"
                         onClick={() => togglePrompt(design.id)}
-                        className="text-xs text-primary-600 dark:text-primary-300 font-semibold"
+                        className="text-primary-600 dark:text-primary-300 text-xs font-semibold"
                       >
                         {expandedPrompts[design.id] ? 'Show less' : 'See full prompt'}
                       </button>
                     )}
                   </div>
                   {design.style && (
-                    <p className="text-xs text-gray-500 dark:text-gray-500 mb-2">
+                    <p className="mb-2 text-xs text-gray-500 dark:text-gray-500">
                       <strong>Style:</strong> {design.style}
                     </p>
                   )}
-                  <p className="text-xs text-gray-500 dark:text-gray-500 mb-3">
+                  <p className="mb-3 text-xs text-gray-500 dark:text-gray-500">
                     {new Date(design.createdAt).toLocaleString()}
                   </p>
 
-                  <div className="mt-3 flex flex-col sm:flex-row gap-2 sm:static sticky bottom-0 bg-white dark:bg-gray-800 py-3 sm:py-0 border-t sm:border-0 border-gray-200 dark:border-gray-700">
-                    {!design.approvalStatus && design.status === 'COMPLETED' && (
-                      isPaidOrFulfillment ? (
+                  <div className="sticky bottom-0 mt-3 flex flex-col gap-2 border-t border-gray-200 bg-white py-3 sm:static sm:flex-row sm:border-0 sm:py-0 dark:border-gray-700 dark:bg-gray-800">
+                    {!design.approvalStatus &&
+                      design.status === 'COMPLETED' &&
+                      (isPaidOrFulfillment ? (
                         <Button
                           variant="primary"
                           size="sm"
@@ -936,7 +959,7 @@ function DesignContent(): JSX.Element {
                         >
                           {isApproving === design.id ? (
                             <span className="flex items-center justify-center gap-2">
-                              <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white"></div>
+                              <div className="h-3 w-3 animate-spin rounded-full border-b-2 border-white"></div>
                               Approving...
                             </span>
                           ) : (
@@ -953,8 +976,7 @@ function DesignContent(): JSX.Element {
                         >
                           Print this tee
                         </Button>
-                      )
-                    )}
+                      ))}
 
                     <Button
                       variant="secondary"
@@ -968,14 +990,14 @@ function DesignContent(): JSX.Element {
                   </div>
 
                   {design.approvalStatus && (
-                    <div className="bg-green-50 dark:bg-green-900/20 rounded-lg p-3 text-center mt-3">
-                      <p className="text-sm text-green-800 dark:text-green-400 font-semibold">
+                    <div className="mt-3 rounded-lg bg-green-50 p-3 text-center dark:bg-green-900/20">
+                      <p className="text-sm font-semibold text-green-800 dark:text-green-400">
                         Design Approved! Order submitted for printing.
                       </p>
                     </div>
                   )}
 
-                  <p className="text-xs text-gray-500 dark:text-gray-500 mt-2">
+                  <p className="mt-2 text-xs text-gray-500 dark:text-gray-500">
                     We’ll copy a link if sharing isn’t available on your device.
                   </p>
                 </div>
@@ -995,6 +1017,16 @@ function DesignContent(): JSX.Element {
   );
 }
 
+/**
+ * @component
+ * @description Design studio page for creating and approving AI-generated artwork. Features prompt input, style selection, color/size picker, design generation, approval workflow, and sharing capabilities. Protected by authentication.
+ *
+ * @returns {JSX.Element} The rendered design page with protected content
+ *
+ * @example
+ * // Used in App.tsx routing
+ * <Route path="/design" element={<DesignPage />} />
+ */
 export default function DesignPage(): JSX.Element {
   return (
     <ProtectedRoute>

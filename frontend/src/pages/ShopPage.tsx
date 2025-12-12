@@ -1,6 +1,6 @@
 /**
  * @module pages/ShopPage
- * @description Shop page with product catalog
+ * @description Shop page with product catalog (currently redirects to quickstart)
  * @since 2025-11-21
  */
 
@@ -8,34 +8,48 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Product } from '../types/product';
 import { apiGet } from '../utils/api';
-import { ProductCard } from '../components/ProductCard';
-import { ProductModal } from '../components/ProductModal';
+import { ProductCard } from '@components/product/ProductCard';
+import { ProductModal } from '@components/product/ProductModal';
 import { trackEvent } from '@utils/analytics';
-// import { Quickstart } from '@components/Quickstart';
-import SocialProofStrip from '@components/SocialProofStrip/SocialProofStrip';
-import { Button } from '@components/Button';
+// import { Quickstart } from '@components/sections/Quickstart';
+import SocialProofStrip from '@components/sections/SocialProofStrip/SocialProofStrip';
+import { Button } from '@components/ui/Button';
 import { useCart } from '../hooks/useCart';
-import Hero from '@components/Hero/Hero';
+import Hero from '@components/sections/Hero/Hero';
 
 const FAQ_ITEMS = [
   {
     question: 'How long does shipping take?',
-    answer: 'Most US orders ship in 5-8 business days after you approve your design. You get tracking as soon as it leaves the facility.',
+    answer:
+      'Most US orders ship in 5-8 business days after you approve your design. You get tracking as soon as it leaves the facility.',
   },
   {
     question: 'What if I do not like the design?',
-    answer: 'Premium includes unlimited redraws before print. We only print after you approve a design you love.',
+    answer:
+      'Premium includes unlimited redraws before print. We only print after you approve a design you love.',
   },
   {
     question: 'What is your return policy?',
-    answer: 'If there is a defect, misprint, or damage, we will reprint or refund. Unworn items can be returned within 30 days.',
+    answer:
+      'If there is a defect, misprint, or damage, we will reprint or refund. Unworn items can be returned within 30 days.',
   },
   {
     question: 'How does sizing fit?',
-    answer: 'Our Bella 3001 tees are unisex and true to size. Size up for a relaxed fit; size down for a tailored fit.',
+    answer:
+      'Our Bella 3001 tees are unisex and true to size. Size up for a relaxed fit; size down for a tailored fit.',
   },
 ];
 
+/**
+ * @component
+ * @description Shop page with product catalog featuring category filters, product grid, and mobile cart bar. Currently redirects to quickstart section on home page.
+ *
+ * @returns {JSX.Element} The rendered shop page (or Hero if shop is hidden)
+ *
+ * @example
+ * // Used in App.tsx routing
+ * <Route path="/shop" element={<ShopPage />} />
+ */
 export default function ShopPage(): JSX.Element {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
@@ -119,20 +133,17 @@ export default function ShopPage(): JSX.Element {
   };
 
   const visibleProducts =
-    categoryFilter === 'ALL'
-      ? products
-      : products.filter((p) => p.category === categoryFilter);
+    categoryFilter === 'ALL' ? products : products.filter((p) => p.category === categoryFilter);
   const skeletonCards = Array.from({ length: 6 });
 
   return (
     <div className="container-max py-8 pb-24 md:pb-12">
       {/* Header */}
       <div className="mb-8 space-y-3">
-        <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-2">
-          Create your fit
-        </h1>
-        <p className="text-lg text-gray-600 dark:text-gray-400 max-w-3xl">
-          Your design is ready to go—pick your fit, we&apos;ll generate the artwork, and you pay after you approve. Limitless redraws included.
+        <h1 className="mb-2 text-4xl font-bold text-gray-900 dark:text-white">Create your fit</h1>
+        <p className="max-w-3xl text-lg text-gray-600 dark:text-gray-400">
+          Your design is ready to go—pick your fit, we&apos;ll generate the artwork, and you pay
+          after you approve. Limitless redraws included.
         </p>
         {/* <div className="grid gap-2 sm:grid-cols-2 max-w-xl">
           <div className="flex items-center gap-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 px-3 py-2">
@@ -154,16 +165,16 @@ export default function ShopPage(): JSX.Element {
           Submit your selections and your design preview will appear for approval.
         </p>
         <div className="-mx-4 sm:mx-0">
-          <div className="flex gap-2 mt-4 overflow-x-auto pb-2 px-4 sm:px-0">
+          <div className="mt-4 flex gap-2 overflow-x-auto px-4 pb-2 sm:px-0">
             {['ALL', 'T_SHIRT', 'HOODIE'].map((category) => (
               <button
                 key={category}
                 onClick={() => setCategoryFilter(category)}
                 aria-pressed={categoryFilter === category}
-                className={`px-4 py-2 rounded-full border whitespace-nowrap transition-colors ${
+                className={`rounded-full border px-4 py-2 whitespace-nowrap transition-colors ${
                   categoryFilter === category
                     ? 'border-primary-600 text-primary-600 bg-primary-50 dark:bg-primary-900'
-                    : 'border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300'
+                    : 'border-gray-300 text-gray-700 dark:border-gray-600 dark:text-gray-300'
                 }`}
               >
                 {category === 'ALL' ? 'All' : category.replace('_', ' ')}
@@ -173,24 +184,24 @@ export default function ShopPage(): JSX.Element {
         </div>
       </div>
 
-      <div className="hidden mb-8">
+      <div className="mb-8 hidden">
         <SocialProofStrip />
       </div>
 
       {/* Loading State */}
       {loading && (
-        <div className="grid grid-cols-1 min-[360px]:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6 mb-8">
+        <div className="mb-8 grid grid-cols-1 gap-4 min-[360px]:grid-cols-2 sm:gap-6 md:grid-cols-3 xl:grid-cols-4">
           {skeletonCards.map((_, idx) => (
             <div
               key={idx}
-              className="bg-white dark:bg-gray-800 rounded-lg shadow-md border border-gray-100 dark:border-gray-700 overflow-hidden animate-pulse"
+              className="animate-pulse overflow-hidden rounded-lg border border-gray-100 bg-white shadow-md dark:border-gray-700 dark:bg-gray-800"
             >
               <div className="aspect-square bg-gray-200 dark:bg-gray-700" />
-              <div className="p-4 space-y-3">
-                <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-3/4" />
-                <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-full" />
-                <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-2/3" />
-                <div className="h-10 bg-gray-200 dark:bg-gray-700 rounded mt-2" />
+              <div className="space-y-3 p-4">
+                <div className="h-4 w-3/4 rounded bg-gray-200 dark:bg-gray-700" />
+                <div className="h-3 w-full rounded bg-gray-200 dark:bg-gray-700" />
+                <div className="h-3 w-2/3 rounded bg-gray-200 dark:bg-gray-700" />
+                <div className="mt-2 h-10 rounded bg-gray-200 dark:bg-gray-700" />
               </div>
             </div>
           ))}
@@ -199,11 +210,11 @@ export default function ShopPage(): JSX.Element {
 
       {/* Error State */}
       {error && (
-        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4 mb-8">
+        <div className="mb-8 rounded-lg border border-red-200 bg-red-50 p-4 dark:border-red-800 dark:bg-red-900/20">
           <p className="text-red-800 dark:text-red-400">{error}</p>
           <button
             onClick={fetchProducts}
-            className="mt-2 text-sm text-red-600 dark:text-red-400 hover:underline"
+            className="mt-2 text-sm text-red-600 hover:underline dark:text-red-400"
           >
             Try again
           </button>
@@ -212,7 +223,7 @@ export default function ShopPage(): JSX.Element {
 
       {/* Product Grid */}
       {!loading && !error && visibleProducts.length > 0 && (
-        <div className="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
+        <div className="grid grid-cols-1 gap-4 sm:gap-6 md:grid-cols-3 xl:grid-cols-4">
           {visibleProducts.map((product) => (
             <ProductCard
               key={product.id}
@@ -225,10 +236,8 @@ export default function ShopPage(): JSX.Element {
 
       {/* Empty State */}
       {!loading && !error && visibleProducts.length === 0 && (
-        <div className="text-center py-12">
-          <p className="text-gray-600 dark:text-gray-400 text-lg">
-            Coming soon!
-          </p>
+        <div className="py-12 text-center">
+          <p className="text-lg text-gray-600 dark:text-gray-400">Coming soon!</p>
         </div>
       )}
 
@@ -242,9 +251,9 @@ export default function ShopPage(): JSX.Element {
       )}
 
       {hasCartItems && !selectedProduct && (
-        <div className="fixed bottom-0 inset-x-0 z-40 md:hidden">
+        <div className="fixed inset-x-0 bottom-0 z-40 md:hidden">
           <div className="container-max pb-4">
-            <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg p-3 flex items-center justify-between gap-3">
+            <div className="flex items-center justify-between gap-3 rounded-lg border border-gray-200 bg-white p-3 shadow-lg dark:border-gray-700 dark:bg-gray-900">
               <div>
                 <p className="text-xs text-gray-500 dark:text-gray-400">Cart</p>
                 <p className="text-sm font-semibold text-gray-900 dark:text-white">
@@ -269,18 +278,20 @@ export default function ShopPage(): JSX.Element {
       </div> */}
 
       <div className="my-10">
-        <h2 className="hidden! text-2xl font-bold text-gray-900 dark:text-white mb-3">Answers at a glance</h2>
-        <div className="space-y-3 hidden!">
+        <h2 className="mb-3 hidden! text-2xl font-bold text-gray-900 dark:text-white">
+          Answers at a glance
+        </h2>
+        <div className="hidden! space-y-3">
           {FAQ_ITEMS.map((faq) => (
             <details
               key={faq.question}
-              className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4"
+              className="rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800"
             >
-              <summary className="flex items-center justify-between cursor-pointer text-gray-900 dark:text-white font-semibold">
+              <summary className="flex cursor-pointer items-center justify-between font-semibold text-gray-900 dark:text-white">
                 <span>{faq.question}</span>
                 <span className="text-primary-600 dark:text-primary-400">+</span>
               </summary>
-              <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">{faq.answer}</p>
+              <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">{faq.answer}</p>
             </details>
           ))}
         </div>

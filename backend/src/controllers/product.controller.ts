@@ -10,8 +10,14 @@ import prisma from '../config/database.js';
 import { getTierPricingMap } from '../services/pricing.service.js';
 
 /**
- * Get all products
- * GET /api/products
+ * @route GET /api/products
+ * @description Retrieves all active products with tier pricing
+ * @access Public
+ *
+ * @param {Request} _req - Express request (unused)
+ * @param {Response} res - Express response
+ *
+ * @returns {Object} Array of products with tier pricing information
  */
 export const getProducts = catchAsync(async (_req: Request, res: Response) => {
   const tierPricing = await getTierPricingMap();
@@ -32,8 +38,15 @@ export const getProducts = catchAsync(async (_req: Request, res: Response) => {
 });
 
 /**
- * Get single product by ID
- * GET /api/products/:id
+ * @route GET /api/products/:id
+ * @description Retrieves a single product by ID with tier pricing
+ * @access Public
+ *
+ * @param {Request} req - Express request (params.id required)
+ * @param {Response} res - Express response
+ *
+ * @returns {Object} Product details with tier pricing
+ * @throws {404} Product not found
  */
 export const getProductById = catchAsync(async (req: Request, res: Response) => {
   const { id } = req.params;
@@ -58,8 +71,15 @@ export const getProductById = catchAsync(async (req: Request, res: Response) => 
 });
 
 /**
- * Get single product by slug
- * GET /api/products/slug/:slug
+ * @route GET /api/products/slug/:slug
+ * @description Retrieves a single product by slug with tier pricing
+ * @access Public
+ *
+ * @param {Request} req - Express request (params.slug required)
+ * @param {Response} res - Express response
+ *
+ * @returns {Object} Product details with tier pricing
+ * @throws {404} Product not found
  */
 export const getProductBySlug = catchAsync(async (req: Request, res: Response) => {
   const { slug } = req.params;

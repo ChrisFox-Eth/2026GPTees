@@ -4,10 +4,22 @@
  * @since 2025-11-21
  */
 
+/**
+ * @enum TierType
+ * @description Pricing tier enumeration
+ */
 export enum TierType {
   LIMITLESS = 'PREMIUM',
 }
 
+/**
+ * @interface TierConfig
+ * @description Tier configuration schema
+ * @property {string} name - Tier display name
+ * @property {number} price - Tier price in USD
+ * @property {number} maxDesigns - Maximum design generations (9999 = unlimited)
+ * @property {string} description - Tier description
+ */
 export interface TierConfig {
   name: string;
   price: number;
@@ -15,6 +27,10 @@ export interface TierConfig {
   description: string;
 }
 
+/**
+ * @constant TIERS
+ * @description Pricing tier configuration map
+ */
 export const TIERS: Record<TierType, TierConfig> = {
   [TierType.LIMITLESS]: {
     name: 'Limitless',
@@ -25,19 +41,23 @@ export const TIERS: Record<TierType, TierConfig> = {
 };
 
 /**
- * Get tier configuration by type
+ * @function getTierConfig
+ * @description Retrieves tier configuration by type
+ *
  * @param {TierType} tier - Tier type
- * @returns {TierConfig} Tier configuration
+ * @returns {TierConfig} Tier configuration object
  */
 export function getTierConfig(tier: TierType): TierConfig {
   return TIERS[tier];
 }
 
 /**
- * Calculate total price including product base price
+ * @function calculateTotalPrice
+ * @description Calculates total price including product base price and tier price
+ *
  * @param {number} basePrice - Product base price
  * @param {TierType} tier - Selected tier
- * @returns {number} Total price
+ * @returns {number} Total price in USD
  */
 export function calculateTotalPrice(basePrice: number, tier: TierType): number {
   const tierConfig = getTierConfig(tier);

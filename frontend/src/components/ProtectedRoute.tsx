@@ -6,12 +6,24 @@
 
 import { useAuth } from '@clerk/clerk-react';
 import { Navigate } from 'react-router-dom';
-import { ReactNode } from 'react';
+import type { ProtectedRouteProps } from './ProtectedRoute.types';
 
-interface ProtectedRouteProps {
-  children: ReactNode;
-}
-
+/**
+ * @component
+ * @description Route wrapper that enforces authentication using Clerk. Shows a loading spinner
+ * while authentication state loads, redirects to /auth if user is not signed in, or renders
+ * children if authenticated. Can be bypassed in development with VITE_SKIP_AUTH=true.
+ *
+ * @param {ProtectedRouteProps} props - Component props
+ * @param {ReactNode} props.children - Child components to render when authenticated
+ *
+ * @returns {JSX.Element} Loading spinner, redirect to auth, or protected content
+ *
+ * @example
+ * <ProtectedRoute>
+ *   <Dashboard />
+ * </ProtectedRoute>
+ */
 export default function ProtectedRoute({ children }: ProtectedRouteProps): JSX.Element {
   const skipAuth = import.meta.env.VITE_SKIP_AUTH === 'true';
   const { isLoaded, isSignedIn } = useAuth();
@@ -23,8 +35,8 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps): JSX.E
   // Wait for auth to load
   if (!isLoaded) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="border-primary-600 h-12 w-12 animate-spin rounded-full border-b-2"></div>
       </div>
     );
   }

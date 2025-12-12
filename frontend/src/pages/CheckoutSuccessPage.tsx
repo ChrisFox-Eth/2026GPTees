@@ -6,34 +6,23 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { Link, useSearchParams, useNavigate } from 'react-router-dom';
-import { Button } from '@components/Button';
+import { Button } from '@components/ui/Button';
 import { useCart } from '../hooks/useCart';
 import { apiGet } from '@utils/api';
 import { trackEvent } from '@utils/analytics';
 import { useAuth } from '@clerk/clerk-react';
+import type { OrderSummary } from '../types/order';
 
-interface OrderItem {
-  productName: string;
-  size: string;
-  color: string;
-  quantity: number;
-  unitPrice: number;
-}
-
-interface OrderSummary {
-  totalAmount: number;
-  items: OrderItem[];
-  shipping?: number;
-  tier?: string;
-  country?: string;
-  promoCode?: {
-    code: string;
-    type: string;
-    percentOff?: number | null;
-    productTier?: string | null;
-  } | null;
-}
-
+/**
+ * @component
+ * @description Checkout success page confirming payment completion and displaying next steps. Auto-redirects to design page after brief delay.
+ *
+ * @returns {JSX.Element} The rendered checkout success page
+ *
+ * @example
+ * // Used in App.tsx routing
+ * <Route path="/checkout/success" element={<CheckoutSuccessPage />} />
+ */
 export default function CheckoutSuccessPage(): JSX.Element {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
@@ -138,11 +127,9 @@ export default function CheckoutSuccessPage(): JSX.Element {
   if (!orderId) {
     return (
       <div className="container-max py-12">
-        <div className="max-w-2xl mx-auto text-center">
-          <h1 className="text-2xl font-bold text-red-600 mb-4">Invalid Session</h1>
-          <p className="text-gray-600 dark:text-gray-400 mb-6">
-            No order information found.
-          </p>
+        <div className="mx-auto max-w-2xl text-center">
+          <h1 className="mb-4 text-2xl font-bold text-red-600">Invalid Session</h1>
+          <p className="mb-6 text-gray-600 dark:text-gray-400">No order information found.</p>
           <Link to="/#quickstart">
             <Button variant="primary">Start another design</Button>
           </Link>
@@ -153,65 +140,88 @@ export default function CheckoutSuccessPage(): JSX.Element {
 
   return (
     <div className="container-max py-8">
-      <div className="max-w-2xl mx-auto space-y-6">
+      <div className="mx-auto max-w-2xl space-y-6">
         {/* Success Icon */}
         <div className="text-center">
-          <div className="inline-flex items-center justify-center w-20 h-20 bg-green-100 dark:bg-green-900 rounded-full mb-4">
-            <svg className="w-10 h-10 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+          <div className="mb-4 inline-flex h-20 w-20 items-center justify-center rounded-full bg-green-100 dark:bg-green-900">
+            <svg
+              className="h-10 w-10 text-green-600 dark:text-green-400"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M5 13l4 4L19 7"
+              />
             </svg>
           </div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+          <h1 className="mb-2 text-3xl font-bold text-gray-900 dark:text-white">
             Design locked & paid
           </h1>
           <p className="text-lg text-gray-600 dark:text-gray-400">
-            Your order is locked with your latest design and fit. We&apos;re sending you to your design page for a final look.
+            Your order is locked with your latest design and fit. We&apos;re sending you to your
+            design page for a final look.
           </p>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">If you&apos;re not redirected, use the button below.</p>
+          <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
+            If you&apos;re not redirected, use the button below.
+          </p>
         </div>
 
         {/* Order Info */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-5">
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
+        <div className="rounded-lg bg-white p-5 shadow-lg dark:bg-gray-800">
+          <h2 className="mb-4 text-xl font-semibold text-gray-900 dark:text-white">
             What&apos;s next?
           </h2>
           <div className="space-y-3">
             <div className="flex items-start gap-3">
-              <div className="flex-shrink-0 w-8 h-8 bg-primary-100 dark:bg-primary-900 rounded-full flex items-center justify-center">
+              <div className="bg-primary-100 dark:bg-primary-900 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full">
                 <span className="text-primary-600 dark:text-primary-400 font-bold">1</span>
               </div>
               <div>
-                <h3 className="font-semibold text-gray-900 dark:text-white">Review your locked design</h3>
-                <p className="text-sm text-gray-600 dark:text-gray-400">We applied your latest design and fit. You can view it in My Designs.</p>
+                <h3 className="font-semibold text-gray-900 dark:text-white">
+                  Review your locked design
+                </h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  We applied your latest design and fit. You can view it in My Designs.
+                </p>
               </div>
             </div>
             <div className="flex items-start gap-3">
-              <div className="flex-shrink-0 w-8 h-8 bg-primary-100 dark:bg-primary-900 rounded-full flex items-center justify-center">
+              <div className="bg-primary-100 dark:bg-primary-900 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full">
                 <span className="text-primary-600 dark:text-primary-400 font-bold">2</span>
               </div>
               <div>
-                <h3 className="font-semibold text-gray-900 dark:text-white">We&apos;ll print & ship</h3>
-                <p className="text-sm text-gray-600 dark:text-gray-400">Our team is moving it to production. You&apos;ll get tracking as soon as it ships.</p>
+                <h3 className="font-semibold text-gray-900 dark:text-white">
+                  We&apos;ll print & ship
+                </h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  Our team is moving it to production. You&apos;ll get tracking as soon as it ships.
+                </p>
               </div>
             </div>
             <div className="flex items-start gap-3">
-              <div className="flex-shrink-0 w-8 h-8 bg-primary-100 dark:bg-primary-900 rounded-full flex items-center justify-center">
+              <div className="bg-primary-100 dark:bg-primary-900 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full">
                 <span className="text-primary-600 dark:text-primary-400 font-bold">3</span>
               </div>
               <div>
                 <h3 className="font-semibold text-gray-900 dark:text-white">Need tweaks?</h3>
-                <p className="text-sm text-gray-600 dark:text-gray-400">If something looks off, reach out within 24 hours at team@gptees.app.</p>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  If something looks off, reach out within 24 hours at team@gptees.app.
+                </p>
               </div>
             </div>
           </div>
         </div>
 
         {/* Primary CTA */}
-        <div className="flex flex-col sm:flex-row gap-3">
+        <div className="flex flex-col gap-3 sm:flex-row">
           <Button
             variant="primary"
             onClick={() => navigate(`/design?orderId=${orderId}`)}
-            className="flex-1 text-lg py-4"
+            className="flex-1 py-4 text-lg"
           >
             View my locked design
           </Button>
@@ -222,13 +232,13 @@ export default function CheckoutSuccessPage(): JSX.Element {
           <button
             type="button"
             onClick={() => setDetailsOpen((prev) => !prev)}
-            className="w-full flex items-center justify-between text-sm font-semibold text-primary-800 dark:text-primary-200"
+            className="text-primary-800 dark:text-primary-200 flex w-full items-center justify-between text-sm font-semibold"
           >
             <span>Order details</span>
             <span>{detailsOpen ? 'Hide' : 'Show'}</span>
           </button>
           {detailsOpen && (
-            <div className="mt-3 space-y-1 text-sm text-primary-800 dark:text-primary-200">
+            <div className="text-primary-800 dark:text-primary-200 mt-3 space-y-1 text-sm">
               <p>
                 <strong>Order ID:</strong> {orderId}
               </p>
@@ -254,8 +264,7 @@ export default function CheckoutSuccessPage(): JSX.Element {
                   </p>
                   {orderSummary.promoCode && (
                     <p>
-                      <strong>Code Applied:</strong>{' '}
-                      {orderSummary.promoCode.code} (
+                      <strong>Code Applied:</strong> {orderSummary.promoCode.code} (
                       {orderSummary.promoCode.type === 'FREE_PRODUCT'
                         ? `Free ${orderSummary.promoCode.productTier || 'tee'}`
                         : `${orderSummary.promoCode.percentOff || 0}% off`}
@@ -269,11 +278,14 @@ export default function CheckoutSuccessPage(): JSX.Element {
         </div>
 
         {/* Support */}
-        <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 text-sm text-gray-700 dark:text-gray-300">
+        <div className="rounded-lg bg-gray-50 p-4 text-sm text-gray-700 dark:bg-gray-800 dark:text-gray-300">
           <p className="font-semibold">Need help?</p>
           <p className="mt-1">
             Email us at{' '}
-            <a className="text-primary-600 dark:text-primary-400 underline" href="mailto:team@gptees.app">
+            <a
+              className="text-primary-600 dark:text-primary-400 underline"
+              href="mailto:team@gptees.app"
+            >
               team@gptees.app
             </a>{' '}
             and we&rsquo;ll jump in.

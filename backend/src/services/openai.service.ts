@@ -1,6 +1,6 @@
 /**
  * @module services/openai
- * @description OpenAI DALL-E 3 service for design generation
+ * @description OpenAI DALL-E 3 service for AI-powered t-shirt design generation. Handles prompt enhancement, content moderation, and image generation with style customization.
  * @since 2025-11-21
  */
 
@@ -11,19 +11,33 @@ const openai = new OpenAI({
   organization: process.env.OPENAI_ORGANIZATION_ID,
 });
 
+/**
+ * Design generation parameters interface
+ * @interface DesignGenerationParams
+ * @property {string} prompt - User's design prompt
+ * @property {string} [style] - Optional style preset
+ * @property {string} [size] - Image dimensions
+ */
 export interface DesignGenerationParams {
   prompt: string;
   style?: 'modern' | 'vintage' | 'artistic' | 'playful' | 'professional' | 'trendy';
   size?: '1024x1024' | '1024x1792' | '1792x1024';
 }
 
+/**
+ * Design generation result interface
+ * @interface DesignGenerationResult
+ * @property {string} imageUrl - URL to generated image
+ * @property {string} revisedPrompt - DALL-E's revised/enhanced prompt
+ */
 export interface DesignGenerationResult {
   imageUrl: string;
   revisedPrompt: string;
 }
 
 /**
- * Style-based prompt enhancements
+ * Style-based prompt enhancements mapping
+ * Maps style names to prompt suffixes that guide DALL-E generation
  */
 const STYLE_PROMPTS = {
   modern: 'in a modern, clean, minimalist style with bold colors',
@@ -35,10 +49,17 @@ const STYLE_PROMPTS = {
 };
 
 /**
- * Enhance prompt based on style
- * @param {string} basePrompt - User's base prompt
- * @param {string} style - Selected style
- * @returns {string} Enhanced prompt
+ * @function enhancePrompt
+ * @description Enhances user's base prompt with style-specific guidance and t-shirt design best practices. Adds style modifiers and ensures the output is optimized for apparel printing.
+ *
+ * @param {string} basePrompt - User's original design prompt
+ * @param {string} [style] - Optional style preset to apply
+ *
+ * @returns {string} Enhanced prompt with style and t-shirt optimization
+ *
+ * @example
+ * const enhanced = enhancePrompt('a dragon', 'vintage');
+ * // Returns: "a dragon in a vintage, retro style with muted colors and aged textures. Designed for a t-shirt print, high contrast, centered composition, no background."
  */
 function enhancePrompt(basePrompt: string, style?: string): string {
   let enhanced = basePrompt;
@@ -55,9 +76,20 @@ function enhancePrompt(basePrompt: string, style?: string): string {
 }
 
 /**
- * Check content moderation
- * @param {string} prompt - Prompt to check
- * @returns {Promise<boolean>} True if safe, false if flagged
+ * @function moderateContent
+ * @description Checks prompt content for policy violations using OpenAI's moderation API. Prevents generation of inappropriate, harmful, or policy-violating content.
+ *
+ * @param {string} prompt - User prompt to moderate
+ *
+ * @returns {Promise<boolean>} True if content is safe, false if flagged
+ *
+ * @example
+ * const isSafe = await moderateContent('a cute puppy');
+ * if (!isSafe) {
+ *   throw new Error('Content violates policies');
+ * }
+ *
+ * @async
  */
 export async function moderateContent(prompt: string): Promise<boolean> {
   try {
@@ -75,9 +107,31 @@ export async function moderateContent(prompt: string): Promise<boolean> {
 }
 
 /**
- * Generate AI design using DALL-E 3
- * @param {DesignGenerationParams} params - Generation parameters
- * @returns {Promise<DesignGenerationResult>} Generated design
+ * @function generateDesign
+ * @description Generates custom t-shirt design using OpenAI's DALL-E 3 model. Includes content moderation, prompt enhancement, and error handling for common OpenAI API errors.
+ *
+ * @param {DesignGenerationParams} params - Design generation parameters
+ * @param {string} params.prompt - User's design description
+ * @param {string} [params.style] - Optional style preset ('modern', 'vintage', etc.)
+ * @param {string} [params.size='1024x1024'] - Image dimensions
+ *
+ * @returns {Promise<DesignGenerationResult>} Generated design with image URL and revised prompt
+ * @returns {string} imageUrl - Temporary URL to generated image (expires after 1 hour)
+ * @returns {string} revisedPrompt - DALL-E's enhanced version of the prompt
+ *
+ * @throws {Error} When prompt contains inappropriate content
+ * @throws {Error} When prompt is invalid (400 error)
+ * @throws {Error} When rate limit is exceeded (429 error)
+ * @throws {Error} When OpenAI service has an error (500 error)
+ *
+ * @example
+ * const design = await generateDesign({
+ *   prompt: 'a majestic dragon',
+ *   style: 'vintage',
+ *   size: '1024x1024'
+ * });
+ *
+ * @async
  */
 export async function generateDesign(
   params: DesignGenerationParams
@@ -141,8 +195,14 @@ export async function generateDesign(
 }
 
 /**
- * Generate random creative prompt for "Surprise Me" feature
- * @returns {string} Random prompt
+ * @function generateRandomPrompt
+ * @description Generates random creative prompt for the "Surprise Me" feature. Combines random subjects and themes to create unique design prompts.
+ *
+ * @returns {string} Randomly generated design prompt
+ *
+ * @example
+ * const prompt = generateRandomPrompt();
+ * // Returns something like: "a majestic dragon with vibrant colors"
  */
 export function generateRandomPrompt(): string {
   const subjects = [

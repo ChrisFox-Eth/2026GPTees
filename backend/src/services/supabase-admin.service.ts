@@ -1,6 +1,7 @@
 /**
  * @module services/supabase-admin
- * @description Supabase service-role client for social ops (server-side only)
+ * @description Supabase service-role client for privileged server-side operations. Provides admin-level access for social operations, bypassing row-level security. Server-side only - never expose to client.
+ * @since 2025-11-21
  */
 
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
@@ -23,7 +24,16 @@ if (supabaseUrl && supabaseServiceRoleKey) {
 }
 
 /**
- * Get configured Supabase client or throw if missing.
+ * @function getSupabaseServiceRoleClient
+ * @description Returns configured Supabase service role client with admin privileges. Bypasses row-level security for server-side operations.
+ *
+ * @returns {SupabaseClient} Supabase client with service role permissions
+ *
+ * @throws {AppError} When Supabase is not configured (500 error)
+ *
+ * @example
+ * const supabase = getSupabaseServiceRoleClient();
+ * const { data } = await supabase.from('table').select('*');
  */
 export function getSupabaseServiceRoleClient(): SupabaseClient {
   if (!supabase) {
@@ -33,7 +43,15 @@ export function getSupabaseServiceRoleClient(): SupabaseClient {
 }
 
 /**
- * Check if Supabase client is ready.
+ * @function isSupabaseConfigured
+ * @description Checks if Supabase service role client is configured and ready to use.
+ *
+ * @returns {boolean} True if Supabase is configured, false otherwise
+ *
+ * @example
+ * if (isSupabaseConfigured()) {
+ *   const client = getSupabaseServiceRoleClient();
+ * }
  */
 export function isSupabaseConfigured(): boolean {
   return Boolean(supabase);
