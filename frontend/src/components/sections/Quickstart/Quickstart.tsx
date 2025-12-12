@@ -1,6 +1,6 @@
 /**
  * @module components/sections/Quickstart
- * @description Quickstart component for creating preview orders with AI-generated designs
+ * @description Quickstart component for creating preview orders with custom designs
  * @since 2025-11-21
  */
 
@@ -56,7 +56,7 @@ const PROMPT_IDEAS: string[] = [
   'Kawaii fox eating a slice of pizza, wearing a bow, no background.',
   'Chrome heart reflecting neon city lights at night.',
   'A phoenix rising from swirling ink, high contrast, centered.',
-  'A floating library above a serene pond, enchanted vibe.',
+  'A floating library above a serene pond, enchanted atmosphere.',
   'Tiny dragon sleeping in a teacup, pastel florals around it.',
   'Bubble tea cup with heart-shaped bubbles, playful and bright.',
   'Steel rose with razor-blade petals, dramatic lighting.',
@@ -91,7 +91,7 @@ const FALLBACK_PRODUCT: Product = {
   id: 'fallback-basic-tee',
   name: 'Limitless Tee',
   slug: 'basic-tee',
-  description: 'Limitless design-first tee with free previews.',
+  description: 'Limitless design-first tee with studio access.',
   basePrice: 54.99,
   printfulId: 'fallback',
   category: 'T_SHIRT',
@@ -454,12 +454,12 @@ export default function Quickstart(): JSX.Element {
     try {
       setGeneratedDesign(null);
       setIsGenerating(true);
-      setProgressMessage('Generating your design...');
+      setProgressMessage('Creating your draft...');
       await generateDesignWithToken(orderId, promptText, QUICKSTART_STYLE, token);
       setPrompt('');
     } catch (err: any) {
       console.error('Error generating design from quickstart:', err);
-      setSubmitError(err?.message || 'Failed to generate your design. Please try again.');
+      setSubmitError(err?.message || 'Unable to create draft. Please try again.');
     } finally {
       setIsGenerating(false);
       setProgressMessage(null);
@@ -470,7 +470,7 @@ export default function Quickstart(): JSX.Element {
     if (!product) return;
     const promptText = prompt.trim();
     if (!promptText) {
-      setSubmitError('Please add a prompt to start your preview.');
+      setSubmitError('Please describe your idea to start your preview.');
       return;
     }
 
@@ -512,7 +512,7 @@ export default function Quickstart(): JSX.Element {
 
         // Kick off generation as guest before redirect
         try {
-          setProgressMessage('Generating your design while you sign in...');
+          setProgressMessage('Creating your draft while you sign in...');
           const genResponse = await apiPost('/api/designs/generate/guest', {
             orderId: guestOrderId,
             guestToken,
@@ -608,32 +608,31 @@ export default function Quickstart(): JSX.Element {
   const showLoading = (isGenerating || isCreating) && !generatedDesign;
 
   return (
-    <div className="flex w-full max-w-full flex-col items-start gap-6 overflow-hidden rounded-xl border border-gray-200 bg-white p-5 shadow sm:p-6 dark:border-gray-700 dark:bg-gray-800">
+    <div className="flex w-full max-w-full flex-col items-start gap-6 overflow-hidden rounded-xl border border-muted/20 bg-surface p-5 shadow-soft sm:p-6 dark:border-muted-dark/20 dark:bg-surface-dark">
       {showPromptUI && (
         <div className="w-full flex-1 space-y-4">
           <div className="space-y-2">
-            <label className="text-xs font-semibold text-gray-700 dark:text-gray-300">
-              Your vision
+            <label className="font-sans text-sm font-semibold text-ink dark:text-ink-dark">
+              Describe your idea
             </label>
-            <p className="text-xs text-gray-600 dark:text-gray-400">
-              Describe the tee you want—we&apos;ll generate the artwork and take you to the design
-              page to choose size and color before checkout.
+            <p className="font-sans text-xs text-muted dark:text-muted-dark">
+              Tell us what to create. You&apos;ll preview the artwork before choosing your fit and color.
             </p>
             <textarea
               id={textareaId}
               value={prompt}
               onChange={(e) => setPrompt(e.target.value)}
               placeholder="Try: Retro surf wave; Minimal line-art tiger; Neon cyberpunk skyline"
-              className="focus:ring-primary-500 w-full resize-none rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 placeholder:text-gray-500 focus:border-transparent focus:ring-2 dark:border-gray-600 dark:bg-gray-900 dark:text-white dark:placeholder:text-gray-500"
+              className="w-full resize-none rounded-lg border border-muted/30 bg-surface px-3 py-2 font-sans text-sm text-ink placeholder:text-muted/60 focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20 dark:border-muted-dark/30 dark:bg-surface-dark dark:text-ink-dark dark:placeholder:text-muted-dark/60 dark:focus:border-accent-dark dark:focus:ring-accent-dark/20"
               rows={3}
             />
           </div>
 
-          <div className="space-y-2 rounded-lg border border-gray-200 bg-gray-50 p-3 dark:border-gray-700 dark:bg-gray-900">
+          <div className="space-y-2 rounded-lg border border-muted/20 bg-surface-2 p-3 dark:border-muted-dark/20 dark:bg-surface-dark">
             <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
               <div className="space-y-1">
-                <p className="text-xs font-semibold text-gray-800 dark:text-gray-100">
-                  Prompt ideas - Choose to Use
+                <p className="font-sans text-xs font-semibold text-ink dark:text-ink-dark">
+                  Ideas to try
                 </p>
               </div>
             </div>
@@ -643,17 +642,17 @@ export default function Quickstart(): JSX.Element {
                   key={ideaIndex}
                   type="button"
                   onClick={() => handleUseIdea(PROMPT_IDEAS[ideaIndex])}
-                  aria-label={`Try prompt: ${PROMPT_IDEAS[ideaIndex]}`}
-                  className="group border-primary-200 dark:border-primary-800 hover:bg-primary-50 dark:hover:bg-primary-900 focus-visible:outline-primary-500 absolute inset-0 inline-flex transform cursor-pointer items-center gap-3 rounded-xl border px-3 py-2 text-left shadow-sm transition-colors focus-visible:outline-2 focus-visible:outline-offset-2"
+                  aria-label={`Try idea: ${PROMPT_IDEAS[ideaIndex]}`}
+                  className="group absolute inset-0 inline-flex transform cursor-pointer items-center gap-3 rounded-xl border border-accent/20 bg-surface px-3 py-2 text-left shadow-sm transition-colors hover:bg-accent-soft focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-2 dark:border-accent-dark/20 dark:bg-surface-dark dark:hover:bg-accent-dark/10"
                   initial={{ opacity: 0, y: 12, rotateX: -12 }}
                   animate={{ opacity: 1, y: 0, rotateX: 0 }}
                   exit={{ opacity: 0, y: -12, rotateX: 12 }}
                   transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
                 >
-                  <span className="bg-primary-600 inline-flex h-7 items-center justify-center rounded-full px-3 text-[9px] font-bold tracking-wide text-white uppercase shadow-sm">
+                  <span className="inline-flex h-7 items-center justify-center rounded-full bg-accent px-3 text-[9px] font-bold uppercase tracking-wide text-white shadow-sm dark:bg-accent-dark">
                     Use
                   </span>
-                  <span className="text-primary-900 dark:text-primary-50 text-xs leading-snug">
+                  <span className="font-sans text-xs leading-snug text-ink dark:text-ink-dark">
                     {PROMPT_IDEAS[ideaIndex]}
                   </span>
                 </motion.button>
@@ -664,13 +663,13 @@ export default function Quickstart(): JSX.Element {
       )}
 
       {!showPromptUI && showLoading && (
-        <div className="w-full space-y-2 rounded-lg border border-blue-200 bg-blue-50 p-4 dark:border-blue-800 dark:bg-blue-900/20">
-          <p className="text-sm font-semibold text-blue-900 dark:text-blue-100">Hang tight</p>
-          <p className="text-xs text-blue-800 dark:text-blue-200">
-            We&apos;re generating your preview.
+        <div className="w-full space-y-2 rounded-lg border border-accent/20 bg-accent-soft p-4 dark:border-accent-dark/20 dark:bg-accent-dark/10">
+          <p className="font-sans text-sm font-semibold text-ink dark:text-ink-dark">Studio preview</p>
+          <p className="font-sans text-xs text-muted dark:text-muted-dark">
+            Creating your draft...
           </p>
           {progressMessage && (
-            <p className="text-xs text-blue-900 dark:text-blue-100">{progressMessage}</p>
+            <p className="font-sans text-xs text-muted dark:text-muted-dark">{progressMessage}</p>
           )}
         </div>
       )}
@@ -679,15 +678,15 @@ export default function Quickstart(): JSX.Element {
         {!hasPreview && (
           <Button
             variant="pulse-gradient"
-            className="from-primary-600 w-full bg-gradient-to-r to-purple-600"
+            className="w-full bg-accent hover:opacity-90 dark:bg-accent-dark"
             onClick={handleSubmit}
             disabled={isCreating || isGenerating}
           >
             {isCreating
               ? 'Starting preview...'
               : isGenerating
-                ? 'Working on it...'
-                : 'Design my Tee!'}
+                ? 'Creating draft...'
+                : 'Create draft'}
           </Button>
         )}
 
@@ -695,7 +694,7 @@ export default function Quickstart(): JSX.Element {
           <div className="w-full space-y-2">
             <Button
               variant="pulse-gradient"
-              className="from-primary-600 w-full bg-gradient-to-r to-purple-600"
+              className="w-full bg-accent hover:opacity-90 dark:bg-accent-dark"
               onClick={handleCheckoutRedirect}
               disabled={isGenerating || isCreating}
             >
@@ -704,10 +703,10 @@ export default function Quickstart(): JSX.Element {
             <button
               type="button"
               onClick={handleStartOver}
-              className="text-primary-600 dark:text-primary-300 w-full text-center text-xs underline"
+              className="w-full text-center font-sans text-xs text-accent underline dark:text-accent-dark"
               disabled={isGenerating || isCreating}
             >
-              Start over
+              Try another direction
             </button>
           </div>
         )}
@@ -716,17 +715,17 @@ export default function Quickstart(): JSX.Element {
           <p className="text-center text-xs text-red-600 dark:text-red-400">{submitError}</p>
         )}
         {progressMessage && showPromptUI && (
-          <div className="w-full rounded-lg border border-blue-200 bg-blue-50 p-3 text-sm text-blue-900 dark:border-blue-800 dark:bg-blue-900/20 dark:text-blue-100">
+          <div className="w-full rounded-lg border border-accent/20 bg-accent-soft p-3 font-sans text-sm text-ink dark:border-accent-dark/20 dark:bg-accent-dark/10 dark:text-ink-dark">
             {progressMessage}
           </div>
         )}
         {pendingGuest && !isSignedIn && (
           <div className="w-full space-y-2 rounded-lg border border-amber-200 bg-amber-50 p-3 dark:border-amber-800 dark:bg-amber-900/20">
             <p className="text-sm font-semibold text-amber-900 dark:text-amber-100">
-              Sign in to reveal your free preview
+              Sign in to reveal your design preview
             </p>
             <p className="text-xs text-amber-800 dark:text-amber-200">
-              We saved your prompt and preview order. Log in to see the design and keep generating.
+              We saved your idea and preview order. Log in to see the design and keep creating.
             </p>
             <Button
               variant="secondary"
@@ -738,17 +737,17 @@ export default function Quickstart(): JSX.Element {
           </div>
         )}
         {generatedDesign && (
-          <div className="w-full space-y-3 rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-900">
-            <p className="text-sm font-semibold text-gray-900 dark:text-white">Your preview</p>
-            <div className="overflow-hidden rounded-lg border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800">
+          <div className="w-full space-y-3 rounded-lg border border-muted/20 bg-surface-2 p-4 dark:border-muted-dark/20 dark:bg-surface-dark">
+            <p className="font-sans text-sm font-semibold text-ink dark:text-ink-dark">Your preview</p>
+            <div className="overflow-hidden rounded-lg border border-muted/20 bg-surface dark:border-muted-dark/20 dark:bg-surface-dark">
               <img
                 src={generatedDesign.thumbnailUrl || generatedDesign.imageUrl}
                 alt={generatedDesign.prompt}
-                className="h-64 w-full bg-gray-100 object-contain dark:bg-gray-900"
+                className="h-64 w-full bg-surface-2 object-contain dark:bg-surface-dark"
               />
             </div>
-            <p className="text-[11px] text-gray-500 dark:text-gray-400">
-              We saved this preview to your account. Choose fit and continue on the design page.
+            <p className="font-sans text-[11px] text-muted dark:text-muted-dark">
+              Preview saved. Choose fit and continue on the design page.
             </p>
           </div>
         )}

@@ -6,22 +6,25 @@
 
 /**
  * @component
- * @description Renders a four-step process guide explaining how to use GPTees: 1) Start a free preview,
- * 2) Describe your design, 3) Limitless redraws, 4) Pick fit, pay, and ship. Each step features an
- * icon, number badge, title, and description. Includes gradient connection lines between steps on desktop.
+ * @description Renders a four-step process guide with editorial design.
+ * Updated copy to avoid "AI" language and frame exploration as optional creative choice.
  *
  * @returns {JSX.Element} Section element with grid of process step cards
  *
  * @example
  * <HowItWorks />
  */
+
+import { motion } from 'framer-motion';
+import { staggerContainer, staggerItem } from '@utils/motion';
+
 export default function HowItWorks(): JSX.Element {
   const steps = [
     {
       number: '1',
-      title: 'Start a free preview',
+      title: 'Start your design',
       description:
-        'Jump into Quickstart, capture your prompt, and we create a preview order without payment. Your spot is saved, even before login.',
+        'Enter your idea in Quickstart. We create a preview instantly—no payment required.',
       icon: (
         <svg className="h-8 w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path
@@ -35,9 +38,9 @@ export default function HowItWorks(): JSX.Element {
     },
     {
       number: '2',
-      title: 'Describe Your Design',
+      title: 'Describe your idea',
       description:
-        'Tell us what to print. Be playful! From "cyberpunk cat warrior" to "minimalist mountain sunset".',
+        'Tell us what to create. From bold graphics to minimal art, describe your vision.',
       icon: (
         <svg className="h-8 w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path
@@ -51,9 +54,9 @@ export default function HowItWorks(): JSX.Element {
     },
     {
       number: '3',
-      title: 'Limitless redraws',
+      title: 'Explore options',
       description:
-        'We turn your words into artwork in seconds. Keep refining the prompt until you love it—no caps, all included.',
+        'Want to try a different direction? Refine your idea as much as you like—it\'s part of your studio access.',
       icon: (
         <svg className="h-8 w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path
@@ -67,9 +70,9 @@ export default function HowItWorks(): JSX.Element {
     },
     {
       number: '4',
-      title: 'Pick fit, pay, and ship',
+      title: 'Approve and ship',
       description:
-        'Preview on all four shirt colors, choose size and fit, then check out. We print and ship once you approve.',
+        'Preview on all colors, choose your fit and size, then check out. We print and ship once you approve.',
       icon: (
         <svg className="h-8 w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path
@@ -84,46 +87,56 @@ export default function HowItWorks(): JSX.Element {
   ];
 
   return (
-    <section id="how-it-works" className="bg-gray-50 py-20 dark:bg-gray-800/50">
+    <section id="how-it-works" className="bg-surface-2 py-20 dark:bg-surface-dark">
       <div className="container-max">
         <div className="mb-16 text-center">
-          <h2 className="mb-4 text-4xl font-bold text-gray-900 md:text-5xl dark:text-white">
+          <h2 className="mb-4 font-display text-3xl font-bold leading-tight text-ink md:text-5xl dark:text-ink-dark">
             How It Works
           </h2>
-          <p className="mx-auto max-w-2xl text-xl text-gray-600 dark:text-gray-300">
-            From idea to wearable art in just a few clicks. It's that simple.
+          <p className="mx-auto max-w-2xl font-sans text-base leading-relaxed text-muted md:text-lg dark:text-muted-dark">
+            From idea to wearable art in just a few steps.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-4">
+        <motion.div
+          variants={staggerContainer}
+          initial="initial"
+          whileInView="animate"
+          viewport={{ once: true, margin: '-100px' }}
+          className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-4"
+        >
           {steps.map((step, index) => (
-            <div key={step.number} className="relative">
+            <motion.div
+              key={step.number}
+              variants={staggerItem}
+              className="relative"
+            >
               {/* Connection Line (hidden on mobile) */}
               {index < steps.length - 1 && (
-                <div className="from-primary-400 absolute top-16 left-1/2 hidden h-0.5 w-full bg-gradient-to-r to-transparent lg:block" />
+                <div className="absolute top-16 left-1/2 hidden h-0.5 w-full bg-gradient-to-r from-accent/40 to-transparent lg:block dark:from-accent-dark/40" />
               )}
 
               {/* Step Card */}
-              <div className="relative rounded-xl bg-white p-6 shadow-lg transition-shadow hover:shadow-xl dark:bg-gray-800">
+              <div className="relative rounded-xl bg-surface p-6 shadow-soft transition-shadow hover:shadow-medium dark:bg-surface-dark">
                 {/* Step Number */}
-                <div className="from-primary-600 absolute -top-4 left-6 flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-r to-purple-600 text-xl font-bold text-white shadow-lg">
+                <div className="absolute -top-4 left-6 flex h-12 w-12 items-center justify-center rounded-full bg-accent text-xl font-bold text-white shadow-medium dark:bg-accent-dark">
                   {step.number}
                 </div>
 
                 {/* Icon */}
-                <div className="text-primary-600 dark:text-primary-400 mt-8 mb-4">{step.icon}</div>
+                <div className="mt-8 mb-4 text-accent dark:text-accent-dark">{step.icon}</div>
 
                 {/* Content */}
-                <h3 className="mb-3 text-xl font-bold text-gray-900 dark:text-white">
+                <h3 className="mb-3 font-display text-xl font-bold text-ink dark:text-ink-dark">
                   {step.title}
                 </h3>
-                <p className="leading-relaxed text-gray-600 dark:text-gray-300">
+                <p className="font-sans leading-relaxed text-muted dark:text-muted-dark">
                   {step.description}
                 </p>
               </div>
-            </div>
+            </motion.div>
           ))}
-        </div>
+        </motion.div>
       </div>
     </section>
   );

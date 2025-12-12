@@ -27,15 +27,15 @@ const DEFAULT_TIERS: TierCard[] = [
     name: 'Limitless',
     displayName: 'Limitless',
     price: '$54.99',
-    description: 'Design first, pay when you print. Unlimited redraws included.',
+    description: 'One price. Studio access included.',
     features: [
-      'Super-soft GPTee',
-      'Unlimited redraws until you love it',
+      'Super-soft premium tee',
+      'Explore design options at your own pace',
       'Preview on all four colors before checkout',
-      'Choose size and fit after you see the design',
-      'High-quality printing & tracked shipping',
+      'Choose size and fit after approving your design',
+      'High-quality printing with tracked shipping',
     ],
-    cta: 'Start Limitless',
+    cta: 'Start designing',
     highlighted: true,
     badge: 'Design-first',
   },
@@ -84,14 +84,14 @@ export default function PricingSection(): JSX.Element {
   }, []);
 
   return (
-    <section className="bg-gradient-to-b from-white to-gray-50 py-20 dark:from-gray-900 dark:to-gray-800">
+    <section className="bg-surface py-20 dark:bg-surface-dark">
       <div className="container-max">
         <div className="mb-16 text-center">
-          <h2 className="mb-4 text-4xl font-bold text-gray-900 md:text-5xl dark:text-white">
-            Simple, Transparent Pricing
+          <h2 className="mb-4 font-display text-3xl font-bold leading-tight text-ink md:text-5xl dark:text-ink-dark">
+            Simple Pricing
           </h2>
-          <p className="mx-auto max-w-2xl text-xl text-gray-600 dark:text-gray-300">
-            One Limitless plan: generate for free, refine without limits, pay when you print.
+          <p className="mx-auto max-w-2xl font-sans text-base leading-relaxed text-muted md:text-lg dark:text-muted-dark">
+            One tier. Preview for free, explore options, pay when you print.
           </p>
         </div>
 
@@ -99,16 +99,16 @@ export default function PricingSection(): JSX.Element {
           {tiers.map((tier) => (
             <div
               key={tier.name}
-              className={`relative rounded-2xl bg-white p-8 shadow-xl dark:bg-gray-800 ${
+              className={`relative rounded-2xl bg-surface p-8 shadow-soft dark:bg-surface-dark ${
                 tier.highlighted
-                  ? 'ring-primary-500 scale-105 ring-2'
-                  : 'ring-1 ring-gray-200 dark:ring-gray-700'
+                  ? 'scale-105 ring-2 ring-accent dark:ring-accent-dark'
+                  : 'ring-1 ring-muted/20 dark:ring-muted-dark/20'
               }`}
             >
               {/* Badge */}
               {tier.badge && (
                 <div className="absolute -top-4 left-1/2 -translate-x-1/2 transform">
-                  <span className="from-primary-600 rounded-full bg-gradient-to-r to-purple-600 px-4 py-1 text-sm font-bold text-white shadow-lg">
+                  <span className="rounded-full bg-accent px-4 py-1 font-sans text-sm font-bold text-white shadow-medium dark:bg-accent-dark">
                     {tier.badge}
                   </span>
                 </div>
@@ -116,16 +116,16 @@ export default function PricingSection(): JSX.Element {
 
               {/* Header */}
               <div className="mb-6 text-center">
-                <h3 className="mb-2 text-2xl font-bold text-gray-900 dark:text-white">
+                <h3 className="mb-2 font-display text-2xl font-bold text-ink dark:text-ink-dark">
                   {tier.displayName}
                 </h3>
                 <div className="mb-2">
-                  <span className="text-5xl font-bold text-gray-900 dark:text-white">
+                  <span className="font-display text-5xl font-bold text-ink dark:text-ink-dark">
                     {tier.price}
                   </span>
                 </div>
-                <p className="text-gray-600 dark:text-gray-300">{tier.description}</p>
-                <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
+                <p className="font-sans text-muted dark:text-muted-dark">{tier.description}</p>
+                <p className="mt-2 font-sans text-sm text-muted dark:text-muted-dark">
                   Ships in 5-8 business days | Secure checkout by Stripe
                 </p>
               </div>
@@ -145,7 +145,7 @@ export default function PricingSection(): JSX.Element {
                         clipRule="evenodd"
                       />
                     </svg>
-                    <span className="text-gray-700 dark:text-gray-300">{feature}</span>
+                    <span className="font-sans text-muted dark:text-muted-dark">{feature}</span>
                   </li>
                 ))}
               </ul>
@@ -154,7 +154,7 @@ export default function PricingSection(): JSX.Element {
               <Link to="/#quickstart" className="block">
                 <Button
                   variant="primary"
-                  className="w-full"
+                  className="w-full bg-accent text-white hover:opacity-90 dark:bg-accent-dark"
                   size="lg"
                   onClick={() =>
                     trackEvent('pricing.plan.select', {
@@ -170,7 +170,7 @@ export default function PricingSection(): JSX.Element {
           ))}
         </div>
 
-        <p className="mt-12 text-center text-gray-500 dark:text-gray-400">
+        <p className="mt-12 text-center font-sans text-muted dark:text-muted-dark">
           All prices include the tee, printing, and artwork creation. Shipping calculated at
           checkout.
         </p>

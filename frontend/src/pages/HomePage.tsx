@@ -28,7 +28,7 @@ import { Link } from 'react-router-dom';
 export default function HomePage(): JSX.Element {
   return (
     <main>
-      <div className="container-max py-8">
+      <div className="bg-paper container-max py-8 dark:bg-paper-dark">
         <Hero />
         <div className="mt-3">
           <SocialProofStrip />
@@ -38,16 +38,18 @@ export default function HomePage(): JSX.Element {
         </div>
       </div>
       <HowItWorks />
-      <div className="container-max py-6">
+      <div className="bg-paper container-max py-6 dark:bg-paper-dark">
         <ExamplesGallery />
       </div>
       <Features />
       <PricingSection />
-      <CallToAction />
+      <div className="bg-paper container-max py-6 dark:bg-paper-dark">
+        <CallToAction />
+      </div>
       <Link to="/#quickstart">
         <StickyCtaBar
           primaryLabel="Start your Limitless tee for $54.99 — design first"
-          subcopy="Unlimited redraws, pay when you print"
+          subcopy="Studio access, pay when you print"
           href="#quickstart"
         />
       </Link>

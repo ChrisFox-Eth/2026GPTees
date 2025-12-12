@@ -36,7 +36,7 @@ export default function Features(): JSX.Element {
     {
       title: 'Design-first flow',
       description:
-        'Generate a preview immediately, keep your prompt safe, and pay only after you approve.',
+        'Create a preview immediately, keep your idea safe, and pay only after you approve.',
       icon: (
         <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path
@@ -50,7 +50,7 @@ export default function Features(): JSX.Element {
     },
     {
       title: 'Limitless redraws',
-      description: 'Iterate with fresh prompts until you land the exact vibe you want—no caps.',
+      description: 'Iterate with fresh ideas until you land the exact look you want—no caps.',
       icon: (
         <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path
@@ -133,10 +133,10 @@ export default function Features(): JSX.Element {
     <section className="hidden py-20">
       <div className="container-max">
         <div className="mb-16 text-center">
-          <h2 className="mb-4 text-4xl font-bold text-gray-900 md:text-5xl dark:text-white">
+          <h2 className="mb-4 text-3xl font-display font-bold leading-tight text-gray-900 md:text-5xl dark:text-white">
             Why Choose GPTees?
           </h2>
-          <p className="mx-auto max-w-2xl text-xl text-gray-600 dark:text-gray-300">
+          <p className="mx-auto max-w-2xl text-base font-sans leading-relaxed text-gray-600 md:text-lg dark:text-gray-300">
             One-of-one drops made from your words—design first with limitless redraws.
           </p>
         </div>
@@ -150,10 +150,10 @@ export default function Features(): JSX.Element {
               <div className="bg-primary-100 dark:bg-primary-900 text-primary-600 dark:text-primary-400 mb-4 flex h-12 w-12 items-center justify-center rounded-lg">
                 {feature.icon}
               </div>
-              <h3 className="mb-3 text-xl font-bold text-gray-900 dark:text-white">
+              <h3 className="mb-3 text-xl font-display font-bold text-gray-900 dark:text-white">
                 {feature.title}
               </h3>
-              <p className="leading-relaxed text-gray-600 dark:text-gray-300">
+              <p className="font-sans leading-relaxed text-gray-600 dark:text-gray-300">
                 {feature.description}
               </p>
             </div>

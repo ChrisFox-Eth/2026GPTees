@@ -39,16 +39,19 @@ export default function Input({
   type = 'text',
   ...rest
 }: InputProps): JSX.Element {
+  const errorId = isInvalid && errorMessage ? `error-${Math.random().toString(36).slice(2, 9)}` : undefined;
+
   return (
     <div className={cn('inline-block w-full', className)}>
       <input
         type={type}
         className={inputVariants({ size, invalid: isInvalid })}
         aria-invalid={isInvalid || undefined}
+        aria-describedby={errorId}
         {...rest}
       />
       {isInvalid && errorMessage && (
-        <p className="text-danger-600 dark:text-danger-500 mt-1 text-sm" role="alert">
+        <p id={errorId} className="text-danger-600 dark:text-danger-500 mt-1 text-sm" role="alert">
           {errorMessage}
         </p>
       )}

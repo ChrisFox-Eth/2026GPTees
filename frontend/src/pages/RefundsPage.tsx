@@ -49,7 +49,7 @@ export default function RefundsPage(): JSX.Element {
         </ul>
 
         <p>
-          We strongly encourage using all available design generations (especially on Premium tier)
+          We strongly encourage using all available design options (especially on Limitless tier)
           before approving. Once approved and printed, we cannot offer refunds for design preference
           changes.
         </p>
@@ -89,7 +89,7 @@ export default function RefundsPage(): JSX.Element {
           <li>Designs you approved that were printed accurately</li>
           <li>Items returned without authorization</li>
           <li>Items damaged after delivery due to misuse</li>
-          <li>Design generation fees (non-refundable once used)</li>
+          <li>Design tier fees (non-refundable once used)</li>
         </ul>
 
         <h2>Shipping Costs</h2>
@@ -125,12 +125,12 @@ export default function RefundsPage(): JSX.Element {
           insurance for high-value orders.
         </p>
 
-        <h2>Design Generation Credits</h2>
+        <h2>Design Tier Credits</h2>
         <p>
-          <strong>Basic Tier:</strong> The single design generation is non-refundable once used.
+          <strong>Basic Tier:</strong> The single design option is non-refundable once used.
           <br />
-          <strong>Premium Tier:</strong> If you cancel before approving any design, you receive a
-          full refund. After approval, the premium tier fee is non-refundable.
+          <strong>Limitless Tier:</strong> If you cancel before approving any design, you receive a
+          full refund. After approval, the Limitless tier fee is non-refundable.
         </p>
 
         <h2>Contact for Questions</h2>

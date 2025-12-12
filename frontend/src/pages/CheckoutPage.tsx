@@ -320,7 +320,7 @@ export default function CheckoutPage(): JSX.Element {
               Reusing preview order {previewOrder.orderNumber}
             </p>
             <p className="text-xs text-blue-800 dark:text-blue-200">
-              Your prompt and designs stay attached. Add shipping below and we will reuse this order
+              Your idea and designs stay attached. Add shipping below and we will reuse this order
               for checkout.
             </p>
           </div>
@@ -554,7 +554,7 @@ export default function CheckoutPage(): JSX.Element {
                 {isSubmitting ? 'Processing...' : 'Proceed to Payment'}
               </Button>
               <p className="text-xs text-gray-600 dark:text-gray-400">
-                Ships in 5-8 business days • Unlimited redraws included
+                Ships in 5-8 business days • Studio access included
               </p>
             </div>
           </div>
@@ -573,7 +573,7 @@ export default function CheckoutPage(): JSX.Element {
               <li>• Printful fulfillment & shipping</li>
             </ul>
             <p className="mt-2 text-xs text-gray-600 dark:text-gray-400">
-              Why go Limitless? We redraw until you love it.
+              Why go Limitless? Create with confidence.
             </p>
             <p className="mt-1 text-xs text-gray-600 dark:text-gray-400">
               Ships in 5-8 business days.
@@ -600,7 +600,7 @@ export default function CheckoutPage(): JSX.Element {
                       {item.size} / {item.color} / Limitless redraws
                     </p>
                     <p className="text-xs text-gray-500 dark:text-gray-400">
-                      Unlimited redraws until approval.
+                      Explore options before approval.
                     </p>
                     {!isPreviewCheckout && (item as any).bundle && (
                       <p className="text-primary-700 dark:text-primary-300 text-xs">
@@ -648,7 +648,7 @@ export default function CheckoutPage(): JSX.Element {
         <div className="fixed right-0 bottom-0 left-0 z-30 border-t border-gray-200 bg-white p-4 shadow-lg lg:hidden dark:border-gray-700 dark:bg-gray-800">
           <div className="container-max">
             <p className="mb-2 text-center text-xs text-gray-600 dark:text-gray-400">
-              Ships in 5-8 business days • Unlimited redraws included
+              Ships in 5-8 business days • Studio access included
             </p>
             <Button
               variant="primary"

@@ -9,6 +9,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@clerk/clerk-react';
 import { Button } from '@components/ui/Button';
 import { Toast } from '@components/ui/Toast';
+import { ImagePlaceholder } from '@components/ui/ImagePlaceholder';
 import { useCart } from '@hooks/useCart';
 import { trackEvent } from '@utils/analytics';
 import type { ProductModalProps } from './ProductModal.types';
@@ -129,10 +130,10 @@ export default function ProductModal({
     });
 
     const message = existingItems
-      ? `Added another tee of this design. Cart now has ${existingItems + quantity} item${
+      ? `Added another item. Cart now has ${existingItems + quantity} item${
           existingItems + quantity !== 1 ? 's' : ''
         }.`
-      : 'Added your design setup. Submit your size, color, and tier to see the artwork after checkout.';
+      : 'Added to cart. Your design draft will be ready after checkout.';
     setToastMessage(message);
     setShowToast(true);
     onClose();
@@ -178,10 +179,10 @@ export default function ProductModal({
     });
 
     const message = existingItems
-      ? `Added another tee of this design. Cart now has ${existingItems + quantity} item${
+      ? `Added another item. Cart now has ${existingItems + quantity} item${
           existingItems + quantity !== 1 ? 's' : ''
         }.`
-      : 'Added your design setup. Submit your size and color to see the artwork after checkout.';
+      : 'Added to cart. Your design draft will be ready after checkout.';
     setToastMessage(message);
     onClose();
     goToCheckout();
@@ -193,7 +194,7 @@ export default function ProductModal({
     <div className="fixed inset-0 z-50 overflow-y-auto">
       {/* Backdrop */}
       <div
-        className="bg-opacity-50 fixed inset-0 bg-black transition-opacity"
+        className="fixed inset-0 bg-black/50 backdrop-blur-sm transition-opacity"
         onClick={(e) => {
           e.stopPropagation();
           onClose();
@@ -201,15 +202,18 @@ export default function ProductModal({
       />
 
       {/* Modal */}
-      <div className="flex min-h-full items-center justify-center p-4">
+      <div className="flex min-h-full items-center justify-center p-4 md:p-8">
         <div
-          className="relative w-full max-w-4xl rounded-lg bg-white p-6 pb-16 shadow-xl md:pb-6 dark:bg-gray-800"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="product-modal-title"
+          className="relative w-full max-w-5xl rounded-lg bg-surface p-6 pb-16 shadow-lifted md:p-8 md:pb-8 dark:bg-surface-dark"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Close Button */}
           <button
             onClick={onClose}
-            className="absolute top-0 right-4 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+            className="absolute right-4 top-4 text-muted transition-colors hover:text-ink dark:text-muted-dark dark:hover:text-ink-dark"
             aria-label="Close product modal"
           >
             <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -222,40 +226,44 @@ export default function ProductModal({
             </svg>
           </button>
 
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+          <div className="grid grid-cols-1 gap-8 md:grid-cols-2 md:gap-12">
             {/* Product Image */}
-            <div className="aspect-square overflow-hidden rounded-lg bg-gray-200 dark:bg-gray-700">
+            <div className="aspect-[4/5] overflow-hidden rounded-lg bg-surface-2 dark:bg-paper-dark">
               {product.imageUrl ? (
                 <img
                   src={product.imageUrl}
                   alt={product.name}
                   loading="lazy"
                   width={800}
-                  height={800}
+                  height={1000}
                   className="h-full w-full object-cover"
                 />
               ) : (
-                <div className="flex h-full w-full items-center justify-center">
-                  <span className="text-sm tracking-wide text-gray-400 uppercase">
-                    Image coming soon
-                  </span>
-                </div>
+                <ImagePlaceholder aspectRatio="4/5" label="Product image" />
               )}
             </div>
 
             {/* Product Details */}
             <div className="flex flex-col">
-              <h2 className="mb-2 text-3xl font-bold text-gray-900 dark:text-white">
-                {product.name}
-              </h2>
-              {product.description && (
-                <p className="mb-4 text-gray-600 dark:text-gray-400">{product.description}</p>
-              )}
-              <p className="mb-4 text-sm text-gray-500 dark:text-gray-400">{deliveryText}</p>
+              <div className="mb-6 space-y-3">
+                <h2 id="product-modal-title" className="font-display text-3xl font-semibold tracking-tight text-ink md:text-4xl dark:text-ink-dark">
+                  {product.name}
+                </h2>
+                {product.description && (
+                  <p className="font-sans text-base leading-relaxed text-muted dark:text-muted-dark">
+                    {product.description}
+                  </p>
+                )}
+                <ul className="space-y-1.5 font-sans text-sm text-muted dark:text-muted-dark">
+                  <li>• Premium Bella+Canvas 3001 construction</li>
+                  <li>• Vibrant, long-lasting prints</li>
+                  <li>• {deliveryText}</li>
+                </ul>
+              </div>
 
               {/* Size Selection */}
               <div className="mb-6">
-                <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                <label className="mb-3 block font-sans text-sm font-medium text-ink dark:text-ink-dark">
                   Size
                 </label>
                 <div className="flex flex-wrap gap-2">
@@ -263,10 +271,10 @@ export default function ProductModal({
                     <button
                       key={size}
                       onClick={() => handleSizeChange(size)}
-                      className={`rounded-md border px-4 py-2 transition-colors ${
+                      className={`rounded-md border px-4 py-2 font-sans text-sm transition-colors ${
                         selectedSize === size
-                          ? 'border-primary-600 bg-primary-50 dark:bg-primary-900 text-primary-600 dark:text-primary-400'
-                          : 'hover:border-primary-400 border-gray-300 dark:border-gray-600'
+                          ? 'border-accent bg-accent-soft text-accent dark:border-accent-dark dark:bg-accent-dark/10 dark:text-accent-dark'
+                          : 'border-surface-2 text-ink hover:border-accent/50 dark:border-surface-dark dark:text-ink-dark dark:hover:border-accent-dark/50'
                       }`}
                     >
                       {size}
@@ -277,18 +285,18 @@ export default function ProductModal({
 
               {/* Color Selection */}
               <div className="mb-6">
-                <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                <label className="mb-3 block font-sans text-sm font-medium text-ink dark:text-ink-dark">
                   Color: {selectedColor.name}
                 </label>
-                <div className="flex flex-wrap gap-2">
+                <div className="flex flex-wrap gap-2.5">
                   {product.colors.map((color, idx) => (
                     <button
                       key={idx}
                       onClick={() => handleColorChange(color.name)}
                       className={`h-10 w-10 rounded-full border-2 transition-all ${
                         selectedColor.name === color.name
-                          ? 'border-primary-600 scale-110'
-                          : 'border-gray-300 dark:border-gray-600'
+                          ? 'scale-110 border-accent dark:border-accent-dark'
+                          : 'border-surface-2 hover:border-accent/50 dark:border-surface-dark dark:hover:border-accent-dark/50'
                       }`}
                       style={{ backgroundColor: color.hex }}
                       title={color.name}
@@ -300,32 +308,37 @@ export default function ProductModal({
 
               {/* Tier Selection */}
               <div className="mb-6">
-                <div className="bg-primary-50 dark:bg-primary-900/20 border-primary-200 dark:border-primary-800 w-full rounded-lg border p-4 text-left">
-                  <p className="font-semibold text-gray-900 dark:text-white">
-                    Limitless redraws - ${tierPrice.toFixed(2)}
-                  </p>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">
-                    We redraw until you love it—no extra charges. Unlimited designs included.
+                <div className="w-full rounded-lg border border-accent/20 bg-accent-soft p-5 text-left dark:border-accent-dark/20 dark:bg-accent-dark/10">
+                  <div className="mb-2 flex items-baseline justify-between">
+                    <p className="font-display text-lg font-semibold text-ink dark:text-ink-dark">
+                      Limitless
+                    </p>
+                    <p className="font-display text-2xl font-semibold text-accent dark:text-accent-dark">
+                      ${tierPrice.toFixed(2)}
+                    </p>
+                  </div>
+                  <p className="font-sans text-sm leading-relaxed text-muted dark:text-muted-dark">
+                    Studio access with optional exploration—create your unique design with confidence.
                   </p>
                 </div>
               </div>
 
               {/* Price & Actions */}
-              <div className="mt-auto">
-                <div className="mb-4">
-                  <p className="text-sm text-gray-500 dark:text-gray-400">Total Price</p>
-                  <p className="text-3xl font-bold text-gray-900 dark:text-white">
-                    ${totalPrice.toFixed(2)}
-                  </p>
-                  <p className="text-xs text-gray-600 dark:text-gray-400">{deliveryText}</p>
+              <div className="mt-auto border-t border-surface-2/50 pt-6 dark:border-surface-dark/50">
+                <div className="mb-5 space-y-1">
+                  <div className="flex items-baseline justify-between">
+                    <p className="font-sans text-sm text-muted dark:text-muted-dark">Total</p>
+                    <p className="font-display text-3xl font-semibold text-ink dark:text-ink-dark">
+                      ${totalPrice.toFixed(2)}
+                    </p>
+                  </div>
                   {bundleDeal && (
-                    <p className="text-xs text-gray-600 dark:text-gray-400">
-                      Includes 2 items with 10% tier discount.
+                    <p className="font-sans text-xs text-muted dark:text-muted-dark">
+                      Includes 2 items with 10% tier discount
                     </p>
                   )}
-                  <p className="mt-2 text-xs text-gray-600 dark:text-gray-400">
-                    After you lock size, color, and tier, we will reveal your design preview for
-                    approval.
+                  <p className="font-sans text-xs text-muted dark:text-muted-dark">
+                    Your design draft will be ready for review after checkout
                   </p>
                 </div>
                 <div className="flex flex-col gap-3 sm:flex-row">
@@ -345,10 +358,10 @@ export default function ProductModal({
       {/* Mobile Cart Summary Bar */}
       {cartItems > 0 && (
         <div className="fixed inset-x-0 bottom-0 z-[60] md:hidden">
-          <div className="flex items-center justify-between gap-3 border border-gray-200 bg-white p-3 shadow-lg dark:border-gray-700 dark:bg-gray-900">
+          <div className="flex items-center justify-between gap-3 border-t border-surface-2/50 bg-surface p-4 shadow-lifted dark:border-surface-dark/50 dark:bg-surface-dark">
             <div>
-              <p className="text-xs text-gray-500 dark:text-gray-400">Cart</p>
-              <p className="text-sm font-semibold text-gray-900 dark:text-white">
+              <p className="font-sans text-xs text-muted dark:text-muted-dark">Cart</p>
+              <p className="font-sans text-sm font-semibold text-ink dark:text-ink-dark">
                 {cartItems} item{cartItems !== 1 ? 's' : ''} · ${cartSubtotal.toFixed(2)}
               </p>
             </div>

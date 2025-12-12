@@ -123,7 +123,7 @@ function OrderDetailContent(): JSX.Element {
     const landingUrl =
       'https://gptees.app/?utm_source=customer_share&utm_medium=design&utm_campaign=ugc';
     const shareTarget = design.imageUrl || landingUrl;
-    const shareText = `I just designed this one-of-one tee on GPTees. What do you think? Start yours here: ${landingUrl}`;
+    const shareText = `I just designed this custom tee on GPTees. What do you think? Start yours here: ${landingUrl}`;
 
     try {
       setShareFeedback(null);
@@ -132,7 +132,7 @@ function OrderDetailContent(): JSX.Element {
 
       if (supportsNativeShare) {
         await navigator.share({
-          title: 'My GPTee design',
+          title: 'My custom tee design',
           text: shareText,
           url: shareTarget,
         });
@@ -148,7 +148,7 @@ function OrderDetailContent(): JSX.Element {
 
       if (navigator?.clipboard?.writeText) {
         await navigator.clipboard.writeText(`${shareText}\nPreview: ${shareTarget}`);
-        setShareFeedback('Link copied—paste it to get opinions and invite friends.');
+        setShareFeedback('Link copied—paste it to get feedback and invite friends.');
         trackEvent('design.share.success', {
           order_id: order?.id ?? id,
           design_id: design.id,
@@ -158,8 +158,8 @@ function OrderDetailContent(): JSX.Element {
         return;
       }
 
-      window.prompt('Copy this link to share your GPTee:', `${shareText} Preview: ${shareTarget}`);
-      setShareFeedback('Copy the link above to share your GPTee design anywhere.');
+      window.prompt('Copy this link to share your design:', `${shareText} Preview: ${shareTarget}`);
+      setShareFeedback('Copy the link above to share your design anywhere.');
       trackEvent('design.share.success', {
         order_id: order?.id ?? id,
         design_id: design.id,
@@ -241,7 +241,7 @@ function OrderDetailContent(): JSX.Element {
           {order.status === 'PAID' && order.designsGenerated < order.maxDesigns && (
             <Link to={`/design?orderId=${order.id}`}>
               <Button variant="primary" size="sm">
-                Generate Design
+                Create Draft
               </Button>
             </Link>
           )}
@@ -302,11 +302,11 @@ function OrderDetailContent(): JSX.Element {
                   </div>
 
                   <div className="space-y-1 p-3">
-                    <p className="line-clamp-2 text-sm text-gray-700 dark:text-gray-300">
+                    <p className="line-clamp-2 font-sans text-sm text-gray-700 dark:text-gray-300">
                       {design.prompt}
                     </p>
 
-                    <p className="text-xs text-gray-500 dark:text-gray-500">
+                    <p className="font-sans text-xs text-gray-500 dark:text-gray-500">
                       {design.approvalStatus ? 'Approved' : design.status}
                     </p>
 
@@ -320,7 +320,7 @@ function OrderDetailContent(): JSX.Element {
                             onClick={() => handleApproveDesign(design.id)}
                             isDisabled={isApproving === design.id}
                           >
-                            {isApproving === design.id ? 'Approving...' : 'Approve This Design'}
+                            <span className="font-sans">{isApproving === design.id ? 'Approving...' : 'Approve This Design'}</span>
                           </Button>
                         )}
 
@@ -330,10 +330,10 @@ function OrderDetailContent(): JSX.Element {
                         onClick={() => handleShareDesign(design)}
                         isDisabled={design.status !== 'COMPLETED'}
                       >
-                        Share this design
+                        <span className="font-sans">Share this design</span>
                       </Button>
 
-                      <p className="text-[11px] text-gray-500 dark:text-gray-500">
+                      <p className="font-sans text-[11px] text-gray-500 dark:text-gray-500">
                         Sharing uses your device share sheet when available; otherwise we copy a
                         link.
                       </p>

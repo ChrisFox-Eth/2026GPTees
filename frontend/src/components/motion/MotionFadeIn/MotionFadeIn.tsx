@@ -4,8 +4,9 @@
  * @since 2025-11-21
  */
 
-import { motion } from 'framer-motion';
+import { motion, useReducedMotion } from 'framer-motion';
 import type { MotionFadeInProps, MotionFadeInDirection } from './MotionFadeIn.types';
+import { MOTION_EASING, MOTION_DURATION } from '@utils/motion';
 
 /**
  * @constant
@@ -47,14 +48,19 @@ export default function MotionFadeIn({
   className = '',
   ...rest
 }: MotionFadeInProps): JSX.Element {
+  const shouldReduceMotion = useReducedMotion();
   const offset = directionOffset[direction];
+
+  // If reduced motion is preferred, use minimal transforms and shorter duration
+  const reducedOffset = shouldReduceMotion ? { x: 0, y: 0 } : offset;
+  const reducedDuration = shouldReduceMotion ? MOTION_DURATION.micro : duration;
 
   return (
     <motion.div
-      initial={{ opacity: 0, x: offset.x, y: offset.y }}
+      initial={{ opacity: 0, x: reducedOffset.x, y: reducedOffset.y }}
       whileInView={{ opacity: 1, x: 0, y: 0 }}
       viewport={{ once: true, amount: 0.3 }}
-      transition={{ delay, duration, ease: [0.16, 1, 0.3, 1] }}
+      transition={{ delay, duration: reducedDuration, ease: MOTION_EASING }}
       className={className}
       {...rest}
     >

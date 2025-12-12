@@ -4,8 +4,9 @@
  * @since 2025-11-21
  */
 
-import { motion } from 'framer-motion';
+import { motion, useReducedMotion } from 'framer-motion';
 import type { MotionHoverCardProps } from './MotionHoverCard.types';
+import { MOTION_EASING, MOTION_DURATION } from '@utils/motion';
 
 /**
  * @component
@@ -31,12 +32,21 @@ export default function MotionHoverCard({
   className = '',
   ...rest
 }: MotionHoverCardProps): JSX.Element {
+  const shouldReduceMotion = useReducedMotion();
+
+  // If reduced motion is preferred, use minimal transforms
+  const hoverAnimation = shouldReduceMotion
+    ? {}
+    : { y: -4, transition: { duration: MOTION_DURATION.micro, ease: MOTION_EASING } };
+  const tapAnimation = shouldReduceMotion
+    ? {}
+    : { scale: 0.98, transition: { duration: MOTION_DURATION.micro, ease: MOTION_EASING } };
+
   return (
     <motion.article
-      whileHover={{ y: -6, scale: 1.02 }}
-      whileFocus={{ y: -6, scale: 1.02 }}
-      whileTap={{ scale: 0.98 }}
-      transition={{ type: 'spring', stiffness: 220, damping: 18 }}
+      whileHover={hoverAnimation}
+      whileFocus={hoverAnimation}
+      whileTap={tapAnimation}
       className={`border-primary-100 dark:border-primary-900/60 relative overflow-hidden rounded-xl border bg-white/80 p-6 shadow-md backdrop-blur dark:bg-gray-800 ${className}`}
       {...rest}
     >

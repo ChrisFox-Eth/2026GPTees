@@ -15,6 +15,8 @@ import {
   disablePromoCode,
   enablePromoCode,
   getPrintfulVariants,
+  listEmailTemplates,
+  previewEmailTemplate,
 } from '../controllers/admin.controller.js';
 import { requireAuth } from '../middleware/auth.middleware.js';
 import { requireAdmin } from '../middleware/admin.middleware.js';
@@ -181,5 +183,38 @@ router.patch('/promo-codes/:id/enable', requireAuth, requireAdmin, enablePromoCo
  * @throws {500} Internal Server Error
  */
 router.get('/printful/variants', requireAuth, requireAdmin, getPrintfulVariants);
+
+/**
+ * @route GET /api/admin/email-templates
+ * @description Get list of all available email templates
+ * @access Admin - requires admin role
+ *
+ * @param {Request} req - Express request
+ * @param {Response} res - Express response
+ *
+ * @returns {Array<Object>} 200 - Array of template objects with name and description
+ * @throws {401} Unauthorized - When not authenticated
+ * @throws {403} Forbidden - When user is not an admin
+ * @throws {500} Internal Server Error
+ */
+router.get('/email-templates', requireAuth, requireAdmin, listEmailTemplates);
+
+/**
+ * @route GET /api/admin/email-templates/:name/preview
+ * @description Preview an email template with sample data
+ * @access Admin - requires admin role
+ *
+ * @param {Request} req - Express request
+ * @param {Object} req.params - URL parameters
+ * @param {string} req.params.name - Template name (orderConfirmed, designApproved, orderShipped, abandonedCheckout, studioTips, giftCode)
+ * @param {Response} res - Express response
+ *
+ * @returns {Object} 200 - Template preview with subject, HTML, and config
+ * @throws {400} Bad Request - When template name is invalid
+ * @throws {401} Unauthorized - When not authenticated
+ * @throws {403} Forbidden - When user is not an admin
+ * @throws {500} Internal Server Error
+ */
+router.get('/email-templates/:name/preview', requireAuth, requireAdmin, previewEmailTemplate);
 
 export default router;

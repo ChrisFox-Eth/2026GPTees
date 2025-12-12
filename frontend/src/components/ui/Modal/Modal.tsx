@@ -80,7 +80,7 @@ export default function Modal({
 
   return (
     <div
-      className="flex-center bg-opacity-50 fixed inset-0 z-50 bg-black"
+      className="flex-center bg-opacity-50 fixed inset-0 z-50 bg-ink"
       onClick={(e) => {
         if (e.target === e.currentTarget) {
           onClose?.();
@@ -93,19 +93,19 @@ export default function Modal({
         role="dialog"
         aria-modal="true"
         aria-labelledby={title ? 'modal-title' : undefined}
-        className={`relative w-full ${sizeClasses} max-h-[90vh] overflow-y-auto rounded-lg bg-white shadow-lg dark:bg-gray-800 ${className}`}
+        className={`relative w-full ${sizeClasses} max-h-[90vh] overflow-y-auto rounded-lg bg-surface shadow-lifted dark:bg-surface-dark ${className}`}
       >
         {/* Header with title and close button */}
         {title && (
-          <div className="flex items-center justify-between border-b border-gray-200 px-4 py-3 dark:border-gray-700">
-            <h3 id="modal-title" className="text-lg font-semibold text-gray-900 dark:text-white">
+          <div className="flex items-center justify-between border-b border-surface-2 px-4 py-3 dark:border-muted-dark">
+            <h3 id="modal-title" className="text-lg font-semibold text-ink dark:text-ink-dark">
               {title}
             </h3>
             {onClose && (
               <button
                 onClick={onClose}
                 aria-label="Close modal"
-                className="text-gray-400 hover:text-gray-600 focus:outline-none dark:text-gray-500 dark:hover:text-gray-400"
+                className="text-muted hover:text-ink focus:outline-none dark:text-muted-dark dark:hover:text-ink-dark"
               >
                 <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
                   <path
@@ -123,7 +123,7 @@ export default function Modal({
           <button
             onClick={onClose}
             aria-label="Close modal"
-            className="absolute top-3 right-3 text-gray-400 hover:text-gray-600 focus:outline-none dark:text-gray-500 dark:hover:text-gray-400"
+            className="absolute top-3 right-3 text-muted hover:text-ink focus:outline-none dark:text-muted-dark dark:hover:text-ink-dark"
           >
             <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
               <path
@@ -138,7 +138,7 @@ export default function Modal({
         <div className="px-4 py-5">{children}</div>
         {/* Footer section if provided */}
         {footer && (
-          <div className="flex justify-end border-t border-gray-200 px-4 py-3 dark:border-gray-700">
+          <div className="flex justify-end border-t border-surface-2 px-4 py-3 dark:border-muted-dark">
             {footer}
           </div>
         )}

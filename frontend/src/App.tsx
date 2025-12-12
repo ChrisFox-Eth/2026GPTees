@@ -8,9 +8,11 @@
 
 import { useState, useEffect } from 'react';
 import { Routes, Route, useLocation } from 'react-router-dom';
+import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { Header, Footer } from '@components/sections';
 import { ErrorBoundary } from '@components/ErrorBoundary';
 import { trackEvent, trackPageView } from '@utils/analytics';
+import { routeTransition } from '@utils/motion';
 import HomePage from './pages/HomePage';
 import AuthPage from './pages/AuthPage';
 import ShopPage from './pages/ShopPage';
@@ -111,13 +113,13 @@ export default function App(): JSX.Element {
       return true;
     }
     const savedTheme = localStorage.getItem('theme');
-    if (savedTheme === 'light') return false;
-    if (savedTheme === 'dark') return true;
-    return true; // default to dark for first load
+    if (savedTheme === 'light') return true;
+    if (savedTheme === 'dark') return false;
+    return true; // default to light for first load
   };
 
   /** @type {boolean} Current dark mode state */
-  const [isDark, setIsDark] = useState<boolean>(getInitialTheme);
+  const [isLight, setIsLight] = useState<boolean>(getInitialTheme);
   /** @type {boolean} Whether theme initialization is complete */
   const [, setIsInitialized] = useState(false);
 
@@ -129,7 +131,7 @@ export default function App(): JSX.Element {
     const savedTheme = localStorage.getItem('theme');
     const isDarkTheme = savedTheme ? savedTheme === 'dark' : true;
 
-    setIsDark(isDarkTheme);
+    setIsLight(!isDarkTheme);
     applyTheme(isDarkTheme);
     setIsInitialized(true);
   }, []);
@@ -143,9 +145,9 @@ export default function App(): JSX.Element {
   const applyTheme = (isDarkMode: boolean) => {
     const html = document.documentElement;
     if (isDarkMode) {
-      html.classList.add('dark');
+      html.classList.add('light');
     } else {
-      html.classList.remove('dark');
+      html.classList.remove('light');
     }
   };
 
@@ -155,75 +157,93 @@ export default function App(): JSX.Element {
    * localStorage and tracks the theme change event for analytics.
    */
   const toggleTheme = () => {
-    const newIsDark = !isDark;
-    setIsDark(newIsDark);
-    applyTheme(newIsDark);
-    localStorage.setItem('theme', newIsDark ? 'dark' : 'light');
-    trackEvent('ui.theme.toggle', { theme: newIsDark ? 'dark' : 'light' });
+    const newIsLight = !isLight;
+    setIsLight(newIsLight);
+    applyTheme(newIsLight);
+    localStorage.setItem('theme', newIsLight ? 'light' : 'dark');
+    trackEvent('ui.theme.toggle', { theme: newIsLight ? 'light' : 'dark' });
   };
+
+  const location = useLocation();
+  const shouldReduceMotion = useReducedMotion();
+
+  // If reduced motion is preferred, disable route transitions
+  const pageTransition = shouldReduceMotion
+    ? { initial: { opacity: 1 }, animate: { opacity: 1 }, exit: { opacity: 1 } }
+    : routeTransition;
 
   return (
     <ErrorBoundary>
       <PageViewTracker />
       <ScrollToTop />
       <ScrollToHash />
-      <div className="flex min-h-screen flex-col overflow-x-hidden bg-white pt-8 transition-colors duration-200 dark:bg-gray-900">
-        <Header isDark={isDark} onToggleTheme={toggleTheme} />
+      <div className="flex min-h-screen flex-col overflow-x-hidden bg-white pt-8 transition-colors duration-200">
+        <Header isDark={isLight} onToggleTheme={toggleTheme} />
         <div className="flex-1">
-          <Routes>
-            <Route path="/" element={<HomePage />} />
-            <Route path="/shop" element={<ShopPage />} />
-            <Route path="/cart" element={<CartPage />} />
-            <Route
-              path="/checkout"
-              element={
-                <ProtectedRoute>
-                  <CheckoutPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route path="/checkout/success" element={<CheckoutSuccessPage />} />
-            <Route path="/design" element={<DesignPage />} />
-            <Route path="/account" element={<AccountPage />} />
-            <Route
-              path="/orders/:id"
-              element={
-                <ProtectedRoute>
-                  <OrderDetailPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route path="/privacy" element={<PrivacyPage />} />
-            <Route path="/terms" element={<TermsPage />} />
-            <Route path="/refunds" element={<RefundsPage />} />
-            <Route path="/gift" element={<GiftPage />} />
-            <Route path="/gift/success" element={<GiftSuccessPage />} />
-            {import.meta.env.DEV && (
-              <>
-                <Route path="/admin" element={<AdminPage />} />
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={location.pathname}
+              initial="initial"
+              animate="animate"
+              exit="exit"
+              variants={pageTransition}
+            >
+              <Routes location={location}>
+                <Route path="/" element={<HomePage />} />
+                <Route path="/shop" element={<ShopPage />} />
+                <Route path="/cart" element={<CartPage />} />
                 <Route
-                  path="/admin/promo"
+                  path="/checkout"
                   element={
                     <ProtectedRoute>
-                      <AdminPromoPage />
+                      <CheckoutPage />
                     </ProtectedRoute>
                   }
                 />
+                <Route path="/checkout/success" element={<CheckoutSuccessPage />} />
+                <Route path="/design" element={<DesignPage />} />
+                <Route path="/account" element={<AccountPage />} />
                 <Route
-                  path="/admin/help"
+                  path="/orders/:id"
                   element={
                     <ProtectedRoute>
-                      <AdminHelpPage />
+                      <OrderDetailPage />
                     </ProtectedRoute>
                   }
                 />
-              </>
-            )}
-            <Route path="/auth/*" element={<AuthPage />} />
-            <Route path="/sign-in/*" element={<AuthPage />} />
-            <Route path="/sign-up/*" element={<AuthPage />} />
-            <Route path="*" element={<NotFoundPage />} />
-          </Routes>
+                <Route path="/privacy" element={<PrivacyPage />} />
+                <Route path="/terms" element={<TermsPage />} />
+                <Route path="/refunds" element={<RefundsPage />} />
+                <Route path="/gift" element={<GiftPage />} />
+                <Route path="/gift/success" element={<GiftSuccessPage />} />
+                {import.meta.env.DEV && (
+                  <>
+                    <Route path="/admin" element={<AdminPage />} />
+                    <Route
+                      path="/admin/promo"
+                      element={
+                        <ProtectedRoute>
+                          <AdminPromoPage />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/admin/help"
+                      element={
+                        <ProtectedRoute>
+                          <AdminHelpPage />
+                        </ProtectedRoute>
+                      }
+                    />
+                  </>
+                )}
+                <Route path="/auth/*" element={<AuthPage />} />
+                <Route path="/sign-in/*" element={<AuthPage />} />
+                <Route path="/sign-up/*" element={<AuthPage />} />
+                <Route path="*" element={<NotFoundPage />} />
+              </Routes>
+            </motion.div>
+          </AnimatePresence>
         </div>
         <Footer />
       </div>

@@ -242,7 +242,7 @@ function DesignContent(): JSX.Element {
       });
     } catch (err: any) {
       console.error('Error getting random prompt:', err);
-      setError('Failed to generate surprise prompt');
+      setError('Unable to get surprise idea');
     } finally {
       setIsLoadingSurprise(false);
     }
@@ -250,7 +250,7 @@ function DesignContent(): JSX.Element {
 
   const handleGenerateDesign = async () => {
     if (!prompt.trim()) {
-      setError('Please enter a prompt or use Surprise Me');
+      setError('Please describe your idea or use Surprise Me');
       return;
     }
 
@@ -321,7 +321,7 @@ function DesignContent(): JSX.Element {
       });
     } catch (err: any) {
       console.error('Error generating design:', err);
-      setError(err.message || 'Failed to generate design');
+      setError(err.message || 'Unable to create draft');
     } finally {
       setIsGenerating(false);
     }
@@ -360,10 +360,10 @@ function DesignContent(): JSX.Element {
       }
 
       // Show success message
-      alert('Design approved! Your order will be submitted for printing.');
+      alert('Approved! Your order will be submitted for printing.');
     } catch (err: any) {
       console.error('Error approving design:', err);
-      setError(err.message || 'Failed to approve design');
+      setError(err.message || 'Unable to approve design');
     } finally {
       setIsApproving(null);
     }
@@ -415,7 +415,7 @@ function DesignContent(): JSX.Element {
     const landingUrl =
       'https://gptees.app/?utm_source=customer_share&utm_medium=design&utm_campaign=ugc';
     const shareTarget = design.imageUrl || landingUrl;
-    const shareText = `I just designed this one-of-one tee on GPTees. What do you think? Start yours here: ${landingUrl}`;
+    const shareText = `I just designed this custom tee on GPTees. What do you think? Start yours here: ${landingUrl}`;
 
     try {
       setShareFeedback(null);
@@ -424,7 +424,7 @@ function DesignContent(): JSX.Element {
 
       if (supportsNativeShare) {
         await navigator.share({
-          title: 'My GPTee design',
+          title: 'My custom tee design',
           text: shareText,
           url: shareTarget,
         });
@@ -441,7 +441,7 @@ function DesignContent(): JSX.Element {
 
       if (navigator?.clipboard?.writeText) {
         await navigator.clipboard.writeText(`${shareText}\nPreview: ${shareTarget}`);
-        setShareFeedback('Link copied. Paste it to get votes and invite friends to make theirs.');
+        setShareFeedback('Link copied. Paste it to get feedback and invite friends to design theirs.');
         trackEvent('design.share.success', {
           order_id: order?.id ?? orderId,
           design_id: design.id,
@@ -450,8 +450,8 @@ function DesignContent(): JSX.Element {
         return;
       }
 
-      window.prompt('Copy this link to share your GPTee:', `${shareText} Preview: ${shareTarget}`);
-      setShareFeedback('Copy the link above to share your GPTee design anywhere.');
+      window.prompt('Copy this link to share your design:', `${shareText} Preview: ${shareTarget}`);
+      setShareFeedback('Copy the link above to share your design anywhere.');
       trackEvent('design.share.success', {
         order_id: order?.id ?? orderId,
         design_id: design.id,
@@ -549,9 +549,9 @@ function DesignContent(): JSX.Element {
     <div className="container-max py-8">
       {/* Header */}
       <div className="mb-8">
-        <h1 className="mb-2 text-3xl font-bold text-gray-900 dark:text-white">Design Studio</h1>
-        <p className="text-gray-600 dark:text-gray-400">
-          Describe your idea and we will craft the artwork for your GPTee
+        <h1 className="mb-2 font-display text-3xl font-bold text-gray-900 dark:text-white">Studio</h1>
+        <p className="font-sans text-gray-600 dark:text-gray-400">
+          Describe your idea and we will craft the artwork for your tee
         </p>
       </div>
 
@@ -580,12 +580,11 @@ function DesignContent(): JSX.Element {
       {isPreviewOrder && (
         <div className="mb-6 flex flex-col gap-3 rounded-lg border border-blue-200 bg-blue-50 p-4 md:flex-row md:items-center md:justify-between dark:border-blue-800 dark:bg-blue-900/20">
           <div>
-            <p className="text-sm font-semibold text-blue-900 dark:text-blue-100">
-              Design first, pay when you’re ready.
+            <p className="font-sans text-sm font-semibold text-blue-900 dark:text-blue-100">
+              Design first, pay when you're ready.
             </p>
-            <p className="mt-1 text-xs text-blue-800 dark:text-blue-200">
-              Checkout saves your art, size, and color. You’ll see your tee exactly as you approved
-              it.
+            <p className="font-sans mt-1 text-xs text-blue-800 dark:text-blue-200">
+              Checkout saves your artwork, size, and color. You'll see your tee exactly as you approved it.
             </p>
           </div>
           <Button
@@ -603,13 +602,13 @@ function DesignContent(): JSX.Element {
         <div className="mb-6 rounded-lg border border-gray-200 bg-white p-4 shadow dark:border-gray-700 dark:bg-gray-800">
           <div className="mb-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
             <div>
-              <p className="text-sm font-semibold text-gray-900 dark:text-white">Choose your fit</p>
-              <p className="text-xs text-gray-600 dark:text-gray-400">
-                Pick size and color you want printed. We save it when you checkout.
+              <p className="font-sans text-sm font-semibold text-gray-900 dark:text-white">Choose your fit</p>
+              <p className="font-sans text-xs text-gray-600 dark:text-gray-400">
+                Select size and color. We'll lock it in at checkout.
               </p>
             </div>
             {variantMessage && (
-              <p className="text-xs text-green-700 dark:text-green-300">{variantMessage}</p>
+              <p className="font-sans text-xs text-green-700 dark:text-green-300">{variantMessage}</p>
             )}
           </div>
 
@@ -752,10 +751,10 @@ function DesignContent(): JSX.Element {
 
           {(isGenerating || hasGeneratingDesign) && (
             <div className="mb-4 rounded-lg border border-blue-200 bg-blue-50 p-4 dark:border-blue-800 dark:bg-blue-900/20">
-              <p className="text-sm text-blue-800 dark:text-blue-300">
+              <p className="font-sans text-sm text-blue-800 dark:text-blue-300">
                 {isGenerating
-                  ? 'Generating your design... this can take 10–30 seconds.'
-                  : 'Uploading to storage... image will refresh automatically.'}
+                  ? 'Creating your draft... this takes 10–30 seconds.'
+                  : 'Finalizing image... will refresh automatically.'}
               </p>
             </div>
           )}
@@ -764,9 +763,9 @@ function DesignContent(): JSX.Element {
           <div className="mb-4">
             <label
               htmlFor="prompt"
-              className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
+              className="mb-2 block font-sans text-sm font-medium text-gray-700 dark:text-gray-300"
             >
-              Describe your design
+              Describe your idea
             </label>
             <textarea
               id="prompt"
@@ -775,7 +774,7 @@ function DesignContent(): JSX.Element {
               onChange={(e) => setPrompt(e.target.value)}
               placeholder="Short and clear wins: e.g., retro surf wave badge"
               disabled={!canGenerate || hasReachedLimit}
-              className="focus:ring-primary-500 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 focus:border-transparent focus:ring-2 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+              className="focus:ring-primary-500 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 font-sans text-gray-900 focus:border-transparent focus:ring-2 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
             />
           </div>
 
@@ -844,12 +843,12 @@ function DesignContent(): JSX.Element {
             className="mb-3 w-full"
           >
             {isGenerating ? (
-              <span className="flex items-center justify-center gap-2">
+              <span className="flex items-center justify-center gap-2 font-sans">
                 <div className="h-4 w-4 animate-spin rounded-full border-b-2 border-white"></div>
-                Generating Design...
+                Creating draft...
               </span>
             ) : (
-              'Generate Design'
+              <span className="font-sans">Create draft</span>
             )}
           </Button>
 
@@ -860,21 +859,21 @@ function DesignContent(): JSX.Element {
             disabled={!canGenerate || hasReachedLimit || isLoadingSurprise}
             className="mb-3 w-full"
           >
-            {isLoadingSurprise ? 'Loading...' : 'Surprise Me'}
+            <span className="font-sans">{isLoadingSurprise ? 'Loading...' : 'Surprise Me'}</span>
           </Button>
 
-          <p className="mt-3 text-center text-xs text-gray-500 dark:text-gray-400">
-            Generation takes 10-30 seconds
+          <p className="mt-3 text-center font-sans text-xs text-gray-500 dark:text-gray-400">
+            Takes 10-30 seconds
           </p>
         </div>
 
         {/* Generated Designs Display */}
         <div className="rounded-lg bg-white p-6 shadow dark:bg-gray-800">
-          <h2 className="mb-4 text-xl font-bold text-gray-900 dark:text-white">
+          <h2 className="mb-4 font-display text-xl font-bold text-gray-900 dark:text-white">
             Your Designs ({designs.length})
           </h2>
-          <p className="mb-3 text-sm text-gray-600 dark:text-gray-400">
-            Show off your favorite version and then print it.
+          <p className="mb-3 font-sans text-sm text-gray-600 dark:text-gray-400">
+            Review your options and select one to print.
           </p>
           {shareFeedback && (
             <div className="bg-primary-50 dark:bg-primary-900/20 border-primary-100 dark:border-primary-800 text-primary-800 dark:text-primary-200 mb-4 rounded-lg border p-3 text-sm">
@@ -885,8 +884,8 @@ function DesignContent(): JSX.Element {
           {designs.length === 0 && (
             <div className="py-12 text-center">
               <div className="mb-4 text-6xl">🎨</div>
-              <p className="text-gray-600 dark:text-gray-400">
-                No designs yet. Generate your first design!
+              <p className="font-sans text-gray-600 dark:text-gray-400">
+                No designs yet. Create your first draft!
               </p>
             </div>
           )}
@@ -908,7 +907,7 @@ function DesignContent(): JSX.Element {
                     <div className="bg-opacity-50 absolute inset-0 flex items-center justify-center bg-black">
                       <div className="text-center text-white">
                         <div className="mx-auto mb-2 h-8 w-8 animate-spin rounded-full border-b-2 border-white"></div>
-                        <p className="text-sm">Uploading to storage...</p>
+                        <p className="font-sans text-sm">Finalizing...</p>
                       </div>
                     </div>
                   )}
@@ -923,26 +922,26 @@ function DesignContent(): JSX.Element {
                 <div className="p-4">
                   <div className="mb-2 space-y-1">
                     <p
-                      className={`text-sm text-gray-600 dark:text-gray-400 ${expandedPrompts[design.id] ? '' : 'line-clamp-3'}`}
+                      className={`font-sans text-sm text-gray-600 dark:text-gray-400 ${expandedPrompts[design.id] ? '' : 'line-clamp-3'}`}
                     >
-                      <strong>Your Prompt:</strong> {design.prompt}
+                      <strong>Description:</strong> {design.prompt}
                     </p>
                     {design.prompt.length > 140 && (
                       <button
                         type="button"
                         onClick={() => togglePrompt(design.id)}
-                        className="text-primary-600 dark:text-primary-300 text-xs font-semibold"
+                        className="text-primary-600 dark:text-primary-300 font-sans text-xs font-semibold"
                       >
-                        {expandedPrompts[design.id] ? 'Show less' : 'See full prompt'}
+                        {expandedPrompts[design.id] ? 'Show less' : 'See full description'}
                       </button>
                     )}
                   </div>
                   {design.style && (
-                    <p className="mb-2 text-xs text-gray-500 dark:text-gray-500">
+                    <p className="mb-2 font-sans text-xs text-gray-500 dark:text-gray-500">
                       <strong>Style:</strong> {design.style}
                     </p>
                   )}
-                  <p className="mb-3 text-xs text-gray-500 dark:text-gray-500">
+                  <p className="mb-3 font-sans text-xs text-gray-500 dark:text-gray-500">
                     {new Date(design.createdAt).toLocaleString()}
                   </p>
 
@@ -991,14 +990,14 @@ function DesignContent(): JSX.Element {
 
                   {design.approvalStatus && (
                     <div className="mt-3 rounded-lg bg-green-50 p-3 text-center dark:bg-green-900/20">
-                      <p className="text-sm font-semibold text-green-800 dark:text-green-400">
-                        Design Approved! Order submitted for printing.
+                      <p className="font-sans text-sm font-semibold text-green-800 dark:text-green-400">
+                        Approved! Order submitted for printing.
                       </p>
                     </div>
                   )}
 
-                  <p className="mt-2 text-xs text-gray-500 dark:text-gray-500">
-                    We’ll copy a link if sharing isn’t available on your device.
+                  <p className="mt-2 font-sans text-xs text-gray-500 dark:text-gray-500">
+                    We'll copy a link if sharing isn't available on your device.
                   </p>
                 </div>
               </div>

@@ -17,17 +17,17 @@ import { cva } from 'class-variance-authority';
  */
 export const cardVariants = cva(
   // Base classes
-  'rounded-lg transition-smooth dark:bg-gray-800 dark:text-white',
+  'rounded-lg transition-smooth dark:bg-surface-dark dark:text-ink-dark',
   {
     variants: {
       variant: {
-        default: 'bg-white dark:bg-gray-800 shadow-md',
-        bordered: 'bg-white border-2 border-gray-200 dark:border-gray-700',
-        flat: 'bg-gray-50 dark:bg-gray-900 border border-gray-100 dark:border-gray-800',
-        elevated: 'bg-white dark:bg-gray-800 shadow-lg',
+        default: 'bg-surface dark:bg-surface-dark shadow-medium',
+        bordered: 'bg-surface border-2 border-surface-2 dark:border-muted-dark',
+        flat: 'bg-surface-2 dark:bg-paper-dark border border-surface-2 dark:border-surface-dark',
+        elevated: 'bg-surface dark:bg-surface-dark shadow-lifted',
       },
       hoverable: {
-        true: 'hover:shadow-lg dark:hover:shadow-2xl cursor-pointer transform hover:scale-105',
+        true: 'hover:shadow-lifted dark:hover:shadow-2xl cursor-pointer transform hover:scale-105',
         false: '',
       },
     },

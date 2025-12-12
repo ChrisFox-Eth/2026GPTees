@@ -7,6 +7,7 @@
 import { Request, Response } from 'express';
 import { catchAsync, AppError } from '../middleware/error.middleware.js';
 import { syncAllPrintfulOrders, fetchPrintfulProductVariants } from '../services/printful.service.js';
+import { EMAIL_TEMPLATES, buildEmailHtml } from '../services/email-templates.js';
 import prisma from '../config/database.js';
 import crypto from 'crypto';
 
@@ -416,6 +417,84 @@ export const enablePromoCode = catchAsync(async (req: Request, res: Response) =>
   res.json({ success: true, data: updated });
 });
 
+/**
+ * @route GET /api/admin/email-templates
+ * @description Lists all available email template types
+ * @access Admin only
+ *
+ * @param {Request} _req - Express request (unused)
+ * @param {Response} res - Express response
+ *
+ * @returns {Object} Array of template names and descriptions
+ */
+export const listEmailTemplates = catchAsync(async (_req: Request, res: Response) => {
+  const templates = [
+    { name: 'orderConfirmed', description: 'Order confirmation email sent after successful payment' },
+    { name: 'designApproved', description: 'Design approval confirmation email' },
+    { name: 'orderShipped', description: 'Shipping notification email' },
+    { name: 'abandonedCheckout', description: 'Abandoned cart recovery email' },
+    { name: 'studioTips', description: 'Design studio tips email' },
+    { name: 'giftCode', description: 'Gift code email' },
+  ];
+
+  res.json({
+    success: true,
+    data: templates,
+  });
+});
+
+/**
+ * @route GET /api/admin/email-templates/:name/preview
+ * @description Previews an email template with sample data
+ * @access Admin only
+ *
+ * @param {Request} req - Express request (params.name required)
+ * @param {Response} res - Express response
+ *
+ * @returns {Object} Email preview with subject, HTML, and template config
+ * @throws {400} Invalid template name
+ */
+export const previewEmailTemplate = catchAsync(async (req: Request, res: Response) => {
+  const { name } = req.params;
+  const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5173';
+
+  let template;
+  switch (name) {
+    case 'orderConfirmed':
+      template = EMAIL_TEMPLATES.orderConfirmed('ORDER-12345', `${FRONTEND_URL}/design?orderId=123`);
+      break;
+    case 'designApproved':
+      template = EMAIL_TEMPLATES.designApproved('ORDER-12345');
+      break;
+    case 'orderShipped':
+      template = EMAIL_TEMPLATES.orderShipped('ORDER-12345', 'https://tracking.example.com/1Z999AA10123456784');
+      break;
+    case 'abandonedCheckout':
+      template = EMAIL_TEMPLATES.abandonedCheckout(`${FRONTEND_URL}/cart?resume=123`);
+      break;
+    case 'studioTips':
+      template = EMAIL_TEMPLATES.studioTips(`${FRONTEND_URL}/design?orderId=123`);
+      break;
+    case 'giftCode':
+      template = EMAIL_TEMPLATES.giftCode('GIFT-2024-ABCD', `${FRONTEND_URL}/shop`);
+      break;
+    default:
+      throw new AppError('Invalid template name', 400);
+  }
+
+  const html = buildEmailHtml(template);
+
+  res.json({
+    success: true,
+    data: {
+      name,
+      subject: template.subject,
+      html,
+      config: template,
+    },
+  });
+});
+
 export default {
   syncFulfillmentStatuses,
   createPromoCode,
@@ -425,4 +504,7 @@ export default {
   getPromoCodeMetricsById,
   disablePromoCode,
   enablePromoCode,
+  getPrintfulVariants,
+  listEmailTemplates,
+  previewEmailTemplate,
 };

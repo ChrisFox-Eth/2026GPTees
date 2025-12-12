@@ -70,7 +70,7 @@ export default function CartPage(): JSX.Element {
       </h1>
       <p className="mb-4 text-sm text-gray-600 dark:text-gray-400">
         Submit your size and color to unlock your design preview after checkout. Each cart holds one
-        Limitless GPTee with unlimited redraws.
+        Limitless GPTee with studio access.
       </p>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3 lg:gap-8">
@@ -112,7 +112,7 @@ export default function CartPage(): JSX.Element {
                     </p>
                   )}
                   <p className="text-xs text-gray-500 dark:text-gray-400">
-                    Unlimited redraws until you approve.
+                    Explore options until you're ready.
                   </p>
                 </div>
 

@@ -35,3 +35,6 @@ export type { TabsProps, TabItem } from './Tabs';
 
 export { Toast } from './Toast';
 export type { ToastProps } from './Toast';
+
+export { ImagePlaceholder } from './ImagePlaceholder';
+export type { ImagePlaceholderProps } from './ImagePlaceholder';

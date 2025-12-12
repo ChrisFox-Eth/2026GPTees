@@ -8,8 +8,8 @@
  * @component
  * @description Renders the fixed site header with logo, navigation links, authentication controls,
  * and responsive mobile menu. Integrates with Clerk for user authentication, displays user info when
- * signed in, and provides navigation to Start, Gallery, Gift, and My Designs sections. Includes theme
- * support via isDark prop.
+ * signed in, and provides navigation to Start, Gallery, Gift, and My Designs sections. Updated with
+ * semantic tokens for editorial design system.
  *
  * @param {HeaderProps} props - Component props
  * @param {boolean} props.isDark - Current theme state (dark mode enabled)
@@ -49,7 +49,7 @@ export default function Header({ isDark }: HeaderProps): JSX.Element {
 
   return (
     <>
-      <header className="fixed inset-x-0 top-0 z-50 w-full border-b border-gray-200 bg-white/95 shadow-sm backdrop-blur transition-colors duration-200 dark:border-gray-700 dark:bg-gray-900/90">
+      <header className="fixed inset-x-0 top-0 z-50 w-full border-b border-muted/20 bg-surface/95 shadow-soft backdrop-blur transition-colors duration-200 dark:border-muted-dark/20 dark:bg-surface-dark/90">
         <div className="container-max flex items-center justify-between gap-2 px-4 py-2">
           {/* Logo */}
           <Link
@@ -63,7 +63,7 @@ export default function Header({ isDark }: HeaderProps): JSX.Element {
                 <img src={GPTeesIconLightMode} alt="GPTees Logo" />
               )}
             </div>
-            <h1 className="text-lg font-bold text-gray-900 sm:text-xl dark:text-white">GPTees</h1>
+            <h1 className="font-display text-lg font-bold text-ink sm:text-xl dark:text-ink-dark">GPTees</h1>
           </Link>
 
           {/* Desktop Navigation */}
@@ -71,19 +71,19 @@ export default function Header({ isDark }: HeaderProps): JSX.Element {
             <nav className="flex items-center gap-4">
               <Link
                 to="/#quickstart"
-                className="hover:text-primary-600 dark:hover:text-primary-400 text-gray-700 transition-colors dark:text-gray-300"
+                className="font-sans text-muted transition-colors hover:text-ink dark:text-muted-dark dark:hover:text-ink-dark"
               >
                 Start
               </Link>
               <Link
                 to="/#gallery"
-                className="hover:text-primary-600 dark:hover:text-primary-400 text-gray-700 transition-colors dark:text-gray-300"
+                className="font-sans text-muted transition-colors hover:text-ink dark:text-muted-dark dark:hover:text-ink-dark"
               >
                 Gallery
               </Link>
               <Link
                 to="/gift"
-                className="hover:text-primary-600 dark:hover:text-primary-400 text-gray-700 transition-colors dark:text-gray-300"
+                className="font-sans text-muted transition-colors hover:text-ink dark:text-muted-dark dark:hover:text-ink-dark"
               >
                 Gift a GPTee
               </Link>
@@ -91,7 +91,7 @@ export default function Header({ isDark }: HeaderProps): JSX.Element {
 
             <SignedOut>
               <Link to="/auth">
-                <Button variant="primary" size="sm">
+                <Button variant="primary" size="sm" className="bg-accent text-white hover:opacity-90 dark:bg-accent-dark">
                   Sign In
                 </Button>
               </Link>
@@ -100,12 +100,12 @@ export default function Header({ isDark }: HeaderProps): JSX.Element {
             <SignedIn>
               <Link
                 to="/account"
-                className="hover:text-primary-600 dark:hover:text-primary-400 hidden text-gray-700 transition-colors lg:block dark:text-gray-300"
+                className="hidden font-sans text-muted transition-colors hover:text-ink lg:block dark:text-muted-dark dark:hover:text-ink-dark"
               >
                 My Designs
               </Link>
               <div className="flex items-center gap-2">
-                <span className="hidden text-sm text-gray-700 lg:inline dark:text-gray-300">
+                <span className="hidden font-sans text-sm text-muted lg:inline dark:text-muted-dark">
                   {user?.firstName || user?.emailAddresses[0]?.emailAddress}
                 </span>
                 <Button variant="secondary" size="sm" onClick={handleSignOut}>
@@ -113,16 +113,6 @@ export default function Header({ isDark }: HeaderProps): JSX.Element {
                 </Button>
               </div>
             </SignedIn>
-            {/* 
-            <Button
-              style={{ display: 'none' }}
-              variant="secondary"
-              size="sm"
-              onClick={onToggleTheme}
-              ariaLabel={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
-            >
-              {isDark ? 'Light' : 'Dark'}
-            </Button> */}
           </div>
 
           {/* Mobile Controls */}
@@ -130,7 +120,7 @@ export default function Header({ isDark }: HeaderProps): JSX.Element {
             <Button
               variant="primary"
               size="sm"
-              className="px-3 py-1.5 text-sm"
+              className="bg-accent px-3 py-1.5 text-sm text-white hover:opacity-90 dark:bg-accent-dark"
               onClick={toggleMobileMenu}
               ariaLabel="Toggle menu"
             >
@@ -144,45 +134,45 @@ export default function Header({ isDark }: HeaderProps): JSX.Element {
       {isMobileMenuOpen && (
         <>
           <div
-            className="bg-opacity-50 fixed inset-0 z-40 bg-black md:hidden"
+            className="fixed inset-0 z-40 bg-ink/50 bg-opacity-50 md:hidden dark:bg-ink-dark/50"
             onClick={closeMobileMenu}
           />
-          <div className="fixed top-[52px] right-0 bottom-0 z-50 w-full transform bg-white shadow-lg transition-transform duration-300 md:hidden dark:bg-gray-800">
+          <div className="fixed top-[52px] right-0 bottom-0 z-50 w-full transform bg-surface shadow-lifted transition-transform duration-300 md:hidden dark:bg-surface-dark">
             <nav className="flex h-full flex-col gap-4 p-4">
               <Link
                 to="/"
                 onClick={closeMobileMenu}
-                className="hover:text-primary-600 dark:hover:text-primary-400 rounded-md px-3 py-2 text-gray-700 transition-colors hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700"
+                className="rounded-md px-3 py-2 font-sans text-muted transition-colors hover:bg-surface-2 hover:text-ink dark:text-muted-dark dark:hover:bg-surface-dark dark:hover:text-ink-dark"
               >
                 Home
               </Link>
               <Link
                 to="/#quickstart"
                 onClick={closeMobileMenu}
-                className="hover:text-primary-600 dark:hover:text-primary-400 rounded-md px-3 py-2 text-gray-700 transition-colors hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700"
+                className="rounded-md px-3 py-2 font-sans text-muted transition-colors hover:bg-surface-2 hover:text-ink dark:text-muted-dark dark:hover:bg-surface-dark dark:hover:text-ink-dark"
               >
                 Start
               </Link>
               <Link
                 to="/#gallery"
                 onClick={closeMobileMenu}
-                className="hover:text-primary-600 dark:hover:text-primary-400 rounded-md px-3 py-2 text-gray-700 transition-colors hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700"
+                className="rounded-md px-3 py-2 font-sans text-muted transition-colors hover:bg-surface-2 hover:text-ink dark:text-muted-dark dark:hover:bg-surface-dark dark:hover:text-ink-dark"
               >
                 Gallery
               </Link>
               <Link
                 to="/gift"
                 onClick={closeMobileMenu}
-                className="hover:text-primary-600 dark:hover:text-primary-400 rounded-md px-3 py-2 text-gray-700 transition-colors hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700"
+                className="rounded-md px-3 py-2 font-sans text-muted transition-colors hover:bg-surface-2 hover:text-ink dark:text-muted-dark dark:hover:bg-surface-dark dark:hover:text-ink-dark"
               >
                 Gift a GPTee
               </Link>
 
-              <div className="my-2 border-t border-gray-200 dark:border-gray-700" />
+              <div className="my-2 border-t border-muted/20 dark:border-muted-dark/20" />
 
               <SignedOut>
                 <Link to="/auth" onClick={closeMobileMenu}>
-                  <Button variant="primary" size="sm" className="w-full">
+                  <Button variant="primary" size="sm" className="w-full bg-accent text-white hover:opacity-90 dark:bg-accent-dark">
                     Sign In / Sign Up
                   </Button>
                 </Link>
@@ -192,12 +182,12 @@ export default function Header({ isDark }: HeaderProps): JSX.Element {
                 <Link
                   to="/account"
                   onClick={closeMobileMenu}
-                  className="hover:text-primary-600 dark:hover:text-primary-400 rounded-md px-3 py-2 text-gray-700 transition-colors hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700"
+                  className="rounded-md px-3 py-2 font-sans text-muted transition-colors hover:bg-surface-2 hover:text-ink dark:text-muted-dark dark:hover:bg-surface-dark dark:hover:text-ink-dark"
                 >
                   My Designs
                 </Link>
                 <div className="flex flex-col gap-2">
-                  <span className="px-3 py-2 text-sm text-gray-700 dark:text-gray-300">
+                  <span className="px-3 py-2 font-sans text-sm text-muted dark:text-muted-dark">
                     {user?.firstName || user?.emailAddresses[0]?.emailAddress}
                   </span>
                   <Button variant="secondary" size="sm" onClick={handleSignOut} className="w-full">
@@ -206,21 +196,9 @@ export default function Header({ isDark }: HeaderProps): JSX.Element {
                 </div>
               </SignedIn>
 
-              <div className="my-2 border-t border-gray-200 dark:border-gray-700" />
+              <div className="my-2 border-t border-muted/20 dark:border-muted-dark/20" />
 
-              {/* <Button
-                variant="secondary"
-                size="sm"
-                onClick={() => {
-                  onToggleTheme();
-                  closeMobileMenu();
-                }}
-                className="w-full"
-              >
-                {isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
-              </Button> */}
-
-              <div className="mt-auto border-t border-gray-200 pt-3 text-xs text-gray-500 dark:border-gray-700 dark:text-gray-400">
+              <div className="mt-auto border-t border-muted/20 pt-3 font-sans text-xs text-muted dark:border-muted-dark/20 dark:text-muted-dark">
                 <div className="flex items-center justify-between"></div>
               </div>
             </nav>

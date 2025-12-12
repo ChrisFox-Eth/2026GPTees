@@ -4,6 +4,9 @@
  * @since 2025-11-21
  */
 
+import { motion } from 'framer-motion';
+import { hoverLift } from '@utils/motion';
+import { ImagePlaceholder } from '@components/ui/ImagePlaceholder';
 import type { ProductCardProps } from './ProductCard.types';
 
 export type { ProductCardProps } from './ProductCard.types';
@@ -11,7 +14,7 @@ export type { ProductCardProps } from './ProductCard.types';
 /**
  * @component
  * @description Displays a clickable product card with image, details, pricing, and available colors.
- * Shows the Limitless GPTee pricing model with unlimited redraws included.
+ * Editorial minimal lookbook style with generous whitespace and subtle hover effects.
  *
  * @param {ProductCardProps} props - Component props
  * @param {Product} props.product - Product data including name, description, image, colors, and sizes
@@ -31,9 +34,10 @@ export default function ProductCard({ product, onClick }: ProductCardProps): JSX
   const deliveryText = 'Ships in 5-8 business days';
 
   return (
-    <div
+    <motion.div
+      {...hoverLift}
       onClick={onClick}
-      className="group focus-within:ring-primary-500 cursor-pointer overflow-hidden rounded-lg bg-white shadow-md transition-shadow duration-300 focus-within:ring-2 hover:shadow-xl dark:bg-gray-800"
+      className="group cursor-pointer overflow-hidden rounded-lg border border-surface-2/50 bg-surface shadow-soft transition-shadow duration-300 focus-within:ring-2 focus-within:ring-accent hover:shadow-medium dark:border-surface-dark/50 dark:bg-surface-dark dark:focus-within:ring-accent-dark"
       tabIndex={0}
       onKeyDown={(e) => {
         if (e.key === 'Enter' || e.key === ' ') {
@@ -43,71 +47,72 @@ export default function ProductCard({ product, onClick }: ProductCardProps): JSX
       }}
     >
       {/* Product Image */}
-      <div className="relative aspect-[4/5] overflow-hidden bg-gray-200 dark:bg-gray-700">
+      <div className="relative aspect-[4/5] overflow-hidden bg-surface-2 dark:bg-paper-dark">
         {product.imageUrl ? (
           <img
             src={product.imageUrl}
             alt={product.name}
             loading="lazy"
             decoding="async"
-            sizes="(max-width: 768px) 50vw, 25vw"
+            sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
             width={640}
-            height={640}
-            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+            height={800}
+            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
           />
         ) : (
-          <div className="flex h-full w-full items-center justify-center">
-            <span className="text-xs tracking-wide text-gray-400 uppercase">Image coming soon</span>
-          </div>
+          <ImagePlaceholder aspectRatio="4/5" label="Product image" />
         )}
       </div>
 
       {/* Product Info */}
-      <div className="space-y-3 p-4">
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-white">{product.name}</h3>
+      <div className="space-y-4 p-6">
+        <div className="space-y-2">
+          <h3 className="font-display text-xl font-semibold tracking-tight text-ink dark:text-ink-dark">
+            {product.name}
+          </h3>
 
-        {product.description && (
-          <p className="line-clamp-2 text-sm text-gray-600 dark:text-gray-400">
-            {product.description}
-          </p>
-        )}
-
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-sm text-gray-500 dark:text-gray-400">Limitless GPTee</p>
-            <p className="text-primary-600 dark:text-primary-400 text-xl font-bold">
-              ${startingPrice.toFixed(2)}
+          {product.description && (
+            <p className="line-clamp-2 font-sans text-sm leading-relaxed text-muted dark:text-muted-dark">
+              {product.description}
             </p>
-            <p className="text-xs text-gray-500 dark:text-gray-400">
-              Unlimited redraws included · {deliveryText}
-            </p>
-          </div>
-
-          <button className="bg-primary-600 hover:bg-primary-700 rounded-md px-4 py-2 text-white transition-colors duration-200">
-            Start a Limitless tee
-          </button>
+          )}
         </div>
 
-        {/* Available Colors Preview */}
-        <div className="flex items-center gap-2">
-          <span className="text-xs text-gray-500 dark:text-gray-400">Colors:</span>
-          <div className="flex gap-1">
-            {product.colors.slice(0, 5).map((color, idx) => (
-              <div
-                key={idx}
-                className="h-5 w-5 rounded-full border-2 border-gray-300 dark:border-gray-600"
-                style={{ backgroundColor: color.hex }}
-                title={color.name}
-              />
-            ))}
-            {product.colors.length > 5 && (
-              <span className="text-xs text-gray-500 dark:text-gray-400">
-                +{product.colors.length - 5}
-              </span>
-            )}
+        <div className="space-y-3 border-t border-surface-2/50 pt-4 dark:border-surface-dark/50">
+          <div className="flex items-baseline justify-between">
+            <div>
+              <p className="font-sans text-sm text-muted dark:text-muted-dark">Limitless</p>
+              <p className="font-display text-2xl font-semibold text-accent dark:text-accent-dark">
+                ${startingPrice.toFixed(2)}
+              </p>
+            </div>
+          </div>
+
+          <p className="font-sans text-xs text-muted dark:text-muted-dark">{deliveryText}</p>
+
+          {/* Available Colors Preview */}
+          <div className="flex items-center gap-2 pt-2">
+            <span className="font-sans text-xs text-muted dark:text-muted-dark">
+              {product.colors.length} {product.colors.length === 1 ? 'color' : 'colors'}
+            </span>
+            <div className="flex gap-1.5">
+              {product.colors.slice(0, 5).map((color, idx) => (
+                <div
+                  key={idx}
+                  className="h-4 w-4 rounded-full border border-surface-2 dark:border-surface-dark"
+                  style={{ backgroundColor: color.hex }}
+                  title={color.name}
+                />
+              ))}
+              {product.colors.length > 5 && (
+                <span className="font-sans text-xs text-muted dark:text-muted-dark">
+                  +{product.colors.length - 5}
+                </span>
+              )}
+            </div>
           </div>
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 }

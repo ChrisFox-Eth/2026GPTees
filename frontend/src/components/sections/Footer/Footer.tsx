@@ -1,58 +1,66 @@
 /**
  * @module components/sections/Footer
- * @description Site footer with navigation links, legal information, and branding
+ * @description Site footer with navigation links, legal information, and branding.
+ * Uses the editorial design system with semantic tokens.
  * @since 2025-11-21
  */
 
+import { Link } from 'react-router-dom';
+
 /**
- * @component
+ * @component Footer
  * @description Renders the global site footer with four columns: Brand description, Explore navigation,
- * Legal links, and Support contacts. Includes dynamic copyright year and bottom bar with attribution.
- * Used on all pages as the site-wide footer.
+ * Legal links, and Support contacts. Uses the warm dark palette from the design system.
  *
  * @returns {JSX.Element} Footer element with multi-column navigation and information layout
  *
  * @example
  * <Footer />
  */
-import { Link } from 'react-router-dom';
-
 export default function Footer(): JSX.Element {
   const currentYear = new Date().getFullYear();
 
   return (
-    <footer className="mt-20 bg-gray-900 py-12 text-gray-300">
+    <footer className="mt-20 bg-ink py-16 text-surface dark:bg-paper-dark">
       <div className="container-max">
-        <div className="mb-8 grid grid-cols-2 gap-8 md:grid-cols-4">
+        <div className="mb-12 grid grid-cols-2 gap-8 md:grid-cols-4">
           {/* Brand */}
-          <div>
-            <h3 className="mb-4 text-xl font-bold text-white">GPTees</h3>
-            <p className="text-sm text-gray-400">
-              One-of-one custom apparel. Turn your imagination into wearable art.
+          <div className="col-span-2 md:col-span-1">
+            <h3 className="mb-4 font-display text-2xl font-bold text-surface">
+              GPTees
+            </h3>
+            <p className="font-sans text-sm leading-relaxed text-muted-dark">
+              Custom apparel from your imagination. One idea, one tee, completely yours.
             </p>
           </div>
 
-          {/* Explore */}
+          {/* Create */}
           <div>
-            <h4 className="mb-4 font-semibold text-white">Explore</h4>
-            <ul className="space-y-2 text-sm">
+            <h4 className="mb-4 font-display text-sm font-semibold uppercase tracking-wider text-surface">
+              Create
+            </h4>
+            <ul className="space-y-3 font-sans text-sm">
               <li>
-                <Link to="/#quickstart" className="transition-colors hover:text-white">
-                  Start a Limitless tee
+                <Link
+                  to="/#quickstart"
+                  className="text-muted-dark transition-colors hover:text-surface"
+                >
+                  Start Designing
                 </Link>
               </li>
               <li>
-                <Link to="/gift" className="transition-colors hover:text-white">
-                  Gift a GPTee
+                <Link
+                  to="/gift"
+                  className="text-muted-dark transition-colors hover:text-surface"
+                >
+                  Gift a Tee
                 </Link>
               </li>
               <li>
-                <Link to="/#gallery" className="transition-colors hover:text-white">
-                  Gallery
-                </Link>
-              </li>
-              <li>
-                <Link to="/account" className="transition-colors hover:text-white">
+                <Link
+                  to="/account"
+                  className="text-muted-dark transition-colors hover:text-surface"
+                >
                   My Designs
                 </Link>
               </li>
@@ -61,21 +69,32 @@ export default function Footer(): JSX.Element {
 
           {/* Legal */}
           <div>
-            <h4 className="mb-4 font-semibold text-white">Legal</h4>
-            <ul className="space-y-2 text-sm">
+            <h4 className="mb-4 font-display text-sm font-semibold uppercase tracking-wider text-surface">
+              Legal
+            </h4>
+            <ul className="space-y-3 font-sans text-sm">
               <li>
-                <Link to="/privacy" className="transition-colors hover:text-white">
-                  Privacy Policy
+                <Link
+                  to="/privacy"
+                  className="text-muted-dark transition-colors hover:text-surface"
+                >
+                  Privacy
                 </Link>
               </li>
               <li>
-                <Link to="/terms" className="transition-colors hover:text-white">
-                  Terms of Service
+                <Link
+                  to="/terms"
+                  className="text-muted-dark transition-colors hover:text-surface"
+                >
+                  Terms
                 </Link>
               </li>
               <li>
-                <Link to="/refunds" className="transition-colors hover:text-white">
-                  Refund Policy
+                <Link
+                  to="/refunds"
+                  className="text-muted-dark transition-colors hover:text-surface"
+                >
+                  Refunds
                 </Link>
               </li>
             </ul>
@@ -83,34 +102,39 @@ export default function Footer(): JSX.Element {
 
           {/* Support */}
           <div>
-            <h4 className="mb-4 font-semibold text-white">Support</h4>
-            <ul className="space-y-2 text-sm">
+            <h4 className="mb-4 font-display text-sm font-semibold uppercase tracking-wider text-surface">
+              Support
+            </h4>
+            <ul className="space-y-3 font-sans text-sm">
               <li>
-                <a href="mailto:team@gptees.app" className="transition-colors hover:text-white">
-                  Contact Us
+                <a
+                  href="mailto:team@gptees.app"
+                  className="text-muted-dark transition-colors hover:text-surface"
+                >
+                  team@gptees.app
                 </a>
               </li>
               <li>
-                <Link to="/refunds" className="transition-colors hover:text-white">
-                  Refunds
+                <Link
+                  to="/refunds"
+                  className="text-muted-dark transition-colors hover:text-surface"
+                >
+                  Returns &amp; Refunds
                 </Link>
-              </li>
-              <li>
-                <span className="text-gray-500">Design-first support: team@gptees.app</span>
               </li>
             </ul>
           </div>
         </div>
 
         {/* Bottom Bar */}
-        <div className="flex flex-col items-center justify-between border-t border-gray-800 pt-8 text-sm md:flex-row">
-          <p className="mb-4 text-gray-400 md:mb-0">
-            (c) {currentYear} GPTees. All rights reserved.
+        <div className="flex flex-col items-center justify-between border-t border-muted-dark/20 pt-8 font-sans text-sm md:flex-row">
+          <p className="mb-4 text-muted-dark md:mb-0">
+            &copy; {currentYear} GPTees. All rights reserved.
           </p>
-          <div className="flex items-center gap-6 text-gray-400">
-            <span>Hand-crafted artwork from your prompt</span>
-            <span>|</span>
-            <span>Fulfilled by Printful</span>
+          <div className="flex items-center gap-4 text-muted-dark">
+            <span>Designed by you</span>
+            <span className="text-muted-dark/40">·</span>
+            <span>Printed by Printful</span>
           </div>
         </div>
       </div>

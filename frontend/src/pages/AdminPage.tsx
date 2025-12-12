@@ -10,6 +10,17 @@ import { apiPost, apiGet } from '../utils/api';
 import { Button } from '@components/ui/Button';
 import type { SyncResult, VariantResult } from '../types/admin';
 
+interface EmailTemplate {
+  name: string;
+  description: string;
+}
+
+interface EmailPreview {
+  name: string;
+  subject: string;
+  html: string;
+}
+
 /**
  * @component
  * @description Admin operations cockpit providing tools for promo/gift code management, fulfillment recovery, Printful variant lookup, and operational runbooks. Only visible in development mode.
@@ -29,6 +40,10 @@ export default function AdminPage(): JSX.Element {
   const [variantLoading, setVariantLoading] = useState(false);
   const [variantError, setVariantError] = useState<string | null>(null);
   const [variantResults, setVariantResults] = useState<VariantResult[]>([]);
+  const [emailTemplates, setEmailTemplates] = useState<EmailTemplate[]>([]);
+  const [emailPreview, setEmailPreview] = useState<EmailPreview | null>(null);
+  const [emailLoading, setEmailLoading] = useState(false);
+  const [emailError, setEmailError] = useState<string | null>(null);
 
   if (!import.meta.env.DEV) {
     return (
@@ -241,6 +256,102 @@ export default function AdminPage(): JSX.Element {
           </div>
         </div>
       )}
+
+      <div className="space-y-3 rounded-lg border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-gray-800">
+        <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+          Email Template Previews
+        </h2>
+        <p className="text-sm text-gray-700 dark:text-gray-300">
+          Preview and review transactional email templates with editorial styling.
+        </p>
+        <div className="flex gap-2">
+          <Button
+            variant="primary"
+            onClick={async () => {
+              setEmailLoading(true);
+              setEmailError(null);
+              try {
+                const response = await apiGet('/api/admin/email-templates');
+                setEmailTemplates(response.data || []);
+              } catch (err: any) {
+                setEmailError(err?.message || 'Failed to fetch templates');
+                setEmailTemplates([]);
+              } finally {
+                setEmailLoading(false);
+              }
+            }}
+            isDisabled={emailLoading}
+          >
+            {emailLoading ? 'Loading...' : 'Load Templates'}
+          </Button>
+          {emailPreview && (
+            <Button
+              variant="secondary"
+              onClick={() => setEmailPreview(null)}
+            >
+              Close Preview
+            </Button>
+          )}
+        </div>
+        {emailError && <p className="text-sm text-red-600 dark:text-red-400">{emailError}</p>}
+        {emailTemplates.length > 0 && !emailPreview && (
+          <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
+            {emailTemplates.map((template) => (
+              <div
+                key={template.name}
+                className="rounded border border-gray-200 bg-gray-50 p-3 dark:border-gray-700 dark:bg-gray-900/40"
+              >
+                <h3 className="font-semibold text-gray-900 dark:text-white">{template.name}</h3>
+                <p className="text-xs text-gray-600 dark:text-gray-400">{template.description}</p>
+                <Button
+                  variant="secondary"
+                  className="mt-2"
+                  onClick={async () => {
+                    setEmailLoading(true);
+                    setEmailError(null);
+                    try {
+                      const response = await apiGet(`/api/admin/email-templates/${template.name}/preview`);
+                      setEmailPreview(response.data);
+                    } catch (err: any) {
+                      setEmailError(err?.message || 'Failed to preview template');
+                    } finally {
+                      setEmailLoading(false);
+                    }
+                  }}
+                >
+                  Preview
+                </Button>
+              </div>
+            ))}
+          </div>
+        )}
+        {emailPreview && (
+          <div className="space-y-3">
+            <div className="rounded border border-gray-200 bg-gray-50 p-3 dark:border-gray-700 dark:bg-gray-900/40">
+              <h3 className="font-semibold text-gray-900 dark:text-white">{emailPreview.name}</h3>
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                <strong>Subject:</strong> {emailPreview.subject}
+              </p>
+            </div>
+            <div className="max-h-96 overflow-auto rounded border border-gray-200 bg-white dark:border-gray-700">
+              <iframe
+                srcDoc={emailPreview.html}
+                title="Email Preview"
+                className="h-96 w-full"
+                sandbox="allow-same-origin"
+              />
+            </div>
+            <details className="rounded border border-gray-200 bg-gray-50 p-3 dark:border-gray-700 dark:bg-gray-900/40">
+              <summary className="cursor-pointer font-semibold text-gray-900 dark:text-white">
+                View HTML Source
+              </summary>
+              <pre className="mt-2 max-h-64 overflow-auto rounded bg-gray-900 p-3 text-xs text-gray-100">
+                {emailPreview.html}
+              </pre>
+            </details>
+          </div>
+        )}
+      </div>
 
       <div className="space-y-3 rounded-lg border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-gray-800">
         <h2 className="text-xl font-semibold text-gray-900 dark:text-white">

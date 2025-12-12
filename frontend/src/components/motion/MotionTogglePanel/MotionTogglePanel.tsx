@@ -5,8 +5,9 @@
  */
 
 import { useState } from 'react';
-import { AnimatePresence, motion } from 'framer-motion';
+import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import type { MotionTogglePanelProps } from './MotionTogglePanel.types';
+import { MOTION_EASING, MOTION_DURATION } from '@utils/motion';
 
 /**
  * @component
@@ -35,6 +36,7 @@ export default function MotionTogglePanel({
   ...rest
 }: MotionTogglePanelProps): JSX.Element {
   const [isOpen, setIsOpen] = useState(defaultOpen);
+  const shouldReduceMotion = useReducedMotion();
 
   const handleToggle = () => {
     setIsOpen((prev) => {
@@ -43,6 +45,10 @@ export default function MotionTogglePanel({
       return next;
     });
   };
+
+  // If reduced motion is preferred, use minimal rotation
+  const chevronRotation = shouldReduceMotion ? 0 : (isOpen ? 180 : 0);
+  const transitionDuration = shouldReduceMotion ? MOTION_DURATION.micro : MOTION_DURATION.section;
 
   return (
     <div
@@ -57,8 +63,8 @@ export default function MotionTogglePanel({
       >
         <span className="text-sm font-semibold text-gray-900 dark:text-white">{title}</span>
         <motion.span
-          animate={{ rotate: isOpen ? 180 : 0 }}
-          transition={{ type: 'spring', stiffness: 260, damping: 20 }}
+          animate={{ rotate: chevronRotation }}
+          transition={{ duration: MOTION_DURATION.micro, ease: MOTION_EASING }}
           className="text-gray-500 dark:text-gray-300"
           aria-hidden
         >
@@ -72,7 +78,7 @@ export default function MotionTogglePanel({
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
-            transition={{ type: 'tween', duration: 0.3 }}
+            transition={{ duration: transitionDuration, ease: MOTION_EASING }}
             className="overflow-hidden border-t border-gray-200 px-4 py-3 text-sm text-gray-600 dark:border-gray-700 dark:text-gray-300"
           >
             {children}

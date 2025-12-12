@@ -1,17 +1,17 @@
 /**
  * @module components/sections/SocialProofStrip
- * @description Trust strip with rotating design prompt examples to inspire users
+ * @description Trust strip with rotating design idea examples to inspire users
  * @since 2025-11-21
  */
 
 /**
  * @component
- * @description Renders a strip with rotating design prompt ideas that users can click to try.
+ * @description Renders a strip with rotating design idea examples that users can click to try.
  * Features automatic rotation every 4 seconds (respects prefers-reduced-motion). Clicking "Try it"
- * prefills the Quickstart component with the selected prompt and scrolls to it. Currently hidden
+ * prefills the Quickstart component with the selected idea and scrolls to it. Currently hidden
  * via CSS (hidden! class). Includes analytics tracking for idea selections.
  *
- * @returns {JSX.Element} Horizontal strip with rotating prompt examples and action button
+ * @returns {JSX.Element} Horizontal strip with rotating idea examples and action button
  *
  * @example
  * <SocialProofStrip />

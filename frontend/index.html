@@ -35,14 +35,14 @@
     <script>
       (() => {
         const savedTheme = localStorage.getItem('theme');
-        const shouldUseDark = savedTheme ? savedTheme === 'dark' : true;
+        const shouldUseLight = savedTheme ? savedTheme === 'light' : true;
         if (
-          shouldUseDark ||
-          (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)
+          shouldUseLight ||
+          (!savedTheme && window.matchMedia('(prefers-color-scheme: light)').matches)
         ) {
-          document.documentElement.classList.add('dark');
+          document.documentElement.classList.add('light');
         } else {
-          document.documentElement.classList.remove('dark');
+          document.documentElement.classList.remove('light');
         }
       })();
     </script>

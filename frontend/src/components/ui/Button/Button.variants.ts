@@ -22,21 +22,21 @@ export const buttonVariants = cva(
     variants: {
       variant: {
         primary:
-          'bg-primary-600 text-white hover:bg-primary-700 focus-visible:outline-primary-500 dark:bg-primary-700 dark:hover:bg-primary-600',
+          'bg-accent text-surface hover:bg-primary-700 focus-visible:outline-accent dark:bg-accent-dark dark:hover:bg-primary-600',
         secondary:
-          'bg-secondary-600 text-white hover:bg-secondary-700 focus-visible:outline-secondary-500 dark:bg-secondary-700 dark:hover:bg-secondary-600',
+          'bg-surface-2 text-ink hover:bg-muted/20 focus-visible:outline-muted dark:bg-surface-dark dark:text-ink-dark dark:hover:bg-muted-dark/20',
         danger:
-          'bg-danger-600 text-white hover:bg-danger-700 focus-visible:outline-danger-500 dark:bg-danger-700 dark:hover:bg-danger-600',
+          'bg-danger-600 text-surface hover:bg-danger-700 focus-visible:outline-danger-500 dark:bg-danger-700 dark:hover:bg-danger-600',
         success:
-          'bg-success-600 text-white hover:bg-success-700 focus-visible:outline-success-500 dark:bg-success-700 dark:hover:bg-success-600',
+          'bg-success-600 text-surface hover:bg-success-700 focus-visible:outline-success-500 dark:bg-success-700 dark:hover:bg-success-600',
         warning:
-          'bg-warning-600 text-white hover:bg-warning-700 focus-visible:outline-warning-500 dark:bg-warning-700 dark:hover:bg-warning-600',
-        'pulse-gradient': 'btn-pulse-gradient text-white',
+          'bg-warning-600 text-ink hover:bg-warning-700 focus-visible:outline-warning-500 dark:bg-warning-700 dark:hover:bg-warning-600',
+        'pulse-gradient': 'btn-pulse-gradient text-surface',
       },
       size: {
-        sm: 'px-3 py-1.5 text-sm',
-        md: 'px-4 py-2 text-base',
-        lg: 'px-6 py-3 text-lg',
+        sm: 'px-3 py-2.5 text-sm min-h-[44px]',
+        md: 'px-4 py-3 text-base min-h-[44px]',
+        lg: 'px-6 py-3 text-lg min-h-[48px]',
       },
     },
     defaultVariants: {

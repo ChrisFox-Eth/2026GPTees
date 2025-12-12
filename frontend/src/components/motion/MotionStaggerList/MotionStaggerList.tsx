@@ -4,8 +4,9 @@
  * @since 2025-11-21
  */
 
-import { motion } from 'framer-motion';
+import { motion, useReducedMotion } from 'framer-motion';
 import type { MotionStaggerListProps } from './MotionStaggerList.types';
+import { MOTION_EASING, MOTION_DURATION } from '@utils/motion';
 
 /**
  * @constant
@@ -16,8 +17,8 @@ const containerVariants = {
   visible: {
     opacity: 1,
     transition: {
-      staggerChildren: 0.12,
-      delayChildren: 0.08,
+      staggerChildren: 0.08,
+      delayChildren: 0.1,
     },
   },
 };
@@ -27,14 +28,13 @@ const containerVariants = {
  * @description Individual item animation variants for list items
  */
 const itemVariants = {
-  hidden: { opacity: 0, y: 12 },
+  hidden: { opacity: 0, y: 16 },
   visible: {
     opacity: 1,
     y: 0,
     transition: {
-      type: 'spring',
-      stiffness: 220,
-      damping: 24,
+      duration: MOTION_DURATION.section,
+      ease: MOTION_EASING,
     },
   },
 };
@@ -61,6 +61,16 @@ export default function MotionStaggerList({
   className = '',
   ...rest
 }: MotionStaggerListProps): JSX.Element {
+  const shouldReduceMotion = useReducedMotion();
+
+  // If reduced motion is preferred, disable stagger and transforms
+  const reducedItemVariants = shouldReduceMotion
+    ? {
+        hidden: { opacity: 0 },
+        visible: { opacity: 1, transition: { duration: MOTION_DURATION.micro } },
+      }
+    : itemVariants;
+
   return (
     <motion.ul
       variants={containerVariants}
@@ -73,7 +83,7 @@ export default function MotionStaggerList({
       {items.map((item, index) => (
         <motion.li
           key={item.id}
-          variants={itemVariants}
+          variants={reducedItemVariants}
           className={`px-4 py-3 ${
             striped && index % 2 === 0 ? 'bg-gray-50 dark:bg-gray-800' : 'bg-white dark:bg-gray-900'
           }`}

@@ -26,7 +26,7 @@ const FAQ_ITEMS = [
   {
     question: 'What if I do not like the design?',
     answer:
-      'Premium includes unlimited redraws before print. We only print after you approve a design you love.',
+      'Limitless includes studio access. We only print after you approve a design you love.',
   },
   {
     question: 'What is your return policy?',
@@ -137,44 +137,27 @@ export default function ShopPage(): JSX.Element {
   const skeletonCards = Array.from({ length: 6 });
 
   return (
-    <div className="container-max py-8 pb-24 md:pb-12">
+    <div className="container-max py-12 pb-24 md:py-16 md:pb-12">
       {/* Header */}
-      <div className="mb-8 space-y-3">
-        <h1 className="mb-2 text-4xl font-bold text-gray-900 dark:text-white">Create your fit</h1>
-        <p className="max-w-3xl text-lg text-gray-600 dark:text-gray-400">
-          Your design is ready to go—pick your fit, we&apos;ll generate the artwork, and you pay
-          after you approve. Limitless redraws included.
-        </p>
-        {/* <div className="grid gap-2 sm:grid-cols-2 max-w-xl">
-          <div className="flex items-center gap-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 px-3 py-2">
-            <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-primary-600 text-white text-sm font-semibold">1</span>
-            <div>
-              <p className="text-sm font-semibold text-gray-900 dark:text-white">Super-soft GPTee</p>
-              <p className="text-xs text-gray-600 dark:text-gray-400">Bella+Canvas quality with vibrant prints.</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 px-3 py-2">
-            <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-primary-600 text-white text-sm font-semibold">2</span>
-            <div>
-              <p className="text-sm font-semibold text-gray-900 dark:text-white">Limitless by default</p>
-              <p className="text-xs text-gray-600 dark:text-gray-400">Unlimited redraws and pay-after-approval flow built in.</p>
-            </div>
-          </div>
-        </div> */}
-        <p className="text-sm text-gray-500 dark:text-gray-400">
-          Submit your selections and your design preview will appear for approval.
+      <div className="mb-12 max-w-2xl space-y-4 md:mb-16">
+        <h1 className="font-display text-4xl font-semibold tracking-tight text-ink md:text-5xl dark:text-ink-dark">
+          Studio Collection
+        </h1>
+        <p className="font-sans text-lg leading-relaxed text-muted md:text-xl dark:text-muted-dark">
+          Custom designs on premium apparel. Select your product, and we&apos;ll create your unique
+          design with optional exploration.
         </p>
         <div className="-mx-4 sm:mx-0">
-          <div className="mt-4 flex gap-2 overflow-x-auto px-4 pb-2 sm:px-0">
+          <div className="mt-6 flex gap-2 overflow-x-auto px-4 pb-2 sm:px-0">
             {['ALL', 'T_SHIRT', 'HOODIE'].map((category) => (
               <button
                 key={category}
                 onClick={() => setCategoryFilter(category)}
                 aria-pressed={categoryFilter === category}
-                className={`rounded-full border px-4 py-2 whitespace-nowrap transition-colors ${
+                className={`whitespace-nowrap rounded-full border px-4 py-2 font-sans text-sm transition-colors ${
                   categoryFilter === category
-                    ? 'border-primary-600 text-primary-600 bg-primary-50 dark:bg-primary-900'
-                    : 'border-gray-300 text-gray-700 dark:border-gray-600 dark:text-gray-300'
+                    ? 'border-accent bg-accent-soft text-accent dark:border-accent-dark dark:bg-accent-dark/10 dark:text-accent-dark'
+                    : 'border-muted/30 text-muted hover:border-muted dark:border-muted-dark/30 dark:text-muted-dark dark:hover:border-muted-dark'
                 }`}
               >
                 {category === 'ALL' ? 'All' : category.replace('_', ' ')}
@@ -190,18 +173,18 @@ export default function ShopPage(): JSX.Element {
 
       {/* Loading State */}
       {loading && (
-        <div className="mb-8 grid grid-cols-1 gap-4 min-[360px]:grid-cols-2 sm:gap-6 md:grid-cols-3 xl:grid-cols-4">
+        <div className="mb-8 grid grid-cols-1 gap-8 md:grid-cols-2 md:gap-12 lg:grid-cols-3">
           {skeletonCards.map((_, idx) => (
             <div
               key={idx}
-              className="animate-pulse overflow-hidden rounded-lg border border-gray-100 bg-white shadow-md dark:border-gray-700 dark:bg-gray-800"
+              className="animate-pulse overflow-hidden rounded-lg border border-surface-2/50 bg-surface shadow-soft dark:border-surface-dark/50 dark:bg-surface-dark"
             >
-              <div className="aspect-square bg-gray-200 dark:bg-gray-700" />
-              <div className="space-y-3 p-4">
-                <div className="h-4 w-3/4 rounded bg-gray-200 dark:bg-gray-700" />
-                <div className="h-3 w-full rounded bg-gray-200 dark:bg-gray-700" />
-                <div className="h-3 w-2/3 rounded bg-gray-200 dark:bg-gray-700" />
-                <div className="mt-2 h-10 rounded bg-gray-200 dark:bg-gray-700" />
+              <div className="aspect-[4/5] bg-surface-2 dark:bg-paper-dark" />
+              <div className="space-y-3 p-6">
+                <div className="h-4 w-3/4 rounded bg-surface-2 dark:bg-paper-dark" />
+                <div className="h-3 w-full rounded bg-surface-2 dark:bg-paper-dark" />
+                <div className="h-3 w-2/3 rounded bg-surface-2 dark:bg-paper-dark" />
+                <div className="mt-4 h-10 rounded bg-surface-2 dark:bg-paper-dark" />
               </div>
             </div>
           ))}
@@ -223,7 +206,7 @@ export default function ShopPage(): JSX.Element {
 
       {/* Product Grid */}
       {!loading && !error && visibleProducts.length > 0 && (
-        <div className="grid grid-cols-1 gap-4 sm:gap-6 md:grid-cols-3 xl:grid-cols-4">
+        <div className="grid grid-cols-1 gap-8 md:grid-cols-2 md:gap-12 lg:grid-cols-3">
           {visibleProducts.map((product) => (
             <ProductCard
               key={product.id}
@@ -237,7 +220,7 @@ export default function ShopPage(): JSX.Element {
       {/* Empty State */}
       {!loading && !error && visibleProducts.length === 0 && (
         <div className="py-12 text-center">
-          <p className="text-lg text-gray-600 dark:text-gray-400">Coming soon!</p>
+          <p className="font-sans text-lg text-muted dark:text-muted-dark">Coming soon!</p>
         </div>
       )}
 
