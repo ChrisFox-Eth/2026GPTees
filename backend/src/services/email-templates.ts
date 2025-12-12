@@ -23,7 +23,16 @@ const BRAND = {
   muted: '#8C8F96',
   accent: '#2F6BFF',
   surface: '#FFFFFF',
+  /** Logo hosted on Supabase Storage for email clients */
+  logoUrl: 'https://ncgvjcormulfgtxkuvat.supabase.co/storage/v1/object/public/designs/assets/gptees-logo.png',
 } as const;
+
+/** Social media links for email footer */
+const SOCIAL_LINKS = [
+  { name: 'Instagram', href: 'https://instagram.com/gptees.app' },
+  { name: 'Facebook', href: 'https://facebook.com/gpteesapp' },
+  { name: 'TikTok', href: 'https://tiktok.com/@gptees.app' },
+] as const;
 
 /**
  * Base HTML email template with editorial styling
@@ -79,13 +88,13 @@ export function buildEmailHtml(config: EmailTemplateConfig): string {
   <div style="max-width: 600px; margin: 0 auto; padding: 40px 20px;">
     <!-- Header -->
     <div style="text-align: center; margin-bottom: 40px;">
-      <h1 style="
-        margin: 0;
-        font-size: 24px;
-        font-weight: 700;
-        color: ${BRAND.ink};
-        letter-spacing: -0.5px;
-      ">GPTees</h1>
+      <img
+        src="${BRAND.logoUrl}"
+        alt="GPTees"
+        width="120"
+        height="auto"
+        style="display: block; margin: 0 auto;"
+      />
     </div>
 
     <!-- Main Content -->
@@ -119,6 +128,10 @@ export function buildEmailHtml(config: EmailTemplateConfig): string {
       font-size: 14px;
       color: ${BRAND.muted};
     ">
+      <!-- Social Links -->
+      <div style="margin-bottom: 16px;">
+        ${SOCIAL_LINKS.map(s => `<a href="${s.href}" style="display: inline-block; margin: 0 8px; color: ${BRAND.muted}; text-decoration: none;" target="_blank">${s.name}</a>`).join('<span style="color: ${BRAND.muted};">·</span>')}
+      </div>
       <p style="margin: 0 0 8px;">GPTees - Custom apparel from your imagination</p>
       <p style="margin: 0;">
         <a href="https://gptees.app" style="color: ${BRAND.muted};">gptees.app</a>

@@ -179,7 +179,7 @@ export default function App(): JSX.Element {
       <ScrollToHash />
       <div className="flex min-h-screen flex-col overflow-x-hidden bg-white pt-8 transition-colors duration-200">
         <Header isDark={isLight} onToggleTheme={toggleTheme} />
-        <div className="flex-1">
+        <div className="bg-paper flex-1">
           <AnimatePresence mode="wait">
             <motion.div
               key={location.pathname}
