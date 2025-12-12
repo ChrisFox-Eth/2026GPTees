@@ -8,6 +8,7 @@
 
 import { inject, track } from '@vercel/analytics';
 // import { loadMetaPixel, loadGA4 } from './pixels';
+import type { AnalyticsEventName } from '../types/analytics-event-catalog';
 
 /**
  * @typedef {string | number | boolean | null} Primitive
@@ -112,7 +113,7 @@ const sanitizePayload = (payload?: Record<string, unknown>): AnalyticsPayload =>
  *   surface: 'order_detail'
  * });
  */
-export function trackEvent(eventName: string, payload?: Record<string, unknown>): void {
+export function trackEvent(eventName: AnalyticsEventName, payload?: Record<string, unknown>): void {
   if (!isClient) return;
 
   try {

@@ -16,6 +16,7 @@ import { getSupabaseServiceRoleClient } from '../services/supabase-admin.service
 import { v4 as uuidv4 } from 'uuid';
 import { sendDesignApproved } from '../services/email.service.js';
 import { createPrintfulOrder } from '../services/printful.service.js';
+import { getOrderActionErrorMessage, isOrderActionAllowed } from '../policies/order-policy.js';
 
 type TransactionClient = PrismaClient;
 
@@ -69,16 +70,8 @@ export const createDesign = catchAsync(async (req: Request, res: Response) => {
     throw new AppError('Unauthorized access to this order', 403);
   }
 
-  const allowedStatuses: OrderStatus[] = [
-    OrderStatus.PAID,
-    OrderStatus.DESIGN_PENDING,
-    OrderStatus.PENDING_PAYMENT,
-  ];
-  if (!allowedStatuses.includes(order.status as OrderStatus)) {
-    throw new AppError(
-      'Order must be active or pending payment before generating designs',
-      400
-    );
+  if (!isOrderActionAllowed('design_generate_authed', order.status as OrderStatus)) {
+    throw new AppError(getOrderActionErrorMessage('design_generate_authed'), 400);
   }
 
   // Check tier limits
@@ -241,15 +234,8 @@ export const createDesignGuest = catchAsync(async (req: Request, res: Response) 
     throw new AppError('Invalid guest token for this preview order', 403);
   }
 
-  const allowedStatuses: OrderStatus[] = [
-    OrderStatus.PENDING_PAYMENT,
-    OrderStatus.DESIGN_PENDING,
-  ];
-  if (!allowedStatuses.includes(order.status as OrderStatus)) {
-    throw new AppError(
-      'Order must be an unpaid preview before generating designs',
-      400
-    );
+  if (!isOrderActionAllowed('design_generate_guest', order.status as OrderStatus)) {
+    throw new AppError(getOrderActionErrorMessage('design_generate_guest'), 400);
   }
 
   if (order.designsGenerated >= order.maxDesigns) {
@@ -497,11 +483,8 @@ export const cloneDesign = catchAsync(async (req: Request, res: Response) => {
     throw new AppError('Unauthorized access to target order', 403);
   }
 
-  if (
-    targetOrder.status !== OrderStatus.PENDING_PAYMENT &&
-    targetOrder.status !== OrderStatus.DESIGN_PENDING
-  ) {
-    throw new AppError('Target order must be an unpaid preview order', 400);
+  if (!isOrderActionAllowed('design_clone_to_preview', targetOrder.status as OrderStatus)) {
+    throw new AppError(getOrderActionErrorMessage('design_clone_to_preview'), 400);
   }
 
   const cloned = await prisma.design.create({
@@ -642,8 +625,8 @@ export const approveDesign = catchAsync(async (req: Request, res: Response) => {
     throw new AppError('This order already has an approved design.', 400);
   }
 
-  if (design.order.status !== OrderStatus.PAID && design.order.status !== OrderStatus.DESIGN_APPROVED) {
-    throw new AppError('Payment is required before approving a design. Please checkout first.', 400);
+  if (!isOrderActionAllowed('design_approve', design.order.status as OrderStatus)) {
+    throw new AppError(getOrderActionErrorMessage('design_approve'), 400);
   }
 
   // Update design approval

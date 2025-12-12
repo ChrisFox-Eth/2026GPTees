@@ -10,6 +10,7 @@ import { useState, useEffect } from 'react';
 import { Routes, Route, useLocation } from 'react-router-dom';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { Header, Footer } from '@components/sections';
+import { CreationCorridorOverlay, useCreationCorridor } from '@components/CreationCorridor';
 import { ErrorBoundary } from '@components/ErrorBoundary';
 import { trackEvent, trackPageView } from '@utils/analytics';
 import { routeTransition } from '@utils/motion';
@@ -167,6 +168,9 @@ export default function App(): JSX.Element {
   const location = useLocation();
   const shouldReduceMotion = useReducedMotion();
 
+  const { state: corridorState } = useCreationCorridor();
+  const isCorridorActive = corridorState.active;
+
   // If reduced motion is preferred, disable route transitions
   const pageTransition = shouldReduceMotion
     ? { initial: { opacity: 1 }, animate: { opacity: 1 }, exit: { opacity: 1 } }
@@ -177,8 +181,13 @@ export default function App(): JSX.Element {
       <PageViewTracker />
       <ScrollToTop />
       <ScrollToHash />
-      <div className="flex min-h-screen flex-col overflow-x-hidden bg-white pt-8 transition-colors duration-200">
-        <Header isDark={isLight} onToggleTheme={toggleTheme} />
+      <CreationCorridorOverlay />
+      <div
+        className={`flex min-h-screen flex-col overflow-x-hidden bg-surface transition-colors duration-200 ${
+          isCorridorActive ? 'pt-0' : 'pt-8'
+        }`}
+      >
+        {!isCorridorActive && <Header isDark={isLight} onToggleTheme={toggleTheme} />}
         <div className="bg-paper flex-1">
           <AnimatePresence mode="wait">
             <motion.div
@@ -245,7 +254,7 @@ export default function App(): JSX.Element {
             </motion.div>
           </AnimatePresence>
         </div>
-        <Footer />
+        {!isCorridorActive && <Footer />}
       </div>
     </ErrorBoundary>
   );

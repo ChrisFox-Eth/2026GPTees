@@ -8,6 +8,7 @@ import { Request, Response, NextFunction } from 'express';
 import { verifyToken } from '@clerk/backend';
 import { AppError } from './error.middleware.js';
 import { getUserByClerkId, getClerkUser, syncUserToDatabase } from '../services/clerk.service.js';
+import prisma from '../config/database.js';
 
 /**
  * @middleware requireAuth
@@ -34,11 +35,17 @@ export const requireAuth = async (
 ): Promise<void> => {
   // Local/dev bypass: set SKIP_AUTH=true and optionally SKIP_AUTH_EMAIL
   if ((process.env.SKIP_AUTH || '').toLowerCase() === 'true') {
-    req.user = {
-      id: process.env.SKIP_AUTH_USER_ID || 'dev-user-id',
-      clerkId: process.env.SKIP_AUTH_CLERK_ID || 'dev-clerk-id',
-      email: process.env.SKIP_AUTH_EMAIL || 'dev@example.com',
-    };
+    const id = process.env.SKIP_AUTH_USER_ID || 'dev-user-id';
+    const clerkId = process.env.SKIP_AUTH_CLERK_ID || 'dev-clerk-id';
+    const email = process.env.SKIP_AUTH_EMAIL || 'dev@example.com';
+
+    await prisma.user.upsert({
+      where: { id },
+      update: { clerkId, email },
+      create: { id, clerkId, email },
+    });
+
+    req.user = { id, clerkId, email };
     return next();
   }
   try {

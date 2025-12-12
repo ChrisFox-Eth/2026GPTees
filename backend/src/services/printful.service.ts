@@ -8,6 +8,7 @@ import axios, { AxiosInstance } from 'axios';
 import { OrderStatus } from '@prisma/client';
 import prisma from '../config/database.js';
 import { sendOrderShipped } from './email.service.js';
+import { isOrderActionAllowed } from '../policies/order-policy.js';
 
 /**
  * Printful API client configuration (v2 API)
@@ -440,7 +441,7 @@ export async function createPrintfulOrder(
       throw new Error('Order not found');
     }
 
-    if (order.status !== OrderStatus.PAID && order.status !== OrderStatus.DESIGN_APPROVED) {
+    if (!isOrderActionAllowed('order_submit_fulfillment', order.status as OrderStatus)) {
       throw new Error('Order must be paid before submitting to Printful');
     }
 

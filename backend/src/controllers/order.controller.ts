@@ -11,12 +11,14 @@ import {
   createPrintfulOrder,
   getPrintfulOrderStatus,
   getPrintfulVariantId,
+  mapOrderStatusFromPrintful,
 } from '../services/printful.service.js';
 import { getTierPricingMap } from '../services/pricing.service.js';
 import { TierType } from '../config/pricing.js';
 import { sendAnalyticsEvent } from '../services/analytics.service.js';
 import { OrderStatus } from '@prisma/client';
 import crypto from 'crypto';
+import { getOrderActionErrorMessage, isOrderActionAllowed } from '../policies/order-policy.js';
 
 /**
  * @route GET /api/orders
@@ -434,13 +436,8 @@ export const claimPreviewOrder = catchAsync(async (req: Request, res: Response) 
     throw new AppError('Invalid claim token for this order', 403);
   }
 
-  if (
-    order.status === OrderStatus.PAID ||
-    order.status === OrderStatus.DESIGN_APPROVED ||
-    order.status === OrderStatus.SUBMITTED ||
-    order.status === OrderStatus.SHIPPED
-  ) {
-    throw new AppError('This order has already been processed', 400);
+  if (!isOrderActionAllowed('order_claim_preview', order.status as OrderStatus)) {
+    throw new AppError(getOrderActionErrorMessage('order_claim_preview'), 400);
   }
 
   const previousUserId = order.userId;
@@ -542,11 +539,8 @@ export const updatePreviewItemVariant = catchAsync(async (req: Request, res: Res
     throw new AppError('Unauthorized access to this order', 403);
   }
 
-  if (
-    order.status !== OrderStatus.PENDING_PAYMENT &&
-    order.status !== OrderStatus.DESIGN_PENDING
-  ) {
-    throw new AppError('Size and color can only be changed before payment is completed', 400);
+  if (!isOrderActionAllowed('order_preview_variant_update', order.status as OrderStatus)) {
+    throw new AppError(getOrderActionErrorMessage('order_preview_variant_update'), 400);
   }
 
   if (!order.items.length) {
@@ -729,11 +723,8 @@ export const submitFulfillment = catchAsync(async (req: Request, res: Response) 
     throw new AppError('Unauthorized access to this order', 403);
   }
 
-  if (
-    order.status !== OrderStatus.PAID &&
-    order.status !== OrderStatus.DESIGN_APPROVED
-  ) {
-    throw new AppError('Payment is required before submitting for fulfillment.', 400);
+  if (!isOrderActionAllowed('order_submit_fulfillment', order.status as OrderStatus)) {
+    throw new AppError(getOrderActionErrorMessage('order_submit_fulfillment'), 400);
   }
 
   if (!order.address) {
@@ -845,20 +836,8 @@ export const getOrderTracking = catchAsync(async (req: Request, res: Response) =
   const trackingUrl = tracking?.tracking_url;
   const fulfillmentStatus = printfulStatus?.status || order.fulfillmentStatus;
 
-  const mappedStatus = (() => {
-    switch (fulfillmentStatus) {
-      case 'fulfilled':
-      case 'shipped':
-      case 'partial':
-        return 'SHIPPED';
-      case 'delivered':
-        return 'DELIVERED';
-      case 'canceled':
-        return 'CANCELLED';
-      default:
-        return order.status;
-    }
-  })();
+  const mapping = mapOrderStatusFromPrintful(fulfillmentStatus || undefined);
+  const mappedStatus = mapping.orderStatus || order.status;
 
   const updatedOrder = await prisma.order.update({
     where: { id: order.id },
@@ -867,9 +846,9 @@ export const getOrderTracking = catchAsync(async (req: Request, res: Response) =
       fulfillmentStatus,
       trackingNumber,
       shippedAt:
-        (mappedStatus === 'SHIPPED' && !order.shippedAt) ? new Date() : order.shippedAt,
+        (mapping.markShipped && !order.shippedAt) ? new Date() : order.shippedAt,
       deliveredAt:
-        (mappedStatus === 'DELIVERED' && !order.deliveredAt) ? new Date() : order.deliveredAt,
+        (mapping.markDelivered && !order.deliveredAt) ? new Date() : order.deliveredAt,
     },
   });
 

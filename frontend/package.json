@@ -9,7 +9,9 @@
     "preview": "vite preview",
     "lint": "eslint . --ext .ts,.tsx",
     "lint:fix": "eslint . --ext .ts,.tsx --fix",
-    "type-check": "tsc --noEmit"
+    "type-check": "tsc --noEmit",
+    "analytics:doc": "tsx --tsconfig tsconfig.scripts.json scripts/generate-analytics-events-doc.ts",
+    "analytics:check": "tsx --tsconfig tsconfig.scripts.json scripts/check-analytics-events.ts"
   },
   "dependencies": {
     "@clerk/clerk-react": "^5.56.1",
@@ -41,6 +43,7 @@
     "prettier": "^3.1.0",
     "prettier-plugin-tailwindcss": "^0.7.2",
     "tailwindcss": "^4.0.0",
+    "tsx": "^4.7.0",
     "typescript": "^5.3.3",
     "vite": "^5.0.8"
   }

@@ -12,6 +12,8 @@
     "lint": "eslint . --ext .ts",
     "lint:fix": "eslint . --ext .ts --fix",
     "type-check": "tsc --noEmit",
+    "api:routes": "tsx scripts/route-manifest.ts --format md --out ../docs/api-routes.generated.md",
+    "order:status": "tsx --tsconfig scripts/tsconfig.json scripts/order-status-diagram.ts --format md --out ../docs/order-status-state-machine.generated.md",
     "db:generate": "prisma generate",
     "db:push": "prisma db push",
     "db:migrate": "prisma migrate dev",

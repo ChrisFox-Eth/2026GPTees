@@ -16,6 +16,7 @@ import { AppError } from '../middleware/error.middleware.js';
 import { sendPromptGuide } from './email.service.js';
 import { sendAnalyticsEvent } from './analytics.service.js';
 import { sendOrderConfirmation, sendGiftCodeEmail } from './email.service.js';
+import { getOrderActionErrorMessage, isOrderActionAllowed } from '../policies/order-policy.js';
 
 /**
  * Stripe client instance configured with API key and version
@@ -136,15 +137,8 @@ export async function createCheckoutSession(
       throw new AppError('Unauthorized access to this order', 403);
     }
 
-    if (
-      existingOrder.status === OrderStatus.PAID ||
-      existingOrder.status === OrderStatus.REFUNDED ||
-      existingOrder.status === OrderStatus.CANCELLED ||
-      existingOrder.status === OrderStatus.SUBMITTED ||
-      existingOrder.status === OrderStatus.SHIPPED ||
-      existingOrder.status === OrderStatus.DELIVERED
-    ) {
-      throw new AppError('This order has already been processed.', 400);
+    if (!isOrderActionAllowed('order_checkout', existingOrder.status as OrderStatus)) {
+      throw new AppError(getOrderActionErrorMessage('order_checkout'), 400);
     }
 
     if (!existingOrder.items.length) {

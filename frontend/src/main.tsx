@@ -10,6 +10,7 @@ import ReactDOM from 'react-dom/client';
 import { ClerkProvider } from '@clerk/clerk-react';
 import { BrowserRouter } from 'react-router-dom';
 import { Analytics } from '@vercel/analytics/react';
+import { CreationCorridorProvider } from '@components/CreationCorridor';
 import App from './App';
 import { initAnalytics } from '@utils/analytics';
 import { loadMetaPixel, loadGA4 } from '@utils/pixels';
@@ -62,7 +63,9 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
     signUpUrl="/auth/sign-up"
   >
     <BrowserRouter>
-      <App />
+      <CreationCorridorProvider>
+        <App />
+      </CreationCorridorProvider>
       <Analytics />
     </BrowserRouter>
   </ClerkProvider>

@@ -55,6 +55,16 @@ function DesignContent(): JSX.Element {
   const navigate = useNavigate();
   const { getToken, isLoaded, isSignedIn } = useAuth();
 
+  const skipAuth = import.meta.env.VITE_SKIP_AUTH === 'true';
+  const isAuthLoaded = skipAuth ? true : isLoaded;
+  const isAuthed = skipAuth ? true : isSignedIn;
+  const getAuthToken = async (): Promise<string | null> => {
+    if (skipAuth) {
+      return 'dev';
+    }
+    return getToken();
+  };
+
   const orderId = searchParams.get('orderId');
 
   const [order, setOrder] = useState<Order | null>(null);
@@ -91,10 +101,10 @@ function DesignContent(): JSX.Element {
       setLoading(false);
       return;
     }
-    if (isLoaded && isSignedIn) {
+    if (isAuthLoaded && isAuthed) {
       fetchOrderAndDesigns();
     }
-  }, [orderId, isLoaded, isSignedIn]);
+  }, [orderId, isAuthLoaded, isAuthed]);
 
   useEffect(() => {
     if (order && !hasTrackedOrderView.current) {
@@ -133,7 +143,7 @@ function DesignContent(): JSX.Element {
     let cancelled = false;
     const pollDesigns = async () => {
       try {
-        const token = await getToken();
+        const token = await getAuthToken();
         if (!token || cancelled) {
           return;
         }
@@ -151,7 +161,7 @@ function DesignContent(): JSX.Element {
       cancelled = true;
       clearInterval(intervalId);
     };
-  }, [hasGeneratingDesign, orderId, getToken]);
+  }, [hasGeneratingDesign, orderId, getToken, isSignedIn]);
 
   useEffect(() => {
     if (!product) return;
@@ -174,7 +184,7 @@ function DesignContent(): JSX.Element {
     try {
       setLoading(true);
       setError(null);
-      const token = await getToken();
+      const token = await getAuthToken();
       if (!token) {
         setError('Authentication required. Please sign in again.');
         return;
@@ -262,7 +272,7 @@ function DesignContent(): JSX.Element {
     try {
       setIsGenerating(true);
       setError(null);
-      const token = await getToken();
+      const token = await getAuthToken();
       if (!token) {
         setError('Authentication required. Please sign in again.');
         return;
@@ -381,7 +391,7 @@ function DesignContent(): JSX.Element {
     try {
       setIsCheckingOut(true);
       setError(null);
-      const token = await getToken();
+      const token = await getAuthToken();
       if (!token) {
         setError('Authentication required. Please sign in again.');
         setIsCheckingOut(false);
