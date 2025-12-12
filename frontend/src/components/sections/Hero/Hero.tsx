@@ -31,20 +31,25 @@ export default function Hero(): JSX.Element {
   };
 
   return (
-    <section className="container-max bg-paper px-4 py-16 text-center md:py-24 dark:bg-paper-dark">
+    <section className="container-max bg-paper px-4 pt-12 text-center dark:bg-paper-dark">
       <motion.div {...fadeUp} className="mx-auto max-w-4xl">
         {/* Hero Headline */}
-        <h1 className="mb-6 text-4xl font-serif-display leading-tight text-ink md:text-6xl lg:text-7xl dark:text-ink-dark">
+        <h1 className="mb-4 text-3xl font-serif-display leading-tight text-ink md:text-6xl lg:text-7xl dark:text-ink-dark">
           Design a tee that doesn&apos;t exist yet.
         </h1>
 
+        {/* Hero Lifestyle Image */}
+        <div className="mb-4">
+          <img className='rounded-2xl h-[400px] w-full object-cover' src={GPTeesLifestyleHero} alt="Hero lifestyle image" />
+        </div>
+
         {/* Minimal Subcopy */}
-        <p className="mx-auto mb-8 max-w-2xl font-sans text-base leading-relaxed text-muted md:text-lg dark:text-muted-dark">
+        <p className="mx-auto mb-4 max-w-2xl font-sans text-base leading-relaxed text-muted md:text-lg dark:text-muted-dark">
           Describe your idea, preview the artwork, then choose fit and color.
         </p>
 
         {/* Primary CTA */}
-        <div className="mb-12 flex justify-center">
+        <div className="mb-4 justify-center hidden md:flex">
           <Button
             size="lg"
             className="bg-accent px-8 py-3 text-base text-white hover:opacity-90 dark:bg-accent-dark"
@@ -55,11 +60,6 @@ export default function Hero(): JSX.Element {
           >
             Start designing
           </Button>
-        </div>
-
-        {/* Hero Lifestyle Image */}
-        <div className="mt-16">
-          <img src={GPTeesLifestyleHero} alt="Hero lifestyle image" />
         </div>
       </motion.div>
     </section>
