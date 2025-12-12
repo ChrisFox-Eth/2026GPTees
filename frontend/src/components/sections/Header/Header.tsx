@@ -63,7 +63,7 @@ export default function Header({ isDark }: HeaderProps): JSX.Element {
                 <img src={GPTeesIconLightMode} alt="GPTees Logo" />
               )}
             </div>
-            <h1 className="font-display text-lg font-bold text-ink sm:text-xl dark:text-ink-dark">GPTees</h1>
+            <h1 className="font-serif-display tracking-wider text-lg font-bold text-ink sm:text-xl dark:text-ink-dark">GPTees</h1>
           </Link>
 
           {/* Desktop Navigation */}
