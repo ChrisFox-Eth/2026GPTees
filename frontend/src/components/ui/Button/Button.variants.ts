@@ -24,7 +24,7 @@ export const buttonVariants = cva(
         primary:
           'bg-accent text-surface hover:bg-primary-700 focus-visible:outline-accent dark:bg-accent-dark dark:hover:bg-primary-600',
         secondary:
-          'bg-surface-2 text-ink hover:bg-muted/20 focus-visible:outline-muted dark:bg-surface-dark dark:text-ink-dark dark:hover:bg-muted-dark/20',
+          'bg-accent-soft text-ink hover:bg-muted/20 focus-visible:outline-muted dark:bg-surface-dark dark:text-ink-dark dark:hover:bg-muted-dark/20',
         danger:
           'bg-danger-600 text-surface hover:bg-danger-700 focus-visible:outline-danger-500 dark:bg-danger-700 dark:hover:bg-danger-600',
         success:
