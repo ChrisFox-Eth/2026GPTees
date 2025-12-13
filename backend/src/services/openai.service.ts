@@ -50,27 +50,50 @@ const STYLE_PROMPTS = {
 
 /**
  * @function enhancePrompt
- * @description Enhances user's base prompt with style-specific guidance and t-shirt design best practices. Adds style modifiers and ensures the output is optimized for apparel printing.
+ * @description Enhances user's base prompt with style-specific guidance and print-ready graphic best practices. Adds style modifiers and guardrails to reduce unwanted product mockups/background scenes.
  *
  * @param {string} basePrompt - User's original design prompt
  * @param {string} [style] - Optional style preset to apply
  *
- * @returns {string} Enhanced prompt with style and t-shirt optimization
+ * @returns {string} Enhanced prompt with style and print optimization
  *
  * @example
  * const enhanced = enhancePrompt('a dragon', 'vintage');
- * // Returns: "a dragon in a vintage, retro style with muted colors and aged textures. Designed for a t-shirt print, high contrast, centered composition, no background."
+ * // Returns: "a dragon in a vintage, retro style with muted colors and aged textures. Output a standalone, print-ready graphic illustration (not a product photo/mockup). Centered composition, high contrast, clean edges. No background scene; isolate subject on a plain transparent or solid background."
  */
+const APPAREL_TRIGGER_REGEX =
+  /\b(t\s*-?\s*shirt|tshirt|tee\s*-?\s*shirt)s?\b/gi;
+
+const TEXT_INTENT_REGEX =
+  /["“”`]|(\btext\b|\btypography\b|\bletter(?:ing|s)?\b|\bword(?:s)?\b|\bquote\b|\bslogan\b|\bphrase\b|\bcaption\b|\bheadline\b|\btitle\b|\bmonogram\b|\binitials?\b)/i;
+
+function normalizeBasePrompt(prompt: string): string {
+  const trimmed = prompt.trim();
+  if (!trimmed) return '';
+
+  const apparelNeutralized = trimmed.replace(APPAREL_TRIGGER_REGEX, 'graphic');
+  return apparelNeutralized.replace(/\s+/g, ' ').trim();
+}
+
+function shouldAllowText(prompt: string): boolean {
+  return TEXT_INTENT_REGEX.test(prompt);
+}
+
 function enhancePrompt(basePrompt: string, style?: string): string {
-  let enhanced = basePrompt;
+  let enhanced = normalizeBasePrompt(basePrompt);
 
   // Add style enhancement
   if (style && STYLE_PROMPTS[style as keyof typeof STYLE_PROMPTS]) {
     enhanced += ` ${STYLE_PROMPTS[style as keyof typeof STYLE_PROMPTS]}`;
   }
 
-  // Add t-shirt specific guidance
-  enhanced += '. Designed for a t-shirt print, high contrast, centered composition, no background.';
+  // Add product-agnostic print guidance to reduce mockups/background scenes
+  enhanced +=
+    '. Output a standalone, print-ready graphic illustration (not a product photo/mockup). Centered composition, high contrast, clean edges. No background scene; isolate subject on a plain transparent or solid background.';
+
+  if (!shouldAllowText(enhanced)) {
+    enhanced += ' No text, letters, numbers, watermark, or signature.';
+  }
 
   return enhanced;
 }
@@ -108,7 +131,7 @@ export async function moderateContent(prompt: string): Promise<boolean> {
 
 /**
  * @function generateDesign
- * @description Generates custom t-shirt design using OpenAI's DALL-E 3 model. Includes content moderation, prompt enhancement, and error handling for common OpenAI API errors.
+ * @description Generates a custom print-ready graphic using OpenAI's DALL-E 3 model. Includes content moderation, prompt enhancement, and error handling for common OpenAI API errors.
  *
  * @param {DesignGenerationParams} params - Design generation parameters
  * @param {string} params.prompt - User's design description

@@ -21,12 +21,12 @@ import { useEffect, useMemo, useState } from 'react';
 import { trackEvent } from '@utils/analytics';
 
 const BLURBS = [
-  'A corgi astronaut planting a GPTees flag on the moon.',
-  'Vintage arcade cabinet that says “Insert vibes to play.”',
-  'Neon dragon riding a bicycle through a cyberpunk alley.',
-  'Minimal line-art koi fish with flowing neon water.',
-  'Retro surf van at sunset with a giant wave made of clouds.',
-  '“404: Boring tee not found” in bold glitch type.',
+  'A neon ramen bowl where the noodles form a spiral galaxy.',
+  'A symmetrical tiger mask built from geometric facets.',
+  'A phoenix made of ink splashes and sharp brush strokes.',
+  'A shattered stained-glass butterfly with prismatic shards.',
+  'A cosmic koi fish shaped like a crescent moon.',
+  'A dragonfly made of circuit traces, sleek tech aesthetic.',
 ];
 
 // const TRUST_BADGES = [''];
