@@ -105,7 +105,7 @@ export default function ExamplesGallery(): JSX.Element {
               onClick={() => setSelected(design)}
               variants={staggerItem}
               {...hoverLift}
-              className="group relative overflow-hidden rounded-lg focus-visible:outline-accent focus-visible:outline-2 focus-visible:outline"
+              className="group relative overflow-hidden rounded-lg focus-visible:outline-accent focus-visible:outline-2"
             >
               <div className="aspect-[4/5] overflow-hidden rounded-lg border border-muted/20 bg-surface dark:border-muted-dark/20 dark:bg-surface-dark">
                 <img
@@ -180,7 +180,7 @@ export default function ExamplesGallery(): JSX.Element {
             <div className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
               <div className="font-sans text-sm text-muted dark:text-muted-dark">
                 <p className="font-semibold text-ink dark:text-ink-dark">Description</p>
-                <p className="text-xs">
+                <p className="truncate text-xs">
                   {selected.revisedPrompt || selected.prompt}
                 </p>
               </div>

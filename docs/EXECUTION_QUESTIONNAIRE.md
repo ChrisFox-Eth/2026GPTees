@@ -7,6 +7,7 @@ Repo: `ChrisFox-Eth/2026GPTees`
 - Edit the **Draft answer** fields into your **Final answer**.
 - If a question has **Repo-based observation: Not found**, the repo did not contain an explicit answer.
 - Keep the **Evidence** links so decisions stay auditable.
+- Repo docs may be stale; treat **Owner clarifications** as the most current source-of-truth unless you override them.
 
 ## Owner clarifications (2025-12-13)
 
@@ -28,6 +29,7 @@ Repo: `ChrisFox-Eth/2026GPTees`
 - **Checkout + fulfillment**: Stripe checkout + Printful order submission; fulfillment is gated until payment.
 - **Shipping**: flat rate by destination country.
 - **Promo support**: promotion config exists for `HAPPYHOLIDAYS`.
+- **Pricing today**: one primary paid SKU at **$54.99** (gift cards separate).
 
 Evidence:
 - `docs/README_PREVIEW_FLOW.md`
@@ -58,7 +60,7 @@ Evidence:
   - Printful submission after approval
 
 **Draft answer (repo-based):**
-- MVP appears to be a **single-product flow**:
+- MVP appears to be a **single-product flow** (one primary SKU at **$54.99** today):
   - Create a preview order (guest or authed)
   - Generate designs until user chooses one
   - Checkout and pay
@@ -155,6 +157,13 @@ Options:
 - **Unknown (not in repo).** To answer, you’d need:
   - OpenAI billing export, or
   - add server-side logging of image generation calls + cost estimates.
+
+**Sanity-check worksheet (fill in; verify current OpenAI pricing):**
+- Assumed cost per image (`dall-e-3`, `standard`, `1024x1024`): $[FILL IN]
+- Typical designs per happy user (your assumption): [FILL IN] (e.g., 1–3)
+- AI cost per happy user session: $[FILL IN]
+- Worst-case “abuse” designs in one session before guardrails trigger: [FILL IN]
+- Worst-case AI cost before guardrails: $[FILL IN]
 
 **Final answer (edit):**
 - [FILL IN]
@@ -256,6 +265,10 @@ Options:
 - The repo does not store or compute Printful base cost / COGS.
 - Shipping *charged to customer* is implemented as flat rates.
 - `products.basePrice` exists in DB but is not clearly used as a COGS field.
+
+**Known revenue components (based on current product direction + repo behavior):**
+- Product price: **$54.99** (pre-shipping; promo codes may reduce)
+- Shipping charged separately: **US $5.95, CA $7.95, Intl $9.95**
 
 **Draft answer (repo-based):**
 - **Unknown (not in repo).** The repo contains customer shipping charges, not your true COGS.
@@ -445,6 +458,7 @@ Options:
 **Evidence:**
 - `backend/src/services/openai.service.ts`
 - `docs/PROMPTING_GUIDE.md`
+- `frontend/src/pages/TermsPage.tsx`
 
 ### Q6.2 — What happens when a user tries real brands / real characters / real people who didn’t consent?
 
@@ -453,13 +467,18 @@ Options:
 - The OpenAI Moderation API may flag some content, but it is not purpose-built for trademark enforcement.
 
 **Draft answer (repo-based):**
-- **Not explicitly handled in code.** Behavior likely depends on OpenAI policy enforcement + moderation flags.
+- **Not explicitly handled in code (technical enforcement).** Behavior likely depends on OpenAI policy enforcement + moderation flags.
+
+**Policy-level stance (legal/terms copy):**
+- Users agree not to generate designs that infringe IP rights.
+- Prompts are “subject to automated content moderation” and GPTees “reserves the right to reject designs that violate guidelines.”
 
 **Final answer (edit):**
 - [FILL IN]
 
 **Evidence:**
 - `backend/src/services/openai.service.ts`
+- `frontend/src/pages/TermsPage.tsx`
 
 ### Q6.3 — Is there a manual review layer, and when does it trigger?
 
@@ -469,23 +488,29 @@ Options:
 **Draft answer (repo-based):**
 - **No manual review layer exists in the repo today.**
 
+**Policy-level note (terms copy):**
+- Terms reserve the right to reject designs, but there is no described human review workflow.
+
 **Final answer (edit):**
 - [FILL IN]
 
 ### Q6.4 — Who eats the cost of a canceled print?
 
-**Repo-based observation:**
-- Not defined in backend logic.
-- There are refund-related DB models, but this questionnaire needs business policy.
+**Repo-based observation (policy exists in UI/legal copy):**
+- Refund policy states that once a design is approved, the order is submitted to Printful and cancellations are not guaranteed.
+- A **$10 processing fee may apply** for cancellations.
+- Full refund/replacement is offered for defects/damage or significant mismatch vs approved design.
+- Shipping costs are generally non-refundable unless it was GPTees’ error.
 
 **Draft answer (repo-based):**
-- **Unknown (not in repo).**
+- The cost allocation is partially defined in the Refund Policy (above), but exact Printful cancellation fee handling and edge-case policies should be finalized.
 
 **Final answer (edit):**
 - [FILL IN]
 
 **Evidence:**
 - `backend/prisma/schema.prisma` (Payment/Refund models)
+- `frontend/src/pages/RefundsPage.tsx`
 
 ---
 
@@ -496,21 +521,32 @@ Options:
 ### Q7.1 — What is your actual early marketing wedge (one platform / one community)?
 
 **Repo-based observation:**
-- Not found in repo.
+ - An archived content strategy exists for **Instagram + Facebook** (December 2025 daily holiday campaign).
 
 **Draft answer (repo-based):**
-- **Unknown (not in repo).**
+- If still relevant, the repo suggests a wedge of:
+  - Short-form social content + community UGC loops
+  - Time-limited promos (example: holiday sale)
+
+**Note:** This appears in `docs/archive/` and may be outdated.
 
 **Final answer (edit):**
 - [FILL IN]
 
+**Evidence:**
+- `docs/archive/social-docs/SOCIAL_MEDIA.md`
+
 ### Q7.2 — What content has already shown traction, even anecdotally?
 
 **Repo-based observation:**
-- Not found in repo.
+ - No analytics tying specific content to conversion is present in-repo.
+ - The archived plan contains example post formats (UGC highlights, BTS reels, shipping deadline reminders, giveaways).
 
 **Draft answer (repo-based):**
-- **Unknown (not in repo).**
+- **Unknown (not in repo)** in terms of measured traction; examples exist in archived content planning docs.
+
+**Evidence:**
+- `docs/archive/social-docs/SOCIAL_MEDIA.md`
 
 **Final answer (edit):**
 - [FILL IN]
@@ -518,10 +554,17 @@ Options:
 ### Q7.3 — How will you test CAC without lighting money on fire?
 
 **Repo-based observation:**
-- Not found in repo.
+- No CAC testing plan is defined in-repo, but funnel analytics instrumentation exists.
 
 **Draft answer (repo-based):**
 - **Unknown (not in repo).**
+
+**Repo-based instrumentation you can use for CAC tests:**
+- Event tracking exists across key funnel points (checkout start, checkout success, design generation, etc.).
+- Use UTM parameters in paid traffic and persist `utm_*` into event payloads to compute CAC by campaign/source.
+
+**Evidence:**
+- `docs/analytics-events.md`
 
 **Final answer (edit):**
 - [FILL IN]
