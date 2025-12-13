@@ -14,6 +14,7 @@ import SocialProofStrip from '@components/sections/SocialProofStrip/SocialProofS
 import { ExamplesGallery } from '@components/sections/ExamplesGallery';
 import { StickyCtaBar } from '@components/sections/StickyCtaBar/StickyCtaBar';
 import { Link } from 'react-router-dom';
+import { applyPercentOff, formatUsdAmount, HAPPY_HOLIDAYS_PERCENT_OFF, isHappyHolidaysActive } from '@utils/holidayPromo';
 
 /**
  * @component
@@ -26,6 +27,10 @@ import { Link } from 'react-router-dom';
  * <Route path="/" element={<HomePage />} />
  */
 export default function HomePage(): JSX.Element {
+  const holidayPromoActive = isHappyHolidaysActive();
+  const basePrice = 54.99;
+  const holidayPrice = formatUsdAmount(applyPercentOff(basePrice, HAPPY_HOLIDAYS_PERCENT_OFF));
+
   return (
     <main>
       <div className="bg-paper container-max py-8 dark:bg-paper-dark">
@@ -38,7 +43,7 @@ export default function HomePage(): JSX.Element {
         </div>
       </div>
       <HowItWorks />
-      <div className="bg-paper container-max py-6 dark:bg-paper-dark">
+      <div id="gallery" className="bg-paper container-max py-6 dark:bg-paper-dark">
         <ExamplesGallery />
       </div>
       <Features />
@@ -48,7 +53,11 @@ export default function HomePage(): JSX.Element {
       </div>
       <Link to="/#quickstart">
         <StickyCtaBar
-          primaryLabel="Start your Limitless tee for $54.99 — design first"
+          primaryLabel={
+            holidayPromoActive
+              ? `Start for ${holidayPrice} (was $54.99) — design first`
+              : 'Start your Limitless tee for $54.99 — design first'
+          }
           subcopy="Studio access, pay when you print"
           href="#quickstart"
         />

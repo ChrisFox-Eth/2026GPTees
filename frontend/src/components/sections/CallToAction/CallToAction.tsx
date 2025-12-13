@@ -55,7 +55,7 @@ export default function CallToAction(): JSX.Element {
                 trackEvent('home.cta.click', { cta: 'gift_codes', surface: 'call_to_action' })
               }
             >
-              Gift a GPTee
+              Gift card
             </Button>
           </Link>
           <Link to="/account">

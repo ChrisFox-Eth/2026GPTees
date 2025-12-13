@@ -85,7 +85,7 @@ export default function Header({ isDark }: HeaderProps): JSX.Element {
                 to="/gift"
                 className="font-sans text-muted transition-colors hover:text-ink dark:text-muted-dark dark:hover:text-ink-dark"
               >
-                Gift a GPTee
+                Gift card
               </Link>
             </nav>
 
@@ -165,7 +165,7 @@ export default function Header({ isDark }: HeaderProps): JSX.Element {
                 onClick={closeMobileMenu}
                 className="rounded-md px-3 py-2 font-sans text-muted transition-colors hover:bg-surface-2 hover:text-ink dark:text-muted-dark dark:hover:bg-surface-dark dark:hover:text-ink-dark"
               >
-                Gift a GPTee
+                Gift card
               </Link>
 
               <div className="my-2 border-t border-muted/20 dark:border-muted-dark/20" />

@@ -7,6 +7,7 @@
 import { Request, Response } from 'express';
 import { catchAsync, AppError } from '../middleware/error.middleware.js';
 import prisma from '../config/database.js';
+import { HAPPY_HOLIDAYS_CODE, isHappyHolidaysActive, normalizePromoCode } from '../config/holidayPromo.js';
 
 /**
  * @route GET /api/promo/validate
@@ -22,14 +23,14 @@ import prisma from '../config/database.js';
  * @throws {400} Promo code usage limit exceeded
  */
 export const validatePromoCode = catchAsync(async (req: Request, res: Response) => {
-  const code = (req.query.code as string | undefined)?.trim();
+  const code = normalizePromoCode(req.query.code as string | undefined);
 
   if (!code) {
     throw new AppError('Promo code is required', 400);
   }
 
   const promo = await prisma.promoCode.findFirst({
-    where: { code, disabled: false },
+    where: { code: { equals: code, mode: 'insensitive' }, disabled: false },
     select: {
       id: true,
       code: true,
@@ -44,6 +45,10 @@ export const validatePromoCode = catchAsync(async (req: Request, res: Response) 
 
   if (!promo) {
     throw new AppError('Invalid or unknown promo code.', 400);
+  }
+
+  if (code === HAPPY_HOLIDAYS_CODE && !isHappyHolidaysActive()) {
+    throw new AppError('This promo code has expired.', 400);
   }
 
   if (promo.usageLimit !== null && promo.usageLimit !== undefined && promo.usageCount >= promo.usageLimit) {

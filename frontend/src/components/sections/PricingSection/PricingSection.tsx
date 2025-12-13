@@ -20,6 +20,15 @@ import { Link } from 'react-router-dom';
 import { Button } from '@components/ui/Button';
 import { trackEvent } from '@utils/analytics';
 import { apiGet } from '@utils/api';
+import {
+  applyPercentOff,
+  formatHappyHolidaysEndsShort,
+  formatUsdAmount,
+  HAPPY_HOLIDAYS_CODE,
+  HAPPY_HOLIDAYS_PERCENT_OFF,
+  isHappyHolidaysActive,
+  parseUsdAmount,
+} from '@utils/holidayPromo';
 import type { TierCard } from './PricingSection.types';
 
 const DEFAULT_TIERS: TierCard[] = [
@@ -49,6 +58,7 @@ const formatPrice = (value: number | undefined): string =>
 
 export default function PricingSection(): JSX.Element {
   const [tiers, setTiers] = useState<TierCard[]>(DEFAULT_TIERS);
+  const holidayPromoActive = isHappyHolidaysActive();
 
   useEffect(() => {
     let cancelled = false;
@@ -120,11 +130,36 @@ export default function PricingSection(): JSX.Element {
                   {tier.displayName}
                 </h3>
                 <div className="mb-2">
-                  <span className="font-display text-5xl font-bold text-ink dark:text-ink-dark">
-                    {tier.price}
-                  </span>
+                  {(() => {
+                    const base = parseUsdAmount(tier.price);
+                    if (!holidayPromoActive || base === null) {
+                      return (
+                        <span className="font-display text-5xl font-bold text-ink dark:text-ink-dark">
+                          {tier.price}
+                        </span>
+                      );
+                    }
+
+                    const discounted = applyPercentOff(base, HAPPY_HOLIDAYS_PERCENT_OFF);
+                    return (
+                      <div className="flex items-baseline justify-center gap-3">
+                        <span className="font-sans text-sm font-semibold text-muted line-through dark:text-muted-dark">
+                          {tier.price}
+                        </span>
+                        <span className="font-display text-5xl font-bold text-ink dark:text-ink-dark">
+                          {formatUsdAmount(discounted)}
+                        </span>
+                      </div>
+                    );
+                  })()}
                 </div>
                 <p className="font-sans text-muted dark:text-muted-dark">{tier.description}</p>
+                {holidayPromoActive && (
+                  <p className="mt-2 font-sans text-sm text-accent dark:text-accent-dark">
+                    Holiday sale: {HAPPY_HOLIDAYS_PERCENT_OFF}% off with code{' '}
+                    <span className="font-mono">{HAPPY_HOLIDAYS_CODE}</span> (ends {formatHappyHolidaysEndsShort()})
+                  </p>
+                )}
                 <p className="mt-2 font-sans text-sm text-muted dark:text-muted-dark">
                   Ships in 5-8 business days | Secure checkout by Stripe
                 </p>
@@ -171,8 +206,7 @@ export default function PricingSection(): JSX.Element {
         </div>
 
         <p className="mt-12 text-center font-sans text-muted dark:text-muted-dark">
-          All prices include the tee, printing, and artwork creation. Shipping calculated at
-          checkout.
+          All prices include the product, printing, and artwork creation. Shipping calculated at checkout.
         </p>
       </div>
     </section>

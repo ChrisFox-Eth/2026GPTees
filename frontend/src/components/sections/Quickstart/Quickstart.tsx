@@ -32,6 +32,7 @@ import { Product } from '../../../types/product';
 import type { QuickstartPrefillEventDetail } from '../../../types/domEvents';
 import { QUICKSTART_PROMPT_KEY } from '@utils/quickstart';
 import { AnimatePresence, motion } from 'framer-motion';
+import { Link } from 'react-router-dom';
 
 const PROMPT_IDEAS: string[] = [
   'A cosmic koi fish shaped like a crescent moon, neon linework, bold outline.',
@@ -196,6 +197,13 @@ export default function Quickstart(): JSX.Element {
           </label>
           <p className="font-sans text-xs text-muted dark:text-muted-dark">
             Tell us what to create. You&apos;ll preview the artwork before choosing your fit and color.
+          </p>
+          <p className="font-sans text-xs text-muted dark:text-muted-dark">
+            Shopping for someone else?{' '}
+            <Link to="/gift" className="text-accent hover:underline dark:text-accent-dark">
+              Gift card
+            </Link>
+            .
           </p>
           <textarea
             id={textareaId}

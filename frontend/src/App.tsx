@@ -9,7 +9,7 @@
 import { useState, useEffect } from 'react';
 import { Routes, Route, useLocation } from 'react-router-dom';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
-import { Header, Footer } from '@components/sections';
+import { Header, Footer, HolidayPromoBanner } from '@components/sections';
 import { CreationCorridorOverlay, useCreationCorridor } from '@components/CreationCorridor';
 import { ErrorBoundary } from '@components/ErrorBoundary';
 import { trackEvent, trackPageView } from '@utils/analytics';
@@ -188,6 +188,7 @@ export default function App(): JSX.Element {
         }`}
       >
         {!isCorridorActive && <Header isDark={isLight} onToggleTheme={toggleTheme} />}
+        {!isCorridorActive && <HolidayPromoBanner />}
         <div className="bg-paper flex-1">
           <AnimatePresence mode="wait">
             <motion.div

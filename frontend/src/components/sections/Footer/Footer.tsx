@@ -107,7 +107,7 @@ export default function Footer(): JSX.Element {
                   to="/gift"
                   className="text-muted-dark transition-colors hover:text-surface"
                 >
-                  Gift a Tee
+                  Gift card
                 </Link>
               </li>
               <li>

@@ -29,3 +29,5 @@ export { Quickstart } from './Quickstart';
 export { default as SocialProofStrip } from './SocialProofStrip';
 
 export { StickyCtaBar } from './StickyCtaBar';
+
+export { HolidayPromoBanner } from './HolidayPromoBanner';

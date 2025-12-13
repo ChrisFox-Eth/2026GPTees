@@ -17,6 +17,7 @@ import { sendPromptGuide } from './email.service.js';
 import { sendAnalyticsEvent } from './analytics.service.js';
 import { sendOrderConfirmation, sendGiftCodeEmail } from './email.service.js';
 import { getOrderActionErrorMessage, isOrderActionAllowed } from '../policies/order-policy.js';
+import { HAPPY_HOLIDAYS_CODE, isHappyHolidaysActive, normalizePromoCode } from '../config/holidayPromo.js';
 
 /**
  * Stripe client instance configured with API key and version
@@ -236,11 +237,15 @@ export async function createCheckoutSession(
 
   // Optional promo/gift code validation
   let promoCode: PromoCode | null = null;
-  const trimmedCode = code ? code.trim() : '';
+  const requestedCode = normalizePromoCode(code);
 
-  if (trimmedCode) {
+  if (requestedCode) {
+    if (requestedCode === HAPPY_HOLIDAYS_CODE && !isHappyHolidaysActive()) {
+      throw new AppError('This promo code has expired.', 400);
+    }
+
     const lookup = await prisma.promoCode.findFirst({
-      where: { code: trimmedCode, disabled: false },
+      where: { code: { equals: requestedCode, mode: 'insensitive' }, disabled: false },
     });
     if (!lookup) {
       throw new AppError('Invalid or unknown promo code.', 400);
@@ -258,7 +263,13 @@ export async function createCheckoutSession(
     if (existingOrder.promoCode.disabled) {
       throw new AppError('This promo code is no longer active.', 400);
     }
-    promoCode = existingOrder.promoCode;
+
+    const existingCode = normalizePromoCode(existingOrder.promoCode.code);
+    if (existingCode === HAPPY_HOLIDAYS_CODE && !isHappyHolidaysActive()) {
+      promoCode = null;
+    } else {
+      promoCode = existingOrder.promoCode;
+    }
   }
 
   let adjustedItems = validatedItems;

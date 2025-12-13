@@ -4,8 +4,8 @@
  * @since 2025-11-22
  */
 
-import { useEffect, useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useCallback, useEffect, useState } from 'react';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@clerk/clerk-react';
 import { apiPost, apiGet } from '@utils/api';
 import { useCart } from '../hooks/useCart';
@@ -13,6 +13,12 @@ import { Button } from '@components/ui/Button';
 import { trackEvent } from '@utils/analytics';
 import { calculateShipping } from '@utils/shipping';
 import { ExamplesGallery } from '@components/sections/ExamplesGallery';
+import {
+  HAPPY_HOLIDAYS_CHECKOUT_OPT_OUT_KEY,
+  HAPPY_HOLIDAYS_CODE,
+  formatHappyHolidaysEndsShort,
+  isHappyHolidaysActive,
+} from '@utils/holidayPromo';
 import type { Order, OrderItem, ShippingAddress } from '../types/order';
 import type { AppliedCodeInfo } from '../types/promo';
 
@@ -57,6 +63,7 @@ export default function CheckoutPage(): JSX.Element {
   const [codeMessage, setCodeMessage] = useState<string | null>(null);
   const [codeError, setCodeError] = useState<string | null>(null);
   const [isApplyingCode, setIsApplyingCode] = useState(false);
+  const [autoPromoAttempted, setAutoPromoAttempted] = useState(false);
 
   const activeItems: Array<OrderItem | (typeof cart)[number]> = isPreviewCheckout
     ? previewOrder?.items || []
@@ -218,10 +225,12 @@ export default function CheckoutPage(): JSX.Element {
     }
   };
 
-  const handleApplyCode = async () => {
-    const trimmed = codeInput.trim();
+  const applyCode = useCallback(async (rawCode: string, source: 'auto' | 'user') => {
+    const trimmed = rawCode.trim();
     if (!trimmed) {
-      setCodeError('Enter a code to apply.');
+      if (source === 'user') {
+        setCodeError('Enter a code to apply.');
+      }
       return;
     }
 
@@ -229,12 +238,9 @@ export default function CheckoutPage(): JSX.Element {
       setIsApplyingCode(true);
       setCodeError(null);
       setCodeMessage(null);
+      setCodeInput(trimmed);
       const token = await getToken();
-      if (!token) {
-        setCodeError('Authentication required. Please sign in.');
-        return;
-      }
-      const res = await apiGet(`/api/promo/validate?code=${encodeURIComponent(trimmed)}`, token);
+      const res = await apiGet(`/api/promo/validate?code=${encodeURIComponent(trimmed)}`, token || undefined);
       setAppliedCode(res?.data?.code || trimmed);
       setAppliedCodeInfo({
         code: res?.data?.code || trimmed,
@@ -250,22 +256,35 @@ export default function CheckoutPage(): JSX.Element {
       trackEvent('checkout.code.applied', {
         code: res?.data?.code || trimmed,
         type: res?.data?.type || 'unknown',
+        source,
       });
     } catch (err: any) {
       setAppliedCode(null);
       setAppliedCodeInfo(null);
       setCodeMessage(null);
-      setCodeError(err?.message || 'Could not validate code.');
+      if (source === 'user') {
+        setCodeError(err?.message || 'Could not validate code.');
+      } else {
+        setCodeInput('');
+      }
       trackEvent('checkout.code.error', {
         code: trimmed,
         message: err?.message || 'unknown',
+        source,
       });
     } finally {
       setIsApplyingCode(false);
     }
+  }, [getToken]);
+
+  const handleApplyCode = async () => {
+    await applyCode(codeInput, 'user');
   };
 
   const handleRemoveCode = () => {
+    if (appliedCode && appliedCode.toUpperCase() === HAPPY_HOLIDAYS_CODE) {
+      localStorage.setItem(HAPPY_HOLIDAYS_CHECKOUT_OPT_OUT_KEY, '1');
+    }
     setAppliedCode(null);
     setAppliedCodeInfo(null);
     setCodeMessage(null);
@@ -273,6 +292,18 @@ export default function CheckoutPage(): JSX.Element {
     setCodeInput('');
     trackEvent('checkout.code.removed', {});
   };
+
+  useEffect(() => {
+    if (autoPromoAttempted) return;
+    if (appliedCode) return;
+    if (!isHappyHolidaysActive()) return;
+    if (localStorage.getItem(HAPPY_HOLIDAYS_CHECKOUT_OPT_OUT_KEY) === '1') return;
+
+    setAutoPromoAttempted(true);
+    applyCode(HAPPY_HOLIDAYS_CODE, 'auto').catch(() => {
+      // no-op (errors are handled inside applyCode)
+    });
+  }, [appliedCode, autoPromoAttempted, applyCode]);
 
   if (isPreviewCheckout && isLoadingPreview) {
     return (
@@ -532,9 +563,27 @@ export default function CheckoutPage(): JSX.Element {
               {codeMessage && (
                 <p className="mt-2 text-sm text-green-700 dark:text-green-300">{codeMessage}</p>
               )}
+              {appliedCode && appliedCode.toUpperCase() === HAPPY_HOLIDAYS_CODE && isHappyHolidaysActive() && (
+                <p className="mt-1 text-xs text-gray-600 dark:text-gray-400">
+                  Holiday promo ends {formatHappyHolidaysEndsShort()}. Excludes gift cards.
+                </p>
+              )}
               {codeError && (
                 <p className="mt-2 text-sm text-red-600 dark:text-red-400">{codeError}</p>
               )}
+              {!appliedCode && isHappyHolidaysActive() && (
+                <p className="mt-2 text-xs text-gray-600 dark:text-gray-400">
+                  Holiday promo: code <span className="font-mono">{HAPPY_HOLIDAYS_CODE}</span> auto-applies (ends{' '}
+                  {formatHappyHolidaysEndsShort()}).
+                </p>
+              )}
+              <p className="mt-1 text-xs text-gray-600 dark:text-gray-400">
+                Shopping for someone else?{' '}
+                <Link to="/gift" className="text-primary-600 hover:underline dark:text-primary-300">
+                  Buy a gift card
+                </Link>
+                .
+              </p>
             </div>
           </div>
 
